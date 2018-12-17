@@ -5,8 +5,8 @@ from string import ascii_letters, digits
 
 from kubernetes.client.rest import ApiException
 
-from hlf.helpers.k8s import Executer, secret_create, secret_from_file, secret_read
-from hlf.helpers.misc import execute
+from helpers.k8s import Executer, secret_create, secret_from_file, secret_read
+from helpers.misc import execute
 
 
 def rand_string(length):

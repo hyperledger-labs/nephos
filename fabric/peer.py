@@ -1,9 +1,9 @@
 import random
 from time import sleep
 
-from hlf.fabric.utils import get_pod
-from hlf.helpers.helm import helm_install, helm_upgrade
-from hlf.helpers.misc import execute
+from fabric.utils import get_pod
+from helpers.helm import helm_install, helm_upgrade
+from helpers.misc import execute
 
 
 # TODO: Perhaps replace opts with orderer name

@@ -3,10 +3,10 @@ from os import listdir, makedirs, path
 import shutil
 from time import sleep
 
-from hlf.fabric.utils import credentials_secret, get_pod
-from hlf.helpers.helm import HelmPreserve, helm_install, helm_upgrade
-from hlf.helpers.k8s import (ingress_read, secret_from_file, secret_read)
-from hlf.helpers.misc import execute, execute_until_success
+from fabric.utils import credentials_secret, get_pod
+from helpers.helm import HelmPreserve, helm_install, helm_upgrade
+from helpers.k8s import (ingress_read, secret_from_file, secret_read)
+from helpers.misc import execute, execute_until_success
 
 CURRENT_DIR = path.abspath(path.split(__file__)[0])
 

@@ -6,8 +6,8 @@ from time import sleep
 
 from blessings import Terminal
 
-from hlf.helpers.k8s import secret_read
-from hlf.helpers.misc import execute
+from helpers.k8s import secret_read
+from helpers.misc import execute
 
 t = Terminal()
 

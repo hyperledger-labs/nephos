@@ -6,13 +6,13 @@ import json
 import click
 from blessings import Terminal
 
-from hlf.helpers.k8s import ns_create
-from hlf.fabric.settings import load_config
-from hlf.fabric.ca import setup_ca
-from hlf.fabric.crypto import setup_blocks, setup_nodes
-from hlf.fabric.ord import setup_ord
-from hlf.fabric.peer import setup_peer, setup_channel
-from hlf.composer.setup import deploy_composer, install_network, setup_admin
+from helpers.k8s import ns_create
+from fabric.settings import load_config
+from fabric.ca import setup_ca
+from fabric.crypto import setup_blocks, setup_nodes
+from fabric.ord import setup_ord
+from fabric.peer import setup_peer, setup_channel
+from composer.setup import deploy_composer, install_network, setup_admin
 
 
 TERM = Terminal()

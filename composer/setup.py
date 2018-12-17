@@ -1,11 +1,11 @@
 from kubernetes.client.rest import ApiException
 
 
-from hlf.composer.connection_template import json_ct
-from hlf.fabric.utils import get_pod
-from hlf.fabric.ca import ca_creds
-from hlf.helpers.helm import helm_install, helm_upgrade
-from hlf.helpers.k8s import (get_app_info,
+from composer.connection_template import json_ct
+from fabric.utils import get_pod
+from fabric.ca import ca_creds
+from helpers.helm import helm_install, helm_upgrade
+from helpers.k8s import (get_app_info,
                          cm_create, cm_read, ingress_read, secret_from_file)
 
 

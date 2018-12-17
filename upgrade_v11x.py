@@ -6,12 +6,12 @@ import os
 import click
 from kubernetes.client.rest import ApiException
 
-from hlf.fabric.settings import load_config
-from hlf.fabric.utils import get_pod
-from hlf.fabric.ord import check_ord
-from hlf.fabric.peer import check_peer
-from hlf.helpers.helm import helm_upgrade
-from hlf.helpers.k8s import ns_create, secret_read, secret_create
+from fabric.settings import load_config
+from fabric.utils import get_pod
+from fabric.ord import check_ord
+from fabric.peer import check_peer
+from helpers.helm import helm_upgrade
+from helpers.k8s import ns_create, secret_read, secret_create
 
 PWD = os.getcwd()
 CryptoInfo = namedtuple('CryptoInfo', ('secret_type', 'subfolder', 'key', 'required'))
