@@ -48,4 +48,18 @@ Once you have all requirments installed, all the unit tests should pass:
 
 ## Usage
 
+To use *nephos*, run the core `nephos.py` executable.
 
+For instance, you can see available commands/options by running:
+
+    ./nephos.py --help
+
+To install a full end-to-end fabric network, you can run:
+
+    ./nephos.py -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
+
+You can also upgrade a network:
+
+    ./nephos.py --upgrade -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
+
+> Example of development/production networks will be provided in future
