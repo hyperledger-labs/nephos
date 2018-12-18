@@ -18,10 +18,13 @@ from composer.setup import deploy_composer, install_network, setup_admin
 TERM = Terminal()
 
 
-@click.group()
-@click.option('--settings_file', '-f', required=True, help='YAML file containing HLF options')
-@click.option('--upgrade', '-u', is_flag=True, default=False)
-@click.option('--verbose/--quiet', '-v/-q', default=False)
+@click.group(help=TERM.green('Nephos helps you install Hyperledger Fabric on Kubernetes'))
+@click.option('--settings_file', '-f', required=True,
+              help=TERM.cyan('YAML file containing HLF options'))
+@click.option('--upgrade', '-u', is_flag=True, default=False,
+              help=TERM.cyan('Do we wish to upgrade already installed components?'))
+@click.option('--verbose/--quiet', '-v/-q', default=False,
+              help=TERM.cyan('Do we want verbose output?'))
 @click.pass_context
 def cli(ctx, settings_file, upgrade, verbose):
     ctx.obj['settings_file'] = settings_file
@@ -29,7 +32,7 @@ def cli(ctx, settings_file, upgrade, verbose):
     ctx.obj['verbose'] = verbose
 
 
-@cli.command()
+@cli.command(help=TERM.cyan('Install Hyperledger Fabric Certificate Authorities'))
 @click.pass_context
 def ca(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
@@ -37,8 +40,7 @@ def ca(ctx):  # pragma: no cover
     setup_ca(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
 
 
-
-@cli.command()
+@cli.command(help=TERM.cyan('Install Hyperledger  Composer'))
 @click.pass_context
 def composer(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
@@ -48,7 +50,7 @@ def composer(ctx):  # pragma: no cover
     install_network(opts, verbose=ctx.obj['verbose'])
 
 
-@click.command()
+@click.command(help=TERM.cyan('Obtain cryptographic materials from CAs'))
 @click.pass_context
 def crypto(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
@@ -58,7 +60,7 @@ def crypto(ctx):  # pragma: no cover
     setup_nodes(opts, 'peer', verbose=ctx.obj['verbose'])
 
 
-@cli.command()
+@cli.command(help=TERM.cyan('Install end-to-end Fabric/Composer network'))
 @click.pass_context
 def deploy(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
@@ -78,8 +80,7 @@ def deploy(ctx):  # pragma: no cover
     install_network(opts, verbose=ctx.obj['verbose'])
 
 
-
-@cli.command()
+@cli.command(help=TERM.cyan('Install end-to-end Hyperledger Fabric network'))
 @click.pass_context
 def fabric(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
@@ -93,7 +94,7 @@ def fabric(ctx):  # pragma: no cover
     setup_channel(opts, verbose=ctx.obj['verbose'])
 
 
-@cli.command()
+@cli.command(help=TERM.cyan('Install Hyperledger Fabric Orderers'))
 @click.pass_context
 def orderer(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
@@ -101,7 +102,7 @@ def orderer(ctx):  # pragma: no cover
     setup_ord(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
 
 
-@cli.command()
+@cli.command(help=TERM.cyan('Install Hyperledger Fabric Peers'))
 @click.pass_context
 def peer(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
@@ -110,7 +111,7 @@ def peer(ctx):  # pragma: no cover
     setup_channel(opts, verbose=ctx.obj['verbose'])
 
 
-@cli.command()
+@cli.command(help=TERM.cyan('Load "nephos" settings YAML file'))
 @click.pass_context
 def settings(ctx):  # pragma: no cover
     data = load_config(ctx.obj['settings_file'])

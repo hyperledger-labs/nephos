@@ -8,6 +8,7 @@ Library to deploy Hyperledger Fabric projects to a Kubernetes cloud
       * [Requirements](#requirements)
    * [Testing](#testing)
       * [Unit tests](#unit-tests)
+   * [Usage](#usage)
 
 ## Prerequisites
 
@@ -44,3 +45,7 @@ All requirments are held in the requirements.txt file
 Once you have all requirments installed, all the unit tests should pass:
 
     PYTHONPATH=. pytest --cov=. --cov-report term-missing
+
+## Usage
+
+
