@@ -3,7 +3,7 @@ from os import path
 
 import yaml
 
-from helpers.k8s import context_get
+from nephos.helpers.k8s import context_get
 
 
 # YAML module will load data using an OrderedDict

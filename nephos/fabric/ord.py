@@ -1,7 +1,7 @@
 from time import sleep
 
-from fabric.utils import get_pod
-from helpers.helm import helm_install, helm_upgrade
+from nephos.fabric.utils import get_pod
+from nephos.helpers.helm import helm_install, helm_upgrade
 
 
 def check_ord(namespace, release, verbose=False):

@@ -6,13 +6,13 @@ import json
 import click
 from blessings import Terminal
 
-from helpers.k8s import ns_create
-from fabric.settings import load_config
-from fabric.ca import setup_ca
-from fabric.crypto import setup_blocks, setup_nodes
-from fabric.ord import setup_ord
-from fabric.peer import setup_peer, setup_channel
-from composer.setup import deploy_composer, install_network, setup_admin
+from nephos.helpers.k8s import ns_create
+from nephos.fabric.settings import load_config
+from nephos.fabric.ca import setup_ca
+from nephos.fabric.crypto import setup_blocks, setup_nodes
+from nephos.fabric.ord import setup_ord
+from nephos.fabric.peer import setup_peer, setup_channel
+from nephos.composer.setup import deploy_composer, install_network, setup_admin
 
 
 TERM = Terminal()

@@ -1,9 +1,9 @@
 import random
 from time import sleep
 
-from fabric.utils import get_pod
-from helpers.helm import helm_install, helm_upgrade
-from helpers.misc import execute
+from nephos.fabric.utils import get_pod
+from nephos.helpers.helm import helm_install, helm_upgrade
+from nephos.helpers.misc import execute
 
 
 # TODO: Perhaps replace opts with orderer name

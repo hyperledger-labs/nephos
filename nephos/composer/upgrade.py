@@ -4,9 +4,9 @@ import os
 
 import click
 
-from fabric.settings import load_config
-from fabric.utils import get_pod
-from helpers.k8s import ns_create
+from nephos.fabric.settings import load_config
+from nephos.fabric.utils import get_pod
+from nephos.helpers.k8s import ns_create
 
 CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
 

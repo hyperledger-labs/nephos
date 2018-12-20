@@ -1,12 +1,12 @@
 from kubernetes.client.rest import ApiException
 
 
-from composer.connection_template import json_ct
-from fabric.utils import get_pod
-from fabric.ca import ca_creds
-from helpers.helm import helm_install, helm_upgrade
-from helpers.k8s import (get_app_info,
-                         cm_create, cm_read, ingress_read, secret_from_file)
+from nephos.composer.connection_template import json_ct
+from nephos.fabric.utils import get_pod
+from nephos.fabric.ca import ca_creds
+from nephos.helpers.helm import helm_install, helm_upgrade
+from nephos.helpers.k8s import (get_app_info,
+                                cm_create, cm_read, ingress_read, secret_from_file)
 
 
 def get_composer_data(opts, verbose=False):

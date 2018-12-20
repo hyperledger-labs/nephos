@@ -1,9 +1,9 @@
 from collections import namedtuple
 from os import path, chdir, getcwd
 
-from fabric.utils import credentials_secret, crypto_secret, get_pod
-from helpers.k8s import ingress_read, secret_from_file
-from helpers.misc import execute, execute_until_success
+from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
+from nephos.helpers.k8s import ingress_read, secret_from_file
+from nephos.helpers.misc import execute, execute_until_success
 
 PWD = getcwd()
 CryptoInfo = namedtuple('CryptoInfo', ('secret_type', 'subfolder', 'key', 'required'))

@@ -3,11 +3,11 @@ from unittest.mock import call
 
 import pytest
 
-from fabric.crypto import (register_node, enroll_node, crypto_to_secrets, setup_nodes, setup_blocks, PWD)
+from nephos.fabric.crypto import (register_node, enroll_node, crypto_to_secrets, setup_nodes, setup_blocks, PWD)
 
 
 class TestRegisterNode:
-    @mock.patch('fabric.crypto.get_pod')
+    @mock.patch('nephos.fabric.crypto.get_pod')
     def test_register_node(self, mock_get_pod):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
@@ -20,7 +20,7 @@ class TestRegisterNode:
             call('fabric-ca-client register --id.name an-ord --id.secret a-password --id.type orderer')
         ])
 
-    @mock.patch('fabric.crypto.get_pod')
+    @mock.patch('nephos.fabric.crypto.get_pod')
     def test_register_node_again(self, mock_get_pod):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
@@ -31,8 +31,8 @@ class TestRegisterNode:
 
 
 class TestEnrollNode:
-    @mock.patch('fabric.crypto.ingress_read')
-    @mock.patch('fabric.crypto.execute_until_success')
+    @mock.patch('nephos.fabric.crypto.ingress_read')
+    @mock.patch('nephos.fabric.crypto.execute_until_success')
     def test_enroll_node(self, mock_execute_until_success, mock_ingress_read):
         mock_ingress_read.side_effect = [['an-ingress']]
         OPTS = {'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
@@ -44,9 +44,9 @@ class TestEnrollNode:
             '-u https://an-ord:a-password@an-ingress -M an-ord_MSP ' +
             '--tls.certfiles /some_msp/tls_cert.pem')
 
-    @mock.patch('fabric.crypto.path')
-    @mock.patch('fabric.crypto.ingress_read')
-    @mock.patch('fabric.crypto.execute_until_success')
+    @mock.patch('nephos.fabric.crypto.path')
+    @mock.patch('nephos.fabric.crypto.ingress_read')
+    @mock.patch('nephos.fabric.crypto.execute_until_success')
     def test_enroll_node_again(self, mock_execute_until_success, mock_ingress_read, mock_path):
         mock_ingress_read.side_effect =[['an-ingress']]
         mock_path.join.side_effect = ['./a_dir/a-peer_MSP']
@@ -57,8 +57,8 @@ class TestEnrollNode:
         mock_ingress_read.assert_called_once_with('a-ca-hlf-ca', namespace='a-namespace', verbose=False)
         mock_execute_until_success.assert_not_called()
 
-    @mock.patch('fabric.crypto.ingress_read')
-    @mock.patch('fabric.crypto.execute_until_success')
+    @mock.patch('nephos.fabric.crypto.ingress_read')
+    @mock.patch('nephos.fabric.crypto.execute_until_success')
     def test_enroll_verbose(self, mock_execute_until_success, mock_ingress_read):
         mock_ingress_read.side_effect =[['an-ingress']]
         OPTS = {'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
@@ -73,8 +73,8 @@ class TestEnrollNode:
 
 class TestCryptoToSecrets:
 
-    @mock.patch('fabric.crypto.print')
-    @mock.patch('fabric.crypto.crypto_secret')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.crypto_secret')
     def test_crypto_to_secrets(self, mock_crypto_secret, mock_print):
         mock_crypto_secret.side_effect = [None, None, None, None]
         crypto_to_secrets('a-namespace', './a_dir', 'a-user')
@@ -90,8 +90,8 @@ class TestCryptoToSecrets:
         ])
         mock_print.assert_not_called()
 
-    @mock.patch('fabric.crypto.print')
-    @mock.patch('fabric.crypto.crypto_secret')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.crypto_secret')
     def test_crypto_to_secrets_notls(self, mock_crypto_secret, mock_print):
         mock_crypto_secret.side_effect = [None, None, None, Exception()]
         crypto_to_secrets('a-namespace', './a_dir', 'a-user', verbose=True)
@@ -108,8 +108,8 @@ class TestCryptoToSecrets:
         mock_print.assert_called_once_with(
             'No ./a_dir/intermediatecerts found, so secret "hlf--a-user-caintcert" was not created')
 
-    @mock.patch('fabric.crypto.print')
-    @mock.patch('fabric.crypto.crypto_secret')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.crypto_secret')
     def test_crypto_to_secrets_nofiles(self, mock_crypto_secret, mock_print):
         mock_crypto_secret.side_effect = [Exception()]
         with pytest.raises(Exception):
@@ -120,10 +120,10 @@ class TestCryptoToSecrets:
 
 
 class TestSetupNodes:
-    @mock.patch('fabric.crypto.register_node')
-    @mock.patch('fabric.crypto.enroll_node')
-    @mock.patch('fabric.crypto.crypto_to_secrets')
-    @mock.patch('fabric.crypto.credentials_secret')
+    @mock.patch('nephos.fabric.crypto.register_node')
+    @mock.patch('nephos.fabric.crypto.enroll_node')
+    @mock.patch('nephos.fabric.crypto.crypto_to_secrets')
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
     def test_nodes(self, mock_credentials_secret, mock_crypto_to_secrets,
                          mock_enroll_node, mock_register_node):
         mock_credentials_secret.side_effect = [{'CA_USERNAME': 'peer0', 'CA_PASSWORD': 'peer0-pw'},
@@ -149,10 +149,10 @@ class TestSetupNodes:
             call(namespace='a-namespace', msp_path='./peer1_MSP', user='peer1', verbose=False)
         ])
 
-    @mock.patch('fabric.crypto.register_node')
-    @mock.patch('fabric.crypto.enroll_node')
-    @mock.patch('fabric.crypto.crypto_to_secrets')
-    @mock.patch('fabric.crypto.credentials_secret')
+    @mock.patch('nephos.fabric.crypto.register_node')
+    @mock.patch('nephos.fabric.crypto.enroll_node')
+    @mock.patch('nephos.fabric.crypto.crypto_to_secrets')
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
     def test_nodes_ord(self, mock_credentials_secret, mock_crypto_to_secrets,
                          mock_enroll_node, mock_register_node):
         mock_credentials_secret.side_effect = [{'CA_USERNAME': 'ord0', 'CA_PASSWORD': 'ord0-pw'}]
@@ -180,11 +180,11 @@ class TestSetupBlocks:
             'peers': {'secret_channel': 'a-channel-secret',
                       'channel_name': 'a-channel', 'channel_profile': 'AProfile'}}
 
-    @mock.patch('fabric.crypto.secret_from_file')
-    @mock.patch('fabric.crypto.print')
-    @mock.patch('fabric.crypto.path')
-    @mock.patch('fabric.crypto.execute')
-    @mock.patch('fabric.crypto.chdir')
+    @mock.patch('nephos.fabric.crypto.secret_from_file')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.path')
+    @mock.patch('nephos.fabric.crypto.execute')
+    @mock.patch('nephos.fabric.crypto.chdir')
     def test_blocks(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
         mock_path.exists.side_effect = [False, False]
         setup_blocks(self.OPTS)
@@ -208,11 +208,11 @@ class TestSetupBlocks:
                  key='a-channel.tx', filename='a-channel.tx', verbose=False)
         ])
 
-    @mock.patch('fabric.crypto.secret_from_file')
-    @mock.patch('fabric.crypto.print')
-    @mock.patch('fabric.crypto.path')
-    @mock.patch('fabric.crypto.execute')
-    @mock.patch('fabric.crypto.chdir')
+    @mock.patch('nephos.fabric.crypto.secret_from_file')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.path')
+    @mock.patch('nephos.fabric.crypto.execute')
+    @mock.patch('nephos.fabric.crypto.chdir')
     def test_again(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
         mock_path.exists.side_effect = [True, True]
         setup_blocks(self.OPTS, True)

@@ -4,7 +4,7 @@ from unittest.mock import call
 import pytest
 from kubernetes.client.rest import ApiException
 
-from upgrade_v11x import extract_credentials, extract_crypto, upgrade_charts
+from nephos.upgrade_v11x import extract_credentials, extract_crypto, upgrade_charts
 
 
 class TestExtractCredentials:
@@ -14,9 +14,9 @@ class TestExtractCredentials:
         'peers': {'names': ['peer0', 'peer1']}
     }
 
-    @mock.patch('upgrade_v11x.secret_read')
-    @mock.patch('upgrade_v11x.secret_create')
-    @mock.patch('upgrade_v11x.print')
+    @mock.patch('nephos.upgrade_v11x.secret_read')
+    @mock.patch('nephos.upgrade_v11x.secret_create')
+    @mock.patch('nephos.upgrade_v11x.print')
     def test_extract_credentials(self, mock_print, mock_secret_create, mock_secret_read):
         secret_data = [
             {'CA_USERNAME': 'ord0', 'CA_PASSWORD': 'a-password'},
@@ -41,9 +41,9 @@ class TestExtractCredentials:
             call(secret_data[1], 'hlf--ord1-cred', 'a-namespace', verbose=False),
         ])
 
-    @mock.patch('upgrade_v11x.secret_read')
-    @mock.patch('upgrade_v11x.secret_create')
-    @mock.patch('upgrade_v11x.print')
+    @mock.patch('nephos.upgrade_v11x.secret_read')
+    @mock.patch('nephos.upgrade_v11x.secret_create')
+    @mock.patch('nephos.upgrade_v11x.print')
     def test_extract_credentials_again(self, mock_print, mock_secret_create, mock_secret_read):
         mock_secret_read.side_effect = [None, None]
         extract_credentials(self.OPTS, 'peer', verbose=True)
@@ -65,10 +65,10 @@ class TestExtractCrypto:
         'peers': {'names': ['peer0']}
     }
 
-    @mock.patch('upgrade_v11x.secret_read')
-    @mock.patch('upgrade_v11x.secret_create')
-    @mock.patch('upgrade_v11x.print')
-    @mock.patch('upgrade_v11x.get_pod')
+    @mock.patch('nephos.upgrade_v11x.secret_read')
+    @mock.patch('nephos.upgrade_v11x.secret_create')
+    @mock.patch('nephos.upgrade_v11x.print')
+    @mock.patch('nephos.upgrade_v11x.get_pod')
     def test_extract_crypto(self, mock_get_pod, mock_print, mock_secret_create, mock_secret_read):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
@@ -105,10 +105,10 @@ class TestExtractCrypto:
             call({'cacert.pem': 'a-secret'}, 'hlf--ord0-cacert', 'a-namespace', verbose=False)
         ])
 
-    @mock.patch('upgrade_v11x.secret_read')
-    @mock.patch('upgrade_v11x.secret_create')
-    @mock.patch('upgrade_v11x.print')
-    @mock.patch('upgrade_v11x.get_pod')
+    @mock.patch('nephos.upgrade_v11x.secret_read')
+    @mock.patch('nephos.upgrade_v11x.secret_create')
+    @mock.patch('nephos.upgrade_v11x.print')
+    @mock.patch('nephos.upgrade_v11x.get_pod')
     def test_extract_crypto_again(self, mock_get_pod, mock_print, mock_secret_create, mock_secret_read):
         mock_pod_ex = mock.Mock()
         mock_get_pod.side_effect = [mock_pod_ex]
@@ -131,10 +131,10 @@ class TestExtractCrypto:
         ])
         mock_secret_create.assert_not_called()
 
-    @mock.patch('upgrade_v11x.secret_read')
-    @mock.patch('upgrade_v11x.secret_create')
-    @mock.patch('upgrade_v11x.print')
-    @mock.patch('upgrade_v11x.get_pod')
+    @mock.patch('nephos.upgrade_v11x.secret_read')
+    @mock.patch('nephos.upgrade_v11x.secret_create')
+    @mock.patch('nephos.upgrade_v11x.print')
+    @mock.patch('nephos.upgrade_v11x.get_pod')
     def test_extract_crypto_fail(self, mock_get_pod, mock_print, mock_secret_create, mock_secret_read):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
@@ -160,11 +160,11 @@ class TestUpgradeCharts:
         'peers': {'names': ['peer0']}
     }
 
-    @mock.patch('upgrade_v11x.print')
-    @mock.patch('upgrade_v11x.helm_upgrade')
-    @mock.patch('upgrade_v11x.get_pod')
-    @mock.patch('upgrade_v11x.check_peer')
-    @mock.patch('upgrade_v11x.check_ord')
+    @mock.patch('nephos.upgrade_v11x.print')
+    @mock.patch('nephos.upgrade_v11x.helm_upgrade')
+    @mock.patch('nephos.upgrade_v11x.get_pod')
+    @mock.patch('nephos.upgrade_v11x.check_peer')
+    @mock.patch('nephos.upgrade_v11x.check_ord')
     def test_upgrade_charts(self, mock_check_ord, mock_check_peer,
                             mock_get_pod, mock_helm_upgrade, mock_print):
         mock_pod_ex = mock.Mock()
@@ -181,11 +181,11 @@ class TestUpgradeCharts:
         mock_check_ord.assert_called_once_with('a-namespace', 'ord0', verbose=False)
         mock_check_peer.assert_not_called()
 
-    @mock.patch('upgrade_v11x.print')
-    @mock.patch('upgrade_v11x.helm_upgrade')
-    @mock.patch('upgrade_v11x.get_pod')
-    @mock.patch('upgrade_v11x.check_peer')
-    @mock.patch('upgrade_v11x.check_ord')
+    @mock.patch('nephos.upgrade_v11x.print')
+    @mock.patch('nephos.upgrade_v11x.helm_upgrade')
+    @mock.patch('nephos.upgrade_v11x.get_pod')
+    @mock.patch('nephos.upgrade_v11x.check_peer')
+    @mock.patch('nephos.upgrade_v11x.check_ord')
     def test_upgrade_charts_again(self, mock_check_ord, mock_check_peer,
                                   mock_get_pod, mock_helm_upgrade, mock_print):
         mock_pod_ex = mock.Mock()

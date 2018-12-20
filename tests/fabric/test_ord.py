@@ -1,12 +1,12 @@
 from unittest import mock
 from unittest.mock import call
 
-from fabric.ord import check_ord, setup_ord
+from nephos.fabric.ord import check_ord, setup_ord
 
 
 class TestCheckOrd:
-    @mock.patch('fabric.ord.sleep')
-    @mock.patch('fabric.ord.get_pod')
+    @mock.patch('nephos.fabric.ord.sleep')
+    @mock.patch('nephos.fabric.ord.get_pod')
     def test_check_ord(self, mock_get_pod, mock_sleep):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.logs.side_effect = [
@@ -18,8 +18,8 @@ class TestCheckOrd:
         assert mock_pod_ex.logs.call_count == 2
         mock_sleep.assert_called_once_with(15)
 
-    @mock.patch('fabric.ord.sleep')
-    @mock.patch('fabric.ord.get_pod')
+    @mock.patch('nephos.fabric.ord.sleep')
+    @mock.patch('nephos.fabric.ord.get_pod')
     def test_check_ord_again(self, mock_get_pod, mock_sleep):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.logs.side_effect = [
@@ -32,9 +32,9 @@ class TestCheckOrd:
 
 
 class TestSetupOrd:
-    @mock.patch('fabric.ord.helm_upgrade')
-    @mock.patch('fabric.ord.helm_install')
-    @mock.patch('fabric.ord.check_ord')
+    @mock.patch('nephos.fabric.ord.helm_upgrade')
+    @mock.patch('nephos.fabric.ord.helm_install')
+    @mock.patch('nephos.fabric.ord.check_ord')
     def test_ord(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
         OPTS = {'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir', 'namespace': 'a-namespace'},
                 'orderers': {'names': ['ord0', 'ord1']}}
@@ -51,9 +51,9 @@ class TestSetupOrd:
             call('a-namespace', 'ord1', verbose=False)
         ])
 
-    @mock.patch('fabric.ord.helm_upgrade')
-    @mock.patch('fabric.ord.helm_install')
-    @mock.patch('fabric.ord.check_ord')
+    @mock.patch('nephos.fabric.ord.helm_upgrade')
+    @mock.patch('nephos.fabric.ord.helm_install')
+    @mock.patch('nephos.fabric.ord.check_ord')
     def test_ord_kafka(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
         OPTS = {'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir', 'namespace': 'a-namespace'},
                 'orderers': {'kafka': {'pod_num': 42}, 'names': ['ord0']}}
@@ -67,9 +67,9 @@ class TestSetupOrd:
         mock_helm_upgrade.assert_not_called()
         mock_check_ord.assert_called_once_with('a-namespace', 'ord0', verbose=True)
 
-    @mock.patch('fabric.ord.helm_upgrade')
-    @mock.patch('fabric.ord.helm_install')
-    @mock.patch('fabric.ord.check_ord')
+    @mock.patch('nephos.fabric.ord.helm_upgrade')
+    @mock.patch('nephos.fabric.ord.helm_install')
+    @mock.patch('nephos.fabric.ord.check_ord')
     def test_ord_upgrade(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
         OPTS = {'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir', 'namespace': 'a-namespace'},
                 'orderers': {'names': ['ord0']}}
