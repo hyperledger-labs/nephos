@@ -39,6 +39,7 @@ def upgrade_network(opts, verbose=False):
             ))
 
 
+# TODO: Refactor and move to core click
 @click.command()
 @click.option('--settings_file', '-f', required=True, help='YAML file containing HLF options')
 @click.option('--verbose/--quiet', '-v/-q', default=False)

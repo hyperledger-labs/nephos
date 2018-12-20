@@ -140,7 +140,7 @@ class TestCaCryptoMaterial:
             call('curl https://an-ingress/cainfo'),
             call('FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client getcacert ' +
                  '-u https://an-ingress -M a_MSP --tls.certfiles ' +
-                 os.path.join(CURRENT_DIR, 'Lets_Encrypt_Authority_X3.pem'))
+                 os.path.join(CURRENT_DIR, '..', '..', 'Lets_Encrypt_Authority_X3.pem'))
         ])
         mock_makedirs.assert_has_calls([
             call('./a_dir/a_MSP/tlscacerts'),
@@ -153,7 +153,7 @@ class TestCaCryptoMaterial:
         mock_execute.assert_called_once_with(
             'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client enroll ' +
             '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ' +
-            os.path.join(CURRENT_DIR, 'Lets_Encrypt_Authority_X3.pem'), verbose=False)
+            os.path.join(CURRENT_DIR, '..', '..', 'Lets_Encrypt_Authority_X3.pem'), verbose=False)
 
 
 class TestCaSecrets:
