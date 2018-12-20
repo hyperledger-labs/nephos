@@ -9,6 +9,7 @@ from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret
 from nephos.helpers.misc import execute
 
 
+# TODO: Possibly hide this function?
 def rand_string(length):
     return ''.join(random.choice(ascii_letters + digits) for _ in range(length))
 

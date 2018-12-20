@@ -12,7 +12,7 @@ from nephos.fabric.ca import setup_ca
 from nephos.fabric.crypto import setup_blocks, setup_nodes
 from nephos.fabric.ord import setup_ord
 from nephos.fabric.peer import setup_peer, setup_channel
-from nephos.composer.setup import deploy_composer, install_network, setup_admin
+from nephos.composer.install import deploy_composer, install_network, setup_admin
 
 
 TERM = Terminal()

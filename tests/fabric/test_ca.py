@@ -134,13 +134,16 @@ class TestCaCryptoMaterial:
             None,  # List CA identities
             'registration'
         ]
-        ca_values = {'msp': 'a_MSP', 'org_admincred': 'a_secret', 'org_admin': 'an_admin', 'org_adminpw': 'a_password'}
+        ca_values = {'msp': 'a_MSP',
+                     'org_admincred': 'a_secret',
+                     'org_admin': 'an_admin',
+                     'org_adminpw': 'a_password',
+                     'tls_cert': './a_cert.pem'}
         ca_crypto_material(mock_pod_exec, 'an-ingress', './a_dir', ca_values)
         mock_execute_until_success.assert_has_calls([
             call('curl https://an-ingress/cainfo'),
             call('FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client getcacert ' +
-                 '-u https://an-ingress -M a_MSP --tls.certfiles ' +
-                 os.path.join(CURRENT_DIR, '..', '..', 'Lets_Encrypt_Authority_X3.pem'))
+                 '-u https://an-ingress -M a_MSP --tls.certfiles ./a_cert.pem')
         ])
         mock_makedirs.assert_has_calls([
             call('./a_dir/a_MSP/tlscacerts'),
@@ -152,8 +155,7 @@ class TestCaCryptoMaterial:
         ])
         mock_execute.assert_called_once_with(
             'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client enroll ' +
-            '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ' +
-            os.path.join(CURRENT_DIR, '..', '..', 'Lets_Encrypt_Authority_X3.pem'), verbose=False)
+            '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ./a_cert.pem', verbose=False)
 
 
 class TestCaSecrets:

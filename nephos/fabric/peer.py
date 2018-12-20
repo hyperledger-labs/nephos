@@ -7,6 +7,7 @@ from nephos.helpers.misc import execute
 
 
 # TODO: Perhaps replace opts with orderer name
+# TODO: Move to Ord module
 # TODO: We need a similar check to see if Peer uses client TLS as well
 def check_ord_tls(opts, verbose=False):
     ord_tls = execute(('kubectl get cm -n blockchain ' +
@@ -29,6 +30,7 @@ def check_peer(namespace, release, verbose=False):
             res = pod_exec.logs(1000)
 
 
+# TODO: Split CouchDB creation from Peer creation
 def setup_peer(opts, upgrade=False, verbose=False):
     for release in opts['peers']['names']:
         # Deploy the CouchDB instances
@@ -60,6 +62,7 @@ def setup_peer(opts, upgrade=False, verbose=False):
         check_peer(opts['core']['namespace'], release, verbose=verbose)
 
 
+# TODO: Split channel creation from channel joining
 def setup_channel(opts, verbose=False):
     # Get orderer TLS status
     ord_tls = check_ord_tls(opts, verbose=verbose)

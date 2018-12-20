@@ -83,7 +83,7 @@ def ca_crypto_material(pod_exec, ingress_host, dir_config, ca_values, verbose=Fa
     command = ('FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client getcacert ' +
                '-u https://{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}').format(
         dir=dir_config, ingress=ingress_host, msp_dir=ca_values['msp'],
-        ca_server_tls=path.join(CURRENT_DIR, 'Lets_Encrypt_Authority_X3.pem'))
+        ca_server_tls=ca_values['tls_cert'])
     execute_until_success(command)
 
     # Get TLS CA certificates
@@ -120,7 +120,7 @@ def ca_crypto_material(pod_exec, ingress_host, dir_config, ca_values, verbose=Fa
              '-u https://{id}:{pw}@{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}').format(
                 dir=dir_config, id=ca_values['org_admin'], pw=ca_values['org_adminpw'],
                 ingress=ingress_host, msp_dir=ca_values['msp'],
-                ca_server_tls=path.join(CURRENT_DIR, 'Lets_Encrypt_Authority_X3.pem')
+                ca_server_tls=ca_values['tls_cert']
             ), verbose=verbose)
 
 
