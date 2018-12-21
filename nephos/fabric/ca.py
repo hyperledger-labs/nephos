@@ -101,6 +101,7 @@ def ca_crypto_material(pod_exec, ingress_host, dir_config, ca_values, verbose=Fa
             if not path.isfile(path.join(tls_dir, filename)):
                 shutil.copy(source_cert, tls_dir)
 
+    # TODO: Organisation registration/enrollment should be in the crypto.py section
     # Register the Organisation with the CAs
     admin_id = pod_exec.execute(
         ('fabric-ca-client identity list --id {id}'

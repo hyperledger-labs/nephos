@@ -9,7 +9,7 @@ PWD = getcwd()
 CryptoInfo = namedtuple('CryptoInfo', ('secret_type', 'subfolder', 'key', 'required'))
 
 
-# Helpers
+# CA Helpers
 def register_node(namespace, ca, node_type, username, password, verbose=False):
     # Get CA
     ca_exec = get_pod(namespace=namespace, release=ca, app='hlf-ca', verbose=verbose)
@@ -43,6 +43,7 @@ def enroll_node(opts, ca, username, password, verbose=False):
     return msp_path
 
 
+# General helpers
 def crypto_to_secrets(namespace, msp_path, user, verbose=False):
     # Secrets
     crypto_info = [
@@ -67,6 +68,7 @@ def crypto_to_secrets(namespace, msp_path, user, verbose=False):
                 print('No {} found, so secret "{}" was not created'.format(file_path, secret_name))
 
 
+# TODO: Create single function to enroll/register, separate from loop
 def setup_nodes(opts, node_type, verbose=False):
     for release in opts[node_type + 's']['names']:
         # Create secret with Orderer credentials
@@ -86,6 +88,7 @@ def setup_nodes(opts, node_type, verbose=False):
         crypto_to_secrets(namespace=opts['core']['namespace'], msp_path=msp_path, user=release, verbose=verbose)
 
 
+# TODO: Split this for the Genesis and Channel block
 def setup_blocks(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts['core']['dir_config'])
