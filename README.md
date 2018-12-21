@@ -4,8 +4,10 @@ Library to deploy Hyperledger Fabric projects to a Kubernetes cloud
 
    * [Prerequisites](#prerequisites)
    * [Installation](#installation)
-      * [Virtual environment](#virtual-environment)
-      * [Requirements](#requirements)
+      * [Pip](#pip)
+      * [Git repository](#git-repository)
+         * [Virtual environment](#virtual-environment)
+         * [Requirements](#requirements)
    * [Testing](#testing)
       * [Unit tests](#unit-tests)
    * [Usage](#usage)
@@ -24,7 +26,21 @@ Either way, you will need to have the following tools installed:
 
 ## Installation
 
-### Virtual environment
+### Pip
+
+You can install nephos from PyPI by running:
+
+    pip install nephos
+
+### Git repository
+
+You can also download the git repository with:
+
+    git clone https://github.com/aidtechnology/nephos.git
+
+And work locally by installing the following:
+
+#### Virtual environment
 
 This library currently only supports Python 3:
 
@@ -32,7 +48,7 @@ This library currently only supports Python 3:
 
     source ./venv/bin/activate
 
-### Requirements
+#### Requirements
 
 All requirments are held in the requirements.txt file
 
