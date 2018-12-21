@@ -1,6 +1,6 @@
 from unittest import mock
 
-from composer.connection_template import define_orderers, define_peers, json_ct
+from nephos.composer.connection_template import define_orderers, define_peers, json_ct
 
 
 class TestDefineOrderers:
@@ -42,8 +42,8 @@ class TestDefinePeers:
 
 # TODO: This command is much too complicated (simplify and derive from hlf_config.yaml
 class TestJsonCt:
-    @mock.patch('composer.connection_template.define_peers')
-    @mock.patch('composer.connection_template.define_orderers')
+    @mock.patch('nephos.composer.connection_template.define_peers')
+    @mock.patch('nephos.composer.connection_template.define_orderers')
     def test_json_ct(self, mock_define_orderers, mock_define_peers):
         mock_define_peers.side_effect = [
             ({

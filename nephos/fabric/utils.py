@@ -5,10 +5,11 @@ from string import ascii_letters, digits
 
 from kubernetes.client.rest import ApiException
 
-from helpers.k8s import Executer, secret_create, secret_from_file, secret_read
-from helpers.misc import execute
+from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret_read
+from nephos.helpers.misc import execute
 
 
+# TODO: Possibly hide this function?
 def rand_string(length):
     return ''.join(random.choice(ascii_letters + digits) for _ in range(length))
 

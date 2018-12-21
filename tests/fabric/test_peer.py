@@ -1,20 +1,20 @@
 from unittest import mock
 from unittest.mock import call
 
-from fabric.peer import check_ord_tls, check_peer, setup_peer, setup_channel
+from nephos.fabric.peer import check_ord_tls, check_peer, setup_peer, setup_channel
 
 
 class TestCheckOrdTls:
     OPTS = {'orderers': {'names': ['an-ord']}}
 
-    @mock.patch('fabric.peer.execute')
+    @mock.patch('nephos.fabric.peer.execute')
     def test_check_ord_tls(self, mock_execute):
         check_ord_tls(self.OPTS)
         mock_execute.assert_called_once_with(
             'kubectl get cm -n blockchain an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"',
             verbose=False)
 
-    @mock.patch('fabric.peer.execute')
+    @mock.patch('nephos.fabric.peer.execute')
     def test_check_ord_tls_verbose(self, mock_execute):
         check_ord_tls(self.OPTS, verbose=True)
         mock_execute.assert_called_once_with(
@@ -25,8 +25,8 @@ class TestCheckOrdTls:
 class TestCheckPeer:
     OPTS = {'core': {'namespace': 'a-namespace'}}
 
-    @mock.patch('fabric.peer.sleep')
-    @mock.patch('fabric.peer.get_pod')
+    @mock.patch('nephos.fabric.peer.sleep')
+    @mock.patch('nephos.fabric.peer.get_pod')
     def test_check_peer(self, mock_get_pod, mock_sleep):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.logs.side_effect = [
@@ -38,8 +38,8 @@ class TestCheckPeer:
         assert mock_pod_ex.logs.call_count == 2
         mock_sleep.assert_called_once_with(15)
 
-    @mock.patch('fabric.peer.sleep')
-    @mock.patch('fabric.peer.get_pod')
+    @mock.patch('nephos.fabric.peer.sleep')
+    @mock.patch('nephos.fabric.peer.get_pod')
     def test_check_peer_again(self, mock_get_pod, mock_sleep):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.logs.side_effect = [
@@ -50,8 +50,8 @@ class TestCheckPeer:
         assert mock_pod_ex.logs.call_count == 1
         mock_sleep.assert_not_called()
 
-    @mock.patch('fabric.peer.sleep')
-    @mock.patch('fabric.peer.get_pod')
+    @mock.patch('nephos.fabric.peer.sleep')
+    @mock.patch('nephos.fabric.peer.get_pod')
     def test_check_peer_noblocks(self, mock_get_pod, mock_sleep):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.logs.side_effect = [
@@ -64,9 +64,9 @@ class TestCheckPeer:
 
 
 class TestSetupPeer:
-    @mock.patch('fabric.peer.helm_upgrade')
-    @mock.patch('fabric.peer.helm_install')
-    @mock.patch('fabric.peer.check_peer')
+    @mock.patch('nephos.fabric.peer.helm_upgrade')
+    @mock.patch('nephos.fabric.peer.helm_install')
+    @mock.patch('nephos.fabric.peer.check_peer')
     def test_peer(self, mock_check_peer, mock_helm_install, mock_helm_upgrade):
         OPTS = {'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir', 'namespace': 'a-namespace'},
                 'peers': {'names': ['peer0', 'peer1']}}
@@ -87,9 +87,9 @@ class TestSetupPeer:
             call('a-namespace', 'peer1', verbose=False)
         ])
 
-    @mock.patch('fabric.peer.helm_upgrade')
-    @mock.patch('fabric.peer.helm_install')
-    @mock.patch('fabric.peer.check_peer')
+    @mock.patch('nephos.fabric.peer.helm_upgrade')
+    @mock.patch('nephos.fabric.peer.helm_install')
+    @mock.patch('nephos.fabric.peer.check_peer')
     def test_peer_upgrade(self, mock_check_peer, mock_helm_install, mock_helm_upgrade):
         OPTS = {'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir', 'namespace': 'a-namespace'},
                 'peers': {'names': ['peer0']}}
@@ -109,9 +109,9 @@ class TestSetupChannel:
             'peers': {'channel_name': 'a-channel', 'names': ['peer0', 'peer1']}}
     CMD_SUFFIX = '--tls --ordererTLSHostnameOverride ord0-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)'
 
-    @mock.patch('fabric.peer.random')
-    @mock.patch('fabric.peer.get_pod')
-    @mock.patch('fabric.peer.check_ord_tls')
+    @mock.patch('nephos.fabric.peer.random')
+    @mock.patch('nephos.fabric.peer.get_pod')
+    @mock.patch('nephos.fabric.peer.check_ord_tls')
     def test_channel(self, mock_check_ord_tls, mock_get_pod, mock_random):
         mock_random.choice.side_effect = ['ord0']
         mock_pod0_ex = mock.Mock()
@@ -161,9 +161,9 @@ class TestSetupChannel:
                  "peer channel join -b /var/hyperledger/a-channel.block " + self.CMD_SUFFIX + "'")
         ])
 
-    @mock.patch('fabric.peer.random')
-    @mock.patch('fabric.peer.get_pod')
-    @mock.patch('fabric.peer.check_ord_tls')
+    @mock.patch('nephos.fabric.peer.random')
+    @mock.patch('nephos.fabric.peer.get_pod')
+    @mock.patch('nephos.fabric.peer.check_ord_tls')
     def test_channel_again(self, mock_check_ord_tls, mock_get_pod, mock_random):
         mock_random.choice.side_effect = ['ord0']
         mock_pod0_ex = mock.Mock()
@@ -194,9 +194,9 @@ class TestSetupChannel:
             call('peer channel list')
         ])
 
-    @mock.patch('fabric.peer.random')
-    @mock.patch('fabric.peer.get_pod')
-    @mock.patch('fabric.peer.check_ord_tls')
+    @mock.patch('nephos.fabric.peer.random')
+    @mock.patch('nephos.fabric.peer.get_pod')
+    @mock.patch('nephos.fabric.peer.check_ord_tls')
     def test_channel_notls(self, mock_check_ord_tls, mock_get_pod, mock_random):
         mock_random.choice.side_effect = ['ord1']
         mock_pod0_ex = mock.Mock()

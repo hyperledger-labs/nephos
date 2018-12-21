@@ -4,7 +4,7 @@ from unittest.mock import call
 
 import pytest
 
-from helpers.helm import helm_init, helm_check, helm_install, helm_upgrade
+from nephos.helpers.helm import helm_init, helm_check, helm_install, helm_upgrade
 
 # NamedTuples for mocking
 ConfigMap = namedtuple('ConfigMap', ('data',))
@@ -13,9 +13,9 @@ IngressHost = namedtuple('IngressHost', ('host',))
 
 
 class TestHelmInit:
-    @mock.patch('helpers.helm.sleep')
-    @mock.patch('helpers.helm.print')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.sleep')
+    @mock.patch('nephos.helpers.helm.print')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_init(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
             None,
@@ -31,9 +31,9 @@ class TestHelmInit:
         mock_print.assert_called_once_with('.', end='', flush=True)
         mock_sleep.assert_called_once()
 
-    @mock.patch('helpers.helm.sleep')
-    @mock.patch('helpers.helm.print')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.sleep')
+    @mock.patch('nephos.helpers.helm.print')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_init_repeat(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
             'Helm list'
@@ -45,9 +45,9 @@ class TestHelmInit:
 
 
 class TestHelmCheck:
-    @mock.patch('helpers.helm.sleep')
-    @mock.patch('helpers.helm.print')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.sleep')
+    @mock.patch('nephos.helpers.helm.print')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_check(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
             'Pending',  # Get states
@@ -62,9 +62,9 @@ class TestHelmCheck:
                                      call('All pods in a-release are running')])
         mock_sleep.assert_called_once()
 
-    @mock.patch('helpers.helm.sleep')
-    @mock.patch('helpers.helm.print')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.sleep')
+    @mock.patch('nephos.helpers.helm.print')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_check_podnum(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
             'Pending Running',  # Get states
@@ -81,8 +81,8 @@ class TestHelmCheck:
 
 
 class TestHelmInstall:
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_install(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             None,  # Helm list
@@ -95,8 +95,8 @@ class TestHelmInstall:
         ])
         mock_helm_check.assert_called_once_with('an_app', 'a-release', 'a-namespace', 1)
 
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_install_again(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             'a-release',  # Helm list
@@ -105,8 +105,8 @@ class TestHelmInstall:
         mock_execute.assert_called_once_with('helm status a-release')
         mock_helm_check.assert_called_once_with('an_app', 'a-release', 'a-namespace', 1)
 
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_install_config(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             None,  # Helm list
@@ -119,8 +119,8 @@ class TestHelmInstall:
         ])
         mock_helm_check.assert_called_once_with('an_app', 'a-release', 'a-namespace', 1)
 
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_install_envvars(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             None,  # Helm list
@@ -136,8 +136,8 @@ class TestHelmInstall:
         ])
         mock_helm_check.assert_called_once_with('an_app', 'a-release', 'a-namespace', 1)
 
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_install_verbose(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             None,  # Helm list
@@ -153,8 +153,8 @@ class TestHelmInstall:
 
 
 class TestHelmUpgrade:
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_upgrade(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             'a-release',  # Helm list
@@ -167,8 +167,8 @@ class TestHelmUpgrade:
         ])
         mock_helm_check.assert_called_once_with('an_app', 'a-release', 'a-namespace', 1)
 
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_upgrade_preinstall(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             None,  # Helm list
@@ -178,8 +178,8 @@ class TestHelmUpgrade:
         mock_execute.assert_called_once_with('helm status a-release')
         mock_helm_check.assert_not_called()
 
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_upgrade_config(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             'a-release',  # Helm list
@@ -192,8 +192,8 @@ class TestHelmUpgrade:
         ])
         mock_helm_check.assert_called_once_with('an_app', 'a-release', 'a-namespace', 1)
 
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_upgrade_envvars(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             'a-release',  # Helm list
@@ -209,9 +209,9 @@ class TestHelmUpgrade:
         ])
         mock_helm_check.assert_called_once_with('an_app', 'a-release', 'a-namespace', 1)
 
-    @mock.patch('helpers.helm.secret_read')
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.secret_read')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_upgrade_preserve(self, mock_execute, mock_helm_check, mock_secret_read):
         mock_execute.side_effect = [
             'a-release',  # Helm list
@@ -228,8 +228,8 @@ class TestHelmUpgrade:
         ])
         mock_helm_check.assert_called_once_with('an_app', 'a-release', 'a-namespace', 1)
 
-    @mock.patch('helpers.helm.helm_check')
-    @mock.patch('helpers.helm.execute')
+    @mock.patch('nephos.helpers.helm.helm_check')
+    @mock.patch('nephos.helpers.helm.execute')
     def test_helm_upgrade_verbose(self, mock_execute, mock_helm_check):
         mock_execute.side_effect = [
             'a-release',  # Helm list

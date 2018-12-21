@@ -4,8 +4,10 @@ Library to deploy Hyperledger Fabric projects to a Kubernetes cloud
 
    * [Prerequisites](#prerequisites)
    * [Installation](#installation)
-      * [Virtual environment](#virtual-environment)
-      * [Requirements](#requirements)
+      * [Pip](#pip)
+      * [Git repository](#git-repository)
+         * [Virtual environment](#virtual-environment)
+         * [Requirements](#requirements)
    * [Testing](#testing)
       * [Unit tests](#unit-tests)
    * [Usage](#usage)
@@ -24,7 +26,21 @@ Either way, you will need to have the following tools installed:
 
 ## Installation
 
-### Virtual environment
+### Pip
+
+You can install nephos from PyPI by running:
+
+    pip install nephos
+
+### Git repository
+
+You can also download the git repository with:
+
+    git clone https://github.com/aidtechnology/nephos.git
+
+And work locally by installing the following:
+
+#### Virtual environment
 
 This library currently only supports Python 3:
 
@@ -32,7 +48,7 @@ This library currently only supports Python 3:
 
     source ./venv/bin/activate
 
-### Requirements
+#### Requirements
 
 All requirments are held in the requirements.txt file
 
@@ -48,18 +64,18 @@ Once you have all requirments installed, all the unit tests should pass:
 
 ## Usage
 
-To use *nephos*, run the core `nephos.py` executable.
+To use *nephos*, run the `deploy.py` executable CLI script.
 
 For instance, you can see available commands/options by running:
 
-    ./nephos.py --help
+    ./nephos/deploy.py --help
 
 To install a full end-to-end fabric network, you can run:
 
-    ./nephos.py -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
+    ./nephos/deploy.py -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
 
 You can also upgrade a network:
 
-    ./nephos.py --upgrade -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
+    ./nephos/deploy.py --upgrade -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
 
 > Example of development/production networks will be provided in future

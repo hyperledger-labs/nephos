@@ -4,7 +4,7 @@ from unittest import mock
 from kubernetes.client.rest import ApiException
 import pytest
 
-from fabric.utils import rand_string, credentials_secret, crypto_secret, get_pod
+from nephos.fabric.utils import rand_string, credentials_secret, crypto_secret, get_pod
 
 
 class TestRandString:
@@ -22,9 +22,9 @@ class TestRandString:
 class TestCredentialsSecret:
     SECRET_DATA = {'CA_USERNAME': 'a-user', 'CA_PASSWORD': 'a-password'}
 
-    @mock.patch('fabric.utils.secret_read')
-    @mock.patch('fabric.utils.secret_create')
-    @mock.patch('fabric.utils.rand_string')
+    @mock.patch('nephos.fabric.utils.secret_read')
+    @mock.patch('nephos.fabric.utils.secret_create')
+    @mock.patch('nephos.fabric.utils.rand_string')
     def test_credentials_secret(self, mock_rand_string, mock_secret_create, mock_secret_read):
         mock_secret_read.side_effect = [ApiException]
         mock_rand_string.side_effect = ['a-password']
@@ -33,9 +33,9 @@ class TestCredentialsSecret:
         mock_rand_string.assert_called_once_with(24)
         mock_secret_create.assert_called_once_with(self.SECRET_DATA, 'a-secret', 'a-namespace')
 
-    @mock.patch('fabric.utils.secret_read')
-    @mock.patch('fabric.utils.secret_create')
-    @mock.patch('fabric.utils.rand_string')
+    @mock.patch('nephos.fabric.utils.secret_read')
+    @mock.patch('nephos.fabric.utils.secret_create')
+    @mock.patch('nephos.fabric.utils.rand_string')
     def test_credentials_secret_again(self, mock_rand_string, mock_secret_create, mock_secret_read):
         mock_secret_read.side_effect = [self.SECRET_DATA]
         credentials_secret('a-secret', 'a-namespace', 'a-user', 'a-password')
@@ -43,9 +43,9 @@ class TestCredentialsSecret:
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
 
-    @mock.patch('fabric.utils.secret_read')
-    @mock.patch('fabric.utils.secret_create')
-    @mock.patch('fabric.utils.rand_string')
+    @mock.patch('nephos.fabric.utils.secret_read')
+    @mock.patch('nephos.fabric.utils.secret_create')
+    @mock.patch('nephos.fabric.utils.rand_string')
     def test_credentials_secret_badpassword(self, mock_rand_string, mock_secret_create, mock_secret_read):
         mock_secret_read.side_effect = [self.SECRET_DATA]
         with pytest.raises(AssertionError):
@@ -54,9 +54,9 @@ class TestCredentialsSecret:
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
 
-    @mock.patch('fabric.utils.secret_read')
-    @mock.patch('fabric.utils.secret_create')
-    @mock.patch('fabric.utils.rand_string')
+    @mock.patch('nephos.fabric.utils.secret_read')
+    @mock.patch('nephos.fabric.utils.secret_create')
+    @mock.patch('nephos.fabric.utils.rand_string')
     def test_credentials_secret_baduser(self, mock_rand_string, mock_secret_create, mock_secret_read):
         mock_secret_read.side_effect = [self.SECRET_DATA]
         with pytest.raises(AssertionError):
@@ -67,8 +67,8 @@ class TestCredentialsSecret:
 
 
 class TestCryptoSecret:
-    @mock.patch('fabric.utils.secret_from_file')
-    @mock.patch('fabric.utils.glob')
+    @mock.patch('nephos.fabric.utils.secret_from_file')
+    @mock.patch('nephos.fabric.utils.glob')
     def test_crypto_secret(self, mock_glob, mock_secret_from_file):
         mock_glob.side_effect = [['./a_path/a_file.txt']]
         crypto_secret('a-secret', 'a-namespace', './a_dir', 'some_file.txt')
@@ -76,8 +76,8 @@ class TestCryptoSecret:
         mock_secret_from_file.assert_called_once_with(
             secret='a-secret', namespace='a-namespace', key='some_file.txt', filename='./a_path/a_file.txt', verbose=False)
 
-    @mock.patch('fabric.utils.secret_from_file')
-    @mock.patch('fabric.utils.glob')
+    @mock.patch('nephos.fabric.utils.secret_from_file')
+    @mock.patch('nephos.fabric.utils.glob')
     def test_crypto_secret_fail(self, mock_glob, mock_secret_from_file):
         mock_glob.side_effect = [[]]
         with pytest.raises(Exception):
@@ -89,8 +89,8 @@ class TestCryptoSecret:
 class TestGetPod:
     OPTS = {'core': {'namespace': 'a-namespace'}}
 
-    @mock.patch('fabric.utils.Executer')
-    @mock.patch('fabric.utils.execute')
+    @mock.patch('nephos.fabric.utils.Executer')
+    @mock.patch('nephos.fabric.utils.execute')
     def test_get_pod(self, mock_execute, mock_Executer):
         mock_execute.side_effect = ['a-pod']
         get_pod('a-namespace', 'a-release', 'an-app')
@@ -99,8 +99,8 @@ class TestGetPod:
             '-o jsonpath="{.items[0].metadata.name}"', verbose=False)
         mock_Executer.assert_called_once_with('a-pod', namespace='a-namespace', verbose=False)
 
-    @mock.patch('fabric.utils.Executer')
-    @mock.patch('fabric.utils.execute')
+    @mock.patch('nephos.fabric.utils.Executer')
+    @mock.patch('nephos.fabric.utils.execute')
     def test_get_pod_fail(self, mock_execute, mock_Executer):
         mock_execute.side_effect = ['']
         with pytest.raises(ValueError):

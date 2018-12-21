@@ -7,7 +7,7 @@ from blessings import Terminal
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
-from helpers.misc import execute, input_files, pretty_print
+from nephos.helpers.misc import execute, input_files, pretty_print
 
 TERM = Terminal()
 

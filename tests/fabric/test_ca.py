@@ -2,13 +2,13 @@ import os
 from unittest import mock
 from unittest.mock import call
 
-from fabric.ca import (ca_creds, ca_chart,
-                           ca_enroll, ca_crypto_material, ca_secrets, setup_ca,
-                           CURRENT_DIR)
+from nephos.fabric.ca import (ca_creds, ca_chart,
+                              ca_enroll, ca_crypto_material, ca_secrets, setup_ca,
+                              CURRENT_DIR)
 
 
 class TestCaCreds:
-    @mock.patch('fabric.ca.credentials_secret')
+    @mock.patch('nephos.fabric.ca.credentials_secret')
     def test_ca_creds(self, mock_credentials_secret):
         mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
         ca_values = {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}
@@ -17,7 +17,7 @@ class TestCaCreds:
             'a_secret', 'a-namespace', username='an_admin', password=None, verbose=False)
         assert ca_values['org_adminpw'] == 'a_password'
 
-    @mock.patch('fabric.ca.credentials_secret')
+    @mock.patch('nephos.fabric.ca.credentials_secret')
     def test_ca_creds_verbose(self, mock_credentials_secret):
         mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
         ca_values = {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}
@@ -28,9 +28,9 @@ class TestCaCreds:
 
 
 class TestCaChart:
-    @mock.patch('fabric.ca.secret_read')
-    @mock.patch('fabric.ca.helm_upgrade')
-    @mock.patch('fabric.ca.helm_install')
+    @mock.patch('nephos.fabric.ca.secret_read')
+    @mock.patch('nephos.fabric.ca.helm_upgrade')
+    @mock.patch('nephos.fabric.ca.helm_install')
     def test_ca_chart(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{'postgresql-password': 'a_password'}]
         opts = {'core': {'dir_values': './some_dir', 'chart_repo': 'a_repo', 'namespace': 'a-namespace'}}
@@ -46,9 +46,9 @@ class TestCaChart:
         mock_secret_read.assert_called_once_with(
             'a-release-pg-postgresql', 'a-namespace', verbose=False)
 
-    @mock.patch('fabric.ca.secret_read')
-    @mock.patch('fabric.ca.helm_upgrade')
-    @mock.patch('fabric.ca.helm_install')
+    @mock.patch('nephos.fabric.ca.secret_read')
+    @mock.patch('nephos.fabric.ca.helm_upgrade')
+    @mock.patch('nephos.fabric.ca.helm_install')
     def test_ca_chart_upgrade(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{'postgresql-password': 'a_password'}]
         opts = {'core': {'dir_values': './some_dir', 'chart_repo': 'a_repo', 'namespace': 'a-namespace'}}
@@ -67,9 +67,9 @@ class TestCaChart:
         mock_secret_read.assert_called_once_with(
             'a-release-pg-postgresql', 'a-namespace', verbose=False)
 
-    @mock.patch('fabric.ca.secret_read')
-    @mock.patch('fabric.ca.helm_upgrade')
-    @mock.patch('fabric.ca.helm_install')
+    @mock.patch('nephos.fabric.ca.secret_read')
+    @mock.patch('nephos.fabric.ca.helm_upgrade')
+    @mock.patch('nephos.fabric.ca.helm_install')
     def test_ca_chart_verbose(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{'postgresql-password': 'a_password'}]
         opts = {'core': {'dir_values': './some_dir', 'chart_repo': 'a_repo', 'namespace': 'a-namespace'}}
@@ -87,7 +87,7 @@ class TestCaChart:
 
 
 class TestCaEnroll:
-    @mock.patch('fabric.ca.sleep')
+    @mock.patch('nephos.fabric.ca.sleep')
     def test_ca_enroll(self, mock_sleep):
         mock_pod_exec = mock.Mock()
         mock_pod_exec.execute.side_effect = [
@@ -106,7 +106,7 @@ class TestCaEnroll:
         assert mock_pod_exec.logs.call_count == 2
         mock_sleep.assert_called_once_with(15)
 
-    @mock.patch('fabric.ca.sleep')
+    @mock.patch('nephos.fabric.ca.sleep')
     def test_ca_enroll_again(self, mock_sleep):
         mock_pod_exec = mock.Mock()
         mock_pod_exec.execute.side_effect = [
@@ -124,23 +124,26 @@ class TestCaEnroll:
 # TODO: Simplify function and test
 # TODO: Add verbosity test
 class TestCaCryptoMaterial:
-    @mock.patch('fabric.ca.makedirs')
-    @mock.patch('fabric.ca.listdir')
-    @mock.patch('fabric.ca.execute_until_success')
-    @mock.patch('fabric.ca.execute')
+    @mock.patch('nephos.fabric.ca.makedirs')
+    @mock.patch('nephos.fabric.ca.listdir')
+    @mock.patch('nephos.fabric.ca.execute_until_success')
+    @mock.patch('nephos.fabric.ca.execute')
     def test_ca_crypto_material(self, mock_execute, mock_execute_until_success, mock_listdir, mock_makedirs):
         mock_pod_exec = mock.Mock()
         mock_pod_exec.execute.side_effect = [
             None,  # List CA identities
             'registration'
         ]
-        ca_values = {'msp': 'a_MSP', 'org_admincred': 'a_secret', 'org_admin': 'an_admin', 'org_adminpw': 'a_password'}
+        ca_values = {'msp': 'a_MSP',
+                     'org_admincred': 'a_secret',
+                     'org_admin': 'an_admin',
+                     'org_adminpw': 'a_password',
+                     'tls_cert': './a_cert.pem'}
         ca_crypto_material(mock_pod_exec, 'an-ingress', './a_dir', ca_values)
         mock_execute_until_success.assert_has_calls([
             call('curl https://an-ingress/cainfo'),
             call('FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client getcacert ' +
-                 '-u https://an-ingress -M a_MSP --tls.certfiles ' +
-                 os.path.join(CURRENT_DIR, 'Lets_Encrypt_Authority_X3.pem'))
+                 '-u https://an-ingress -M a_MSP --tls.certfiles ./a_cert.pem')
         ])
         mock_makedirs.assert_has_calls([
             call('./a_dir/a_MSP/tlscacerts'),
@@ -152,15 +155,14 @@ class TestCaCryptoMaterial:
         ])
         mock_execute.assert_called_once_with(
             'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client enroll ' +
-            '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ' +
-            os.path.join(CURRENT_DIR, 'Lets_Encrypt_Authority_X3.pem'), verbose=False)
+            '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ./a_cert.pem', verbose=False)
 
 
 class TestCaSecrets:
-    @mock.patch('fabric.ca.shutil')
-    @mock.patch('fabric.ca.secret_from_file')
-    @mock.patch('fabric.ca.makedirs')
-    @mock.patch('fabric.ca.glob')
+    @mock.patch('nephos.fabric.ca.shutil')
+    @mock.patch('nephos.fabric.ca.secret_from_file')
+    @mock.patch('nephos.fabric.ca.makedirs')
+    @mock.patch('nephos.fabric.ca.glob')
     def test_ca_secrets(self, mock_glob, mock_makedirs, mock_secret_from_file, mock_shutil):
         ADMIN_CERT = './a_dir/a_MSP/admincerts/cert.pem'
         ADMIN_KEY = './a_dir/a_MSP/keystore/secret_sk'
@@ -184,13 +186,13 @@ class TestSetupCa:
     int_executer = mock.Mock()
     int_executer.pod = 'int-pod'
 
-    @mock.patch('fabric.ca.ca_secrets')
-    @mock.patch('fabric.ca.ingress_read')
-    @mock.patch('fabric.ca.get_pod')
-    @mock.patch('fabric.ca.ca_enroll')
-    @mock.patch('fabric.ca.ca_crypto_material')
-    @mock.patch('fabric.ca.ca_creds')
-    @mock.patch('fabric.ca.ca_chart')
+    @mock.patch('nephos.fabric.ca.ca_secrets')
+    @mock.patch('nephos.fabric.ca.ingress_read')
+    @mock.patch('nephos.fabric.ca.get_pod')
+    @mock.patch('nephos.fabric.ca.ca_enroll')
+    @mock.patch('nephos.fabric.ca.ca_crypto_material')
+    @mock.patch('nephos.fabric.ca.ca_creds')
+    @mock.patch('nephos.fabric.ca.ca_chart')
     def test_ca(self, mock_ca_chart, mock_ca_creds, mock_ca_crypto_material,
                       mock_ca_enroll, mock_get_pod, mock_ingress_read, mock_ca_secrets):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
@@ -222,13 +224,13 @@ class TestSetupCa:
         mock_ca_secrets.assert_called_once_with(
             ca_values=INT_CA, namespace='a-namespace', dir_config='./a_dir', verbose=False)
 
-    @mock.patch('fabric.ca.ca_secrets')
-    @mock.patch('fabric.ca.ingress_read')
-    @mock.patch('fabric.ca.get_pod')
-    @mock.patch('fabric.ca.ca_enroll')
-    @mock.patch('fabric.ca.ca_crypto_material')
-    @mock.patch('fabric.ca.ca_creds')
-    @mock.patch('fabric.ca.ca_chart')
+    @mock.patch('nephos.fabric.ca.ca_secrets')
+    @mock.patch('nephos.fabric.ca.ingress_read')
+    @mock.patch('nephos.fabric.ca.get_pod')
+    @mock.patch('nephos.fabric.ca.ca_enroll')
+    @mock.patch('nephos.fabric.ca.ca_crypto_material')
+    @mock.patch('nephos.fabric.ca.ca_creds')
+    @mock.patch('nephos.fabric.ca.ca_chart')
     def test_ca_upgrade(self, mock_ca_chart, mock_ca_creds, mock_ca_crypto_material,
                       mock_ca_enroll, mock_get_pod, mock_ingress_read, mock_ca_secrets):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
