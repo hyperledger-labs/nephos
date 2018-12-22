@@ -78,15 +78,6 @@ def check_ca(ingress_host, verbose=False):
     execute_until_success(command, verbose=verbose)
 
 
-def ca_crypto_material(ingress_host, dir_config, ca_values, verbose=False):
-    # Get CA certificates
-    command = ('FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client getcacert ' +
-               '-u https://{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}').format(
-        dir=dir_config, ingress=ingress_host, msp_dir=ca_values['msp'],
-        ca_server_tls=ca_values['tls_cert'])
-    execute_until_success(command, verbose=verbose)
-
-
 # TODO: Org admin registration/enrollment should be in the crypto.py section
 def register_admin(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
     # Register the Organisation with the CAs
@@ -153,9 +144,6 @@ def setup_ca(opts, upgrade=False, verbose=False):
             check_ca(ingress_host=ingress_urls[0], verbose=verbose)
 
             # Crypto material for Admin
-            ca_crypto_material(ingress_host=ingress_urls[0],
-                               dir_config=opts['core']['dir_config'], ca_values=ca_values,
-                               verbose=verbose)
             register_admin(pod_exec=pod_exec, ingress_host=ingress_urls[0],
                            dir_config=opts['core']['dir_config'], ca_values=ca_values,
                            verbose=verbose)

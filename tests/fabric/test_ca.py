@@ -3,7 +3,7 @@ from unittest import mock
 from unittest.mock import call
 
 from nephos.fabric.ca import (ca_creds, ca_chart,
-                              ca_enroll, check_ca, ca_crypto_material, register_admin, ca_secrets, setup_ca,
+                              ca_enroll, check_ca, register_admin, ca_secrets, setup_ca,
                               CURRENT_DIR)
 
 
@@ -134,23 +134,6 @@ class CheckCa:
 
 
 # TODO: Add verbosity test
-class TestCaCryptoMaterial:
-    @mock.patch('nephos.fabric.ca.execute_until_success')
-    def test_ca_crypto_material(self, mock_execute_until_success):
-        ca_values = {'msp': 'a_MSP',
-                     'org_admincred': 'a_secret',
-                     'org_admin': 'an_admin',
-                     'org_adminpw': 'a_password',
-                     'tls_cert': './a_cert.pem'}
-        ca_crypto_material('an-ingress', './a_dir', ca_values)
-        mock_execute_until_success.assert_called_once_with(
-            'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client getcacert ' +
-            '-u https://an-ingress -M a_MSP --tls.certfiles ./a_cert.pem',
-            verbose=False
-        )
-
-
-# TODO: Add verbosity test
 class TestRegisterAdmin:
     @mock.patch('nephos.fabric.ca.execute')
     def test_ca_register_admin(self, mock_execute):
@@ -208,10 +191,9 @@ class TestSetupCa:
     @mock.patch('nephos.fabric.ca.check_ca')
     @mock.patch('nephos.fabric.ca.ca_secrets')
     @mock.patch('nephos.fabric.ca.ca_enroll')
-    @mock.patch('nephos.fabric.ca.ca_crypto_material')
     @mock.patch('nephos.fabric.ca.ca_creds')
     @mock.patch('nephos.fabric.ca.ca_chart')
-    def test_ca(self, mock_ca_chart, mock_ca_creds, mock_ca_crypto_material, mock_ca_enroll, mock_ca_secrets,
+    def test_ca(self, mock_ca_chart, mock_ca_creds, mock_ca_enroll, mock_ca_secrets,
                 mock_check_ca, mock_get_pod, mock_ingress_read, mock_register_admin):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
         mock_ingress_read.side_effect =[['an-ingress']]
@@ -237,9 +219,6 @@ class TestSetupCa:
         mock_ca_creds.assert_called_once_with(INT_CA, namespace='a-namespace', verbose=False)
         mock_ingress_read.assert_called_once_with('int-ca-hlf-ca', namespace='a-namespace', verbose=False)
         mock_check_ca.assert_called_once_with(ingress_host='an-ingress', verbose=False)
-        mock_ca_crypto_material.assert_called_once_with(
-            ingress_host='an-ingress', dir_config='./a_dir',
-            ca_values=INT_CA, verbose=False)
         mock_register_admin.assert_called_once_with(
             pod_exec=self.int_executer, ingress_host='an-ingress', dir_config='./a_dir',
             ca_values=INT_CA, verbose=False)
@@ -250,11 +229,10 @@ class TestSetupCa:
     @mock.patch('nephos.fabric.ca.ingress_read')
     @mock.patch('nephos.fabric.ca.get_pod')
     @mock.patch('nephos.fabric.ca.ca_enroll')
-    @mock.patch('nephos.fabric.ca.ca_crypto_material')
     @mock.patch('nephos.fabric.ca.ca_creds')
     @mock.patch('nephos.fabric.ca.ca_chart')
-    def test_ca_upgrade(self, mock_ca_chart, mock_ca_creds, mock_ca_crypto_material,
-                      mock_ca_enroll, mock_get_pod, mock_ingress_read, mock_ca_secrets):
+    def test_ca_upgrade(self, mock_ca_chart, mock_ca_creds,
+                        mock_ca_enroll, mock_get_pod, mock_ingress_read, mock_ca_secrets):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
         mock_ingress_read.side_effect =[['an-ingress']]
         ROOT_CA = {'org_admincert': 'root-secret-cert', 'org_adminkey': 'root-secret-key'}
@@ -268,5 +246,4 @@ class TestSetupCa:
         mock_ca_enroll.assert_called_once_with(self.root_executer)
         mock_ca_creds.assert_not_called()
         mock_ingress_read.assert_not_called()
-        mock_ca_crypto_material.assert_not_called()
         mock_ca_secrets.assert_not_called()
