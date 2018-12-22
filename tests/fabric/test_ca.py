@@ -135,9 +135,8 @@ class CheckCa:
 
 # TODO: Add verbosity test
 class TestCaCryptoMaterial:
-    @mock.patch('nephos.fabric.ca.makedirs')
     @mock.patch('nephos.fabric.ca.execute_until_success')
-    def test_ca_crypto_material(self, mock_execute_until_success, mock_makedirs):
+    def test_ca_crypto_material(self, mock_execute_until_success):
         ca_values = {'msp': 'a_MSP',
                      'org_admincred': 'a_secret',
                      'org_admin': 'an_admin',
@@ -149,10 +148,6 @@ class TestCaCryptoMaterial:
             '-u https://an-ingress -M a_MSP --tls.certfiles ./a_cert.pem',
             verbose=False
         )
-        mock_makedirs.assert_has_calls([
-            call('./a_dir/a_MSP/tlscacerts'),
-            call('./a_dir/a_MSP/tlsintermediatecerts')
-        ])
 
 
 # TODO: Add verbosity test

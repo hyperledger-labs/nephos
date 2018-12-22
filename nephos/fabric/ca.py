@@ -86,21 +86,6 @@ def ca_crypto_material(ingress_host, dir_config, ca_values, verbose=False):
         ca_server_tls=ca_values['tls_cert'])
     execute_until_success(command, verbose=verbose)
 
-    # Get TLS CA certificates
-    # TODO: We should ensure that this is the correct TLS CA cert (config should specify)
-    msp_path = path.join(dir_config, ca_values['msp'])
-    ca_mapping = {'cacerts': 'tlscacerts',
-                  'intermediatecerts': 'tlsintermediatecerts'}
-    for source, destination in ca_mapping.items():
-        tls_dir = path.join(msp_path, destination)
-        if not path.isdir(tls_dir):
-            makedirs(tls_dir)
-        if path.isdir(path.join(msp_path, source)):
-            source_cert = glob.glob(path.join(msp_path, source, '*.pem'))[0]
-            filename = path.split(source_cert)[1]
-            if not path.isfile(path.join(tls_dir, filename)):
-                shutil.copy(source_cert, tls_dir)
-
 
 # TODO: Org admin registration/enrollment should be in the crypto.py section
 def register_admin(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
