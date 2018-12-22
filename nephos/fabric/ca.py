@@ -72,19 +72,19 @@ def ca_enroll(pod_exec):
             "bash -c 'fabric-ca-client enroll -d -u http://$CA_ADMIN:$CA_PASSWORD@$SERVICE_DNS:7054'")
 
 
-# TODO: Logic in here is too complicated, making this difficult to test effectively
-def ca_crypto_material(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
+def check_ca(ingress_host, verbose=False):
     # Check that CA ingress is operational
-    command = 'curl https://{ingress}/cainfo'.format(
-        ingress=ingress_host)
-    execute_until_success(command)
+    command = 'curl https://{ingress}/cainfo'.format(ingress=ingress_host)
+    execute_until_success(command, verbose=verbose)
 
+
+def ca_crypto_material(ingress_host, dir_config, ca_values, verbose=False):
     # Get CA certificates
     command = ('FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client getcacert ' +
                '-u https://{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}').format(
         dir=dir_config, ingress=ingress_host, msp_dir=ca_values['msp'],
         ca_server_tls=ca_values['tls_cert'])
-    execute_until_success(command)
+    execute_until_success(command, verbose=verbose)
 
     # Get TLS CA certificates
     # TODO: We should ensure that this is the correct TLS CA cert (config should specify)
@@ -101,7 +101,9 @@ def ca_crypto_material(pod_exec, ingress_host, dir_config, ca_values, verbose=Fa
             if not path.isfile(path.join(tls_dir, filename)):
                 shutil.copy(source_cert, tls_dir)
 
-    # TODO: Organisation registration/enrollment should be in the crypto.py section
+
+# TODO: Org admin registration/enrollment should be in the crypto.py section
+def register_admin(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
     # Register the Organisation with the CAs
     admin_id = pod_exec.execute(
         ('fabric-ca-client identity list --id {id}'
@@ -161,11 +163,17 @@ def setup_ca(opts, upgrade=False, verbose=False):
             # Get/set credentials
             ca_creds(ca_values, namespace=opts['core']['namespace'], verbose=verbose)
 
-            # Get CA Ingress
+            # Get CA Ingress and check it is running
             ingress_urls = ingress_read(ca_key + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
+            check_ca(ingress_host=ingress_urls[0], verbose=verbose)
 
-            ca_crypto_material(pod_exec=pod_exec, ingress_host=ingress_urls[0],
-                               dir_config=opts['core']['dir_config'], ca_values=ca_values, verbose=verbose)
+            # Crypto material for Admin
+            ca_crypto_material(ingress_host=ingress_urls[0],
+                               dir_config=opts['core']['dir_config'], ca_values=ca_values,
+                               verbose=verbose)
+            register_admin(pod_exec=pod_exec, ingress_host=ingress_urls[0],
+                           dir_config=opts['core']['dir_config'], ca_values=ca_values,
+                           verbose=verbose)
 
             ca_secrets(ca_values=ca_values,
                        namespace=opts['core']['namespace'], dir_config=opts['core']['dir_config'], verbose=verbose)
