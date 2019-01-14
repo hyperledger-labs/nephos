@@ -52,7 +52,7 @@ def helm_init():
     if res is not None:
         print(t.green('Helm is already installed!'))
     else:
-        execute('kubectl create -f {}/../../helm-rbac.yaml'.format(CURRENT_DIR))
+        execute('kubectl create -f {}/../extras/helm-rbac.yaml'.format(CURRENT_DIR))
         execute('helm init --service-account tiller')
         # Fix issue with automountServiceToken
         res = execute('kubectl -n kube-system get deployment tiller-deploy ' +
