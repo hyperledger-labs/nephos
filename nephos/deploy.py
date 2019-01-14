@@ -50,7 +50,7 @@ def composer(ctx):  # pragma: no cover
     install_network(opts, verbose=ctx.obj['verbose'])
 
 
-@click.command(help=TERM.cyan('Obtain cryptographic materials from CAs'))
+@cli.command(help=TERM.cyan('Obtain cryptographic materials from CAs'))
 @click.pass_context
 def crypto(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
