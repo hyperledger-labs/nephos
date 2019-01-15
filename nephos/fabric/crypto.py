@@ -77,10 +77,15 @@ def admin_creds(opts, msp_name, verbose=False):
     msp_values['org_adminpw'] = secret_data['CA_PASSWORD']
 
 
-def msp_secrets(ca_values, namespace, dir_config, verbose=False):
+def msp_secrets(opts, msp_name, verbose=False):
+    # Relevant variables
+    namespace = opts['core']['namespace']
+    dir_config = opts['core']['dir_config']
+    msp_values = opts['msps'][msp_name]
+
     # Copy cert to admincerts
-    signcert = path.join(dir_config, ca_values['msp'], 'signcerts', 'cert.pem')
-    admincert = path.join(dir_config, ca_values['msp'], 'admincerts', 'cert.pem')
+    signcert = path.join(dir_config, msp_name, 'signcerts', 'cert.pem')
+    admincert = path.join(dir_config, msp_name, 'admincerts', 'cert.pem')
     if not path.isfile(admincert):
         admin_dir = path.split(admincert)[0]
         if not path.isdir(admin_dir):
@@ -88,12 +93,12 @@ def msp_secrets(ca_values, namespace, dir_config, verbose=False):
         shutil.copy(signcert, admincert)
 
     # AdminCert
-    secret_from_file(secret=ca_values['org_admincert'], namespace=namespace, key='cert.pem', filename=admincert,
+    secret_from_file(secret=msp_values['org_admincert'], namespace=namespace, key='cert.pem', filename=admincert,
                      verbose=verbose)
 
     # AdminKey
-    adminkey = glob.glob(path.join(dir_config, ca_values['msp'], 'keystore', '*_sk'))[0]
-    secret_from_file(secret=ca_values['org_adminkey'], namespace=namespace, key='key.pem', filename=adminkey,
+    adminkey = glob.glob(path.join(dir_config, msp_name, 'keystore', '*_sk'))[0]
+    secret_from_file(secret=msp_values['org_adminkey'], namespace=namespace, key='key.pem', filename=adminkey,
                      verbose=verbose)
 
 

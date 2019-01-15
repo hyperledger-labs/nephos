@@ -119,8 +119,13 @@ class TestAdminCreds:
         assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
 
 
-
+# TODO: Add verbose test
 class TestMspSecrets:
+    OPTS = {
+        'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
+        'msps': {'a_MSP': {'org_admincert': 'a-secret-cert', 'org_adminkey': 'a-secret-key'}}
+    }
+
     @mock.patch('nephos.fabric.crypto.shutil')
     @mock.patch('nephos.fabric.crypto.secret_from_file')
     @mock.patch('nephos.fabric.crypto.makedirs')
@@ -129,16 +134,13 @@ class TestMspSecrets:
         ADMIN_CERT = './a_dir/a_MSP/admincerts/cert.pem'
         ADMIN_KEY = './a_dir/a_MSP/keystore/secret_sk'
         mock_glob.glob.side_effect = [[ADMIN_KEY]]
-        ca_values = {'msp': 'a_MSP', 'org_admincert': 'a-secret-cert', 'org_adminkey': 'a-secret-key'}
-        msp_secrets(ca_values, 'a-namespace', './a_dir')
+        msp_secrets(self.OPTS, 'a_MSP')
         mock_makedirs.assert_called_once_with('./a_dir/a_MSP/admincerts')
         mock_shutil.copy.assert_called_once_with('./a_dir/a_MSP/signcerts/cert.pem', './a_dir/a_MSP/admincerts/cert.pem')
         mock_glob.glob.assert_called_once_with('./a_dir/a_MSP/keystore/*_sk')
         mock_secret_from_file.assert_has_calls([
-            call(secret='a-secret-cert', namespace='a-namespace', key='cert.pem', filename=ADMIN_CERT,
-                     verbose=False),
-            call(secret='a-secret-key', namespace='a-namespace', key='key.pem', filename=ADMIN_KEY,
-                     verbose=False)
+            call(secret='a-secret-cert', namespace='a-namespace', key='cert.pem', filename=ADMIN_CERT, verbose=False),
+            call(secret='a-secret-key', namespace='a-namespace', key='key.pem', filename=ADMIN_KEY, verbose=False)
         ])
 
 
