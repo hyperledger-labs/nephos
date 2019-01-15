@@ -68,14 +68,19 @@ def create_admin(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
             ), verbose=verbose)
 
 
-def admin_creds(ca_values, namespace, verbose=False):
-    secret_data = credentials_secret(ca_values['org_admincred'], namespace,
-                                     username=ca_values['org_admin'], password=ca_values.get('org_adminpw'),
+def admin_creds(opts, msp_name, verbose=False):
+    msp_values = opts['msps'][msp_name]
+    secret_data = credentials_secret(msp_values['org_admincred'], opts['core']['namespace'],
+                                     username=msp_values['org_admin'], password=msp_values.get('org_adminpw'),
                                      verbose=verbose)
-    ca_values['org_adminpw'] = secret_data['CA_PASSWORD']
+    msp_values['org_adminpw'] = secret_data['CA_PASSWORD']
 
 
-def admin_msp(opts, ca_name, verbose=False):
+def admin_msp(opts, msp_name, verbose=False):
+    # Get MSP
+    msp_values = opts['msps'][msp_name]
+    ca_name = msp_values['ca']
+
     # CA values
     ca_values = opts['cas'][ca_name]
 
@@ -87,7 +92,7 @@ def admin_msp(opts, ca_name, verbose=False):
     ca_ingress = ingress_urls[0]
 
     # Get/set credentials
-    admin_creds(ca_values, namespace=opts['core']['namespace'], verbose=verbose)
+    admin_creds(opts, msp_name, verbose=verbose)
 
     # Crypto material for Admin
     create_admin(pod_exec=pod_exec, ingress_host=ca_ingress,

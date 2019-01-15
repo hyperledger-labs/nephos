@@ -97,30 +97,34 @@ class TestCreateAdmin:
 
 
 class TestAdminCreds:
+    OPTS = {
+        'core': {'namespace': 'a-namespace'},
+        'msps': {'an-msp': {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}}
+    }
+
     @mock.patch('nephos.fabric.crypto.credentials_secret')
     def test_admin_creds(self, mock_credentials_secret):
         mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
-        ca_values = {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}
-        admin_creds(ca_values, 'a-namespace')
+        admin_creds(self.OPTS, 'an-msp')
         mock_credentials_secret.assert_called_once_with(
             'a_secret', 'a-namespace', username='an_admin', password=None, verbose=False)
-        assert ca_values['org_adminpw'] == 'a_password'
+        assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
 
     @mock.patch('nephos.fabric.crypto.credentials_secret')
-    def test_admin_creds_verbose(self, mock_credentials_secret):
+    def test_admin_creds_again(self, mock_credentials_secret):
         mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
-        ca_values = {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}
-        admin_creds(ca_values, 'a-namespace', verbose=True)
+        admin_creds(self.OPTS, 'an-msp', verbose=True)
         mock_credentials_secret.assert_called_once_with(
-            'a_secret', 'a-namespace', username='an_admin', password=None, verbose=True)
-        assert ca_values['org_adminpw'] == 'a_password'
+            'a_secret', 'a-namespace', username='an_admin', password='a_password', verbose=True)
+        assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
 
 
 # TODO: Add verbosity test
 class TestAdminMsp:
     OPTS = {
         'core': {'dir_config': './a-dir', 'namespace': 'a-namespace'},
-        'cas': {'a-ca': 'ca-values'}
+        'cas': {'a-ca': 'ca-values'},
+        'msps': {'an-msp': {'ca': 'a-ca', 'org_admincred': 'a_secret', 'org_admin': 'an_admin'}}
     }
 
     @mock.patch('nephos.fabric.crypto.ingress_read')
@@ -131,13 +135,13 @@ class TestAdminMsp:
     def test_admin_msp(self, mock_ca_creds, mock_ca_secrets, mock_create_admin, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = ['pod-exec']
         mock_ingress_read.side_effect = [['an-ingress']]
-        admin_msp(self.OPTS, 'a-ca')
+        admin_msp(self.OPTS, 'an-msp')
         mock_get_pod.assert_called_once_with(
             namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=False)
         mock_ingress_read.assert_called_once_with(
             'a-ca-hlf-ca', namespace='a-namespace', verbose=False)
         mock_ca_creds.assert_called_once_with(
-            'ca-values', namespace='a-namespace', verbose=False)
+            self.OPTS, 'an-msp', verbose=False)
         mock_create_admin.assert_called_once_with(
             pod_exec='pod-exec', ingress_host='an-ingress', dir_config='./a-dir', ca_values='ca-values', verbose=False)
         mock_ca_secrets.assert_called_once_with(
