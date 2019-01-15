@@ -74,19 +74,32 @@ class TestEnrollNode:
 
 # TODO: Add verbosity test
 class TestCreateAdmin:
+    OPTS = {
+        'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
+        'msps': {'a_MSP': {'ca': 'a-ca',
+                           'org_admincred': 'a_secret',
+                           'org_admin': 'an_admin',
+                           'org_adminpw': 'a_password'}
+                 },
+        'cas': {'a-ca': {'tls_cert': './a_cert.pem'}}
+    }
+
+    @mock.patch('nephos.fabric.crypto.ingress_read')
+    @mock.patch('nephos.fabric.crypto.get_pod')
     @mock.patch('nephos.fabric.crypto.execute')
-    def test_ca_create_admin(self, mock_execute):
-        ca_values = {'msp': 'a_MSP',
-                     'org_admincred': 'a_secret',
-                     'org_admin': 'an_admin',
-                     'org_adminpw': 'a_password',
-                     'tls_cert': './a_cert.pem'}
+    def test_ca_create_admin(self, mock_execute, mock_get_pod, mock_ingress_read):
         mock_pod_exec = mock.Mock()
         mock_pod_exec.execute.side_effect = [
             None,  # List CA identities
             'registration'
         ]
-        create_admin(mock_pod_exec, 'an-ingress', './a_dir', ca_values)
+        mock_get_pod.side_effect = [mock_pod_exec]
+        mock_ingress_read.side_effect = [['an-ingress']]
+        create_admin(self.OPTS, 'a_MSP')
+        mock_get_pod.assert_called_once_with(
+            namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=False)
+        mock_ingress_read.assert_called_once_with(
+            'a-ca-hlf-ca', namespace='a-namespace', verbose=False)
         mock_pod_exec.execute.assert_has_calls([
             call('fabric-ca-client identity list --id an_admin'),
             call("fabric-ca-client register --id.name an_admin --id.secret a_password --id.attrs 'admin=true:ecert'")
@@ -152,25 +165,15 @@ class TestAdminMsp:
         'msps': {'an-msp': {'ca': 'a-ca', 'org_admincred': 'a_secret', 'org_admin': 'an_admin'}}
     }
 
-    @mock.patch('nephos.fabric.crypto.ingress_read')
-    @mock.patch('nephos.fabric.crypto.get_pod')
     @mock.patch('nephos.fabric.crypto.create_admin')
     @mock.patch('nephos.fabric.crypto.msp_secrets')
     @mock.patch('nephos.fabric.crypto.admin_creds')
-    def test_admin_msp(self, mock_ca_creds, mock_ca_secrets, mock_create_admin, mock_get_pod, mock_ingress_read):
-        mock_get_pod.side_effect = ['pod-exec']
-        mock_ingress_read.side_effect = [['an-ingress']]
+    def test_admin_msp(self, mock_ca_creds, mock_msp_secrets, mock_create_admin):
         admin_msp(self.OPTS, 'an-msp')
-        mock_get_pod.assert_called_once_with(
-            namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=False)
-        mock_ingress_read.assert_called_once_with(
-            'a-ca-hlf-ca', namespace='a-namespace', verbose=False)
         mock_ca_creds.assert_called_once_with(
             self.OPTS, 'an-msp', verbose=False)
-        mock_create_admin.assert_called_once_with(
-            pod_exec='pod-exec', ingress_host='an-ingress', dir_config='./a-dir', ca_values='ca-values', verbose=False)
-        mock_ca_secrets.assert_called_once_with(
-            ca_values='ca-values', namespace='a-namespace', dir_config='./a-dir', verbose=False)
+        mock_create_admin.assert_called_once_with(self.OPTS, 'an-msp', verbose=False)
+        mock_msp_secrets.assert_called_once_with(self.OPTS, 'an-msp', verbose=False)
 
 
 class TestCryptoToSecrets:
@@ -231,7 +234,9 @@ class TestSetupNodes:
                                                {'CA_USERNAME': 'peer1', 'CA_PASSWORD': 'peer1-pw'}]
         mock_enroll_node.side_effect = ['./peer0_MSP', './peer1_MSP']
         OPTS = {'core': {'namespace': 'a-namespace'},
-                'peers': {'names': ['peer0', 'peer1'], 'ca': 'ca-peer'}}
+                'msps': {'peer_MSP': {'ca': 'ca-peer'}},
+                'peers': {'names': ['peer0', 'peer1'], 'msp': 'peer_MSP'}
+                }
         setup_nodes(OPTS, 'peer')
         mock_credentials_secret.assert_has_calls([
             call('hlf--peer0-cred', 'a-namespace', username='peer0', verbose=False),
@@ -259,7 +264,8 @@ class TestSetupNodes:
         mock_credentials_secret.side_effect = [{'CA_USERNAME': 'ord0', 'CA_PASSWORD': 'ord0-pw'}]
         mock_enroll_node.side_effect = ['./ord0_MSP']
         OPTS = {'core': {'namespace': 'a-namespace'},
-                'orderers': {'names': ['ord0'], 'ca': 'ca-ord'}}
+                'msps': {'ord_MSP': {'ca': 'ca-ord'}},
+                'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}}
         setup_nodes(OPTS, 'orderer')
         mock_credentials_secret.assert_has_calls([
             call('hlf--ord0-cred', 'a-namespace', username='ord0', verbose=False)

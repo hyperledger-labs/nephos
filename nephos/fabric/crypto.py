@@ -45,26 +45,40 @@ def enroll_node(opts, ca, username, password, verbose=False):
     return msp_path
 
 
-def create_admin(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
+def create_admin(opts, msp_name, verbose=False):
+    dir_config = opts['core']['dir_config']
+    msp_values = opts['msps'][msp_name]
+    ca_values = opts['cas'][msp_values['ca']]
+
+    # TODO: Refactor this into its own function
+    ca_name = msp_values['ca']
+
+    # Obtain CA pod
+    pod_exec = get_pod(namespace=opts['core']['namespace'], release=ca_name, app='hlf-ca', verbose=verbose)
+
+    # Get CA ingress
+    ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
+    ca_ingress = ingress_urls[0]
+
     # Register the Organisation with the CAs
     admin_id = pod_exec.execute(
         ('fabric-ca-client identity list --id {id}'
-         ).format(id=ca_values['org_admin']))
+         ).format(id=msp_values['org_admin']))
 
     # If we cannot find the identity, we must create it
     if not admin_id:
         pod_exec.execute(
             ("fabric-ca-client register --id.name {id} --id.secret {pw} --id.attrs 'admin=true:ecert'"
-             ).format(id=ca_values['org_admin'], pw=ca_values['org_adminpw']))
+             ).format(id=msp_values['org_admin'], pw=msp_values['org_adminpw']))
 
     # If our keystore does not exist or is empty, we need to enroll the identity...
-    keystore = path.join(dir_config, ca_values['msp'], 'keystore')
+    keystore = path.join(dir_config, msp_name, 'keystore')
     if not path.isdir(keystore) or not listdir(keystore):
         execute(
             ('FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client enroll ' +
              '-u https://{id}:{pw}@{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}').format(
-                dir=dir_config, id=ca_values['org_admin'], pw=ca_values['org_adminpw'],
-                ingress=ingress_host, msp_dir=ca_values['msp'],
+                dir=dir_config, id=msp_values['org_admin'], pw=msp_values['org_adminpw'],
+                ingress=ca_ingress, msp_dir=msp_name,
                 ca_server_tls=ca_values['tls_cert']
             ), verbose=verbose)
 
@@ -103,30 +117,14 @@ def msp_secrets(opts, msp_name, verbose=False):
 
 
 def admin_msp(opts, msp_name, verbose=False):
-    # Get MSP
-    msp_values = opts['msps'][msp_name]
-    ca_name = msp_values['ca']
-
-    # CA values
-    ca_values = opts['cas'][ca_name]
-
-    # Obtain CA pod
-    pod_exec = get_pod(namespace=opts['core']['namespace'], release=ca_name, app='hlf-ca', verbose=verbose)
-
-    # Get CA ingress
-    ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
-    ca_ingress = ingress_urls[0]
-
     # Get/set credentials
     admin_creds(opts, msp_name, verbose=verbose)
 
     # Crypto material for Admin
-    create_admin(pod_exec=pod_exec, ingress_host=ca_ingress,
-                 dir_config=opts['core']['dir_config'], ca_values=ca_values,
-                 verbose=verbose)
+    create_admin(opts, msp_name, verbose=verbose)
 
-    msp_secrets(ca_values=ca_values,
-                namespace=opts['core']['namespace'], dir_config=opts['core']['dir_config'], verbose=verbose)
+    # Setup MSP secrets
+    msp_secrets(opts, msp_name, verbose=verbose)
 
 
 # General helpers
@@ -156,18 +154,20 @@ def crypto_to_secrets(namespace, msp_path, user, verbose=False):
 
 # TODO: Create single function to enroll/register, separate from loop
 def setup_nodes(opts, node_type, verbose=False):
-    for release in opts[node_type + 's']['names']:
+    nodes = opts[node_type + 's']
+    msp_values = opts['msps'][nodes['msp']]
+    for release in nodes['names']:
         # Create secret with Orderer credentials
         secret_name = 'hlf--{}-cred'.format(release)
         secret_data = credentials_secret(secret_name, opts['core']['namespace'],
                                          username=release,
                                          verbose=verbose)
         # Register node
-        register_node(opts['core']['namespace'], opts[node_type + 's']['ca'],
+        register_node(opts['core']['namespace'], msp_values['ca'],
                       node_type, secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
                       verbose=verbose)
         # Enroll node
-        msp_path = enroll_node(opts, opts[node_type + 's']['ca'],
+        msp_path = enroll_node(opts, msp_values['ca'],
                                secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
                                verbose=verbose)
         # Secrets

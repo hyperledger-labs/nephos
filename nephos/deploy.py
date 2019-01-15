@@ -56,8 +56,8 @@ def crypto(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
     ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     # Set up Admin MSPs
-    admin_msp(opts, opts['orderers']['ca'], verbose=ctx.obj['verbose'])
-    admin_msp(opts, opts['peers']['ca'], verbose=ctx.obj['verbose'])
+    admin_msp(opts, opts['orderers']['msp'], verbose=ctx.obj['verbose'])
+    admin_msp(opts, opts['peers']['msp'], verbose=ctx.obj['verbose'])
     # Genesis & Channel
     genesis_block(opts, verbose=ctx.obj['verbose'])
     channel_tx(opts, verbose=ctx.obj['verbose'])
@@ -72,10 +72,11 @@ def crypto(ctx):  # pragma: no cover
 def deploy(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
     ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
+    # Setup CA
     setup_ca(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
     # Crypto material
-    admin_msp(opts, opts['orderers']['ca'], verbose=ctx.obj['verbose'])
-    admin_msp(opts, opts['peers']['ca'], verbose=ctx.obj['verbose'])
+    admin_msp(opts, opts['orderers']['msp'], verbose=ctx.obj['verbose'])
+    admin_msp(opts, opts['peers']['msp'], verbose=ctx.obj['verbose'])
     genesis_block(opts, verbose=ctx.obj['verbose'])
     channel_tx(opts, verbose=ctx.obj['verbose'])
     setup_nodes(opts, 'orderer', verbose=ctx.obj['verbose'])
@@ -96,9 +97,11 @@ def deploy(ctx):  # pragma: no cover
 def fabric(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
     ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
+    # Setup CA
+    setup_ca(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
     # Crypto material
-    admin_msp(opts, opts['orderers']['ca'], verbose=ctx.obj['verbose'])
-    admin_msp(opts, opts['peers']['ca'], verbose=ctx.obj['verbose'])
+    admin_msp(opts, opts['orderers']['msp'], verbose=ctx.obj['verbose'])
+    admin_msp(opts, opts['peers']['msp'], verbose=ctx.obj['verbose'])
     genesis_block(opts, verbose=ctx.obj['verbose'])
     channel_tx(opts, verbose=ctx.obj['verbose'])
     setup_nodes(opts, 'orderer', verbose=ctx.obj['verbose'])
