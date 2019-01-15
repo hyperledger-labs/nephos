@@ -145,15 +145,13 @@ class TestSetupCa:
     @mock.patch('nephos.fabric.ca.check_ca')
     @mock.patch('nephos.fabric.ca.ca_enroll')
     @mock.patch('nephos.fabric.ca.ca_chart')
-    def test_ca(self, mock_ca_chart, mock_ca_enroll,
+    def test_setup_ca(self, mock_ca_chart, mock_ca_enroll,
                 mock_check_ca, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
         mock_ingress_read.side_effect = [ApiException, ['an-ingress']]
-        ROOT_CA = {'org_admincert': 'root-secret-cert', 'org_adminkey': 'root-secret-key'}
-        INT_CA = {'msp': 'int_MSP', 'org_admincert': 'int-secret-cert', 'org_adminkey': 'int-secret-key'}
         OPTS = {
             'core': {'namespace': 'a-namespace', 'dir_config': './a_dir'},
-            'cas': {'root-ca': ROOT_CA, 'int-ca': INT_CA}
+            'cas': {'root-ca': 'ca-values', 'int-ca': 'other-values'}
             }
         setup_ca(OPTS)
         mock_ca_chart.assert_has_calls([
@@ -179,14 +177,13 @@ class TestSetupCa:
     @mock.patch('nephos.fabric.ca.check_ca')
     @mock.patch('nephos.fabric.ca.ca_enroll')
     @mock.patch('nephos.fabric.ca.ca_chart')
-    def test_ca_upgrade(self, mock_ca_chart, mock_ca_enroll,
+    def test_setup_ca_upgrade(self, mock_ca_chart, mock_ca_enroll,
                         mock_check_ca, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
         mock_ingress_read.side_effect =[ApiException]
-        ROOT_CA = {'org_admincert': 'root-secret-cert', 'org_adminkey': 'root-secret-key'}
         OPTS = {
             'core': {'namespace': 'a-namespace', 'dir_config': './a_dir'},
-            'cas': {'root-ca': ROOT_CA}
+            'cas': {'root-ca': 'ca-values'}
             }
         setup_ca(OPTS, upgrade=True, verbose=True)
         mock_ca_chart.assert_called_once_with(opts=OPTS, release='root-ca', upgrade=True, verbose=True)
