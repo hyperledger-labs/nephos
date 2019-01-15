@@ -3,7 +3,7 @@ from unittest.mock import call
 
 from kubernetes.client.rest import ApiException
 from nephos.fabric.ca import (ca_chart,
-                              ca_enroll, check_ca, ca_secrets, setup_ca)
+                              ca_enroll, check_ca, setup_ca)
 
 
 class TestCaChart:
@@ -110,28 +110,6 @@ class CheckCa:
     def test_check_ca_verbose(self, mock_execute_until_success):
         check_ca('an-ingress', verbose=True)
         mock_execute_until_success.assert_called_once_with('curl https://an-ingress/cainfo', verbose=True)
-
-
-class TestCaSecrets:
-    @mock.patch('nephos.fabric.ca.shutil')
-    @mock.patch('nephos.fabric.ca.secret_from_file')
-    @mock.patch('nephos.fabric.ca.makedirs')
-    @mock.patch('nephos.fabric.ca.glob')
-    def test_ca_secrets(self, mock_glob, mock_makedirs, mock_secret_from_file, mock_shutil):
-        ADMIN_CERT = './a_dir/a_MSP/admincerts/cert.pem'
-        ADMIN_KEY = './a_dir/a_MSP/keystore/secret_sk'
-        mock_glob.glob.side_effect = [[ADMIN_KEY]]
-        ca_values = {'msp': 'a_MSP', 'org_admincert': 'a-secret-cert', 'org_adminkey': 'a-secret-key'}
-        ca_secrets(ca_values, 'a-namespace', './a_dir')
-        mock_makedirs.assert_called_once_with('./a_dir/a_MSP/admincerts')
-        mock_shutil.copy.assert_called_once_with('./a_dir/a_MSP/signcerts/cert.pem', './a_dir/a_MSP/admincerts/cert.pem')
-        mock_glob.glob.assert_called_once_with('./a_dir/a_MSP/keystore/*_sk')
-        mock_secret_from_file.assert_has_calls([
-            call(secret='a-secret-cert', namespace='a-namespace', key='cert.pem', filename=ADMIN_CERT,
-                     verbose=False),
-            call(secret='a-secret-key', namespace='a-namespace', key='key.pem', filename=ADMIN_KEY,
-                     verbose=False)
-        ])
 
 
 class TestSetupCa:

@@ -1,12 +1,10 @@
-import glob
-from os import makedirs, path
-import shutil
+from os import path
 from time import sleep
 
 from kubernetes.client.rest import ApiException
 from nephos.fabric.utils import get_pod
 from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
-from nephos.helpers.k8s import (ingress_read, secret_from_file, secret_read)
+from nephos.helpers.k8s import (ingress_read, secret_read)
 from nephos.helpers.misc import execute_until_success
 
 CURRENT_DIR = path.abspath(path.split(__file__)[0])
@@ -70,26 +68,6 @@ def check_ca(ingress_host, verbose=False):
     # Check that CA ingress is operational
     command = 'curl https://{ingress}/cainfo'.format(ingress=ingress_host)
     execute_until_success(command, verbose=verbose)
-
-
-def ca_secrets(ca_values, namespace, dir_config, verbose=False):
-    # Copy cert to admincerts
-    signcert = path.join(dir_config, ca_values['msp'], 'signcerts', 'cert.pem')
-    admincert = path.join(dir_config, ca_values['msp'], 'admincerts', 'cert.pem')
-    if not path.isfile(admincert):
-        admin_dir = path.split(admincert)[0]
-        if not path.isdir(admin_dir):
-            makedirs(admin_dir)
-        shutil.copy(signcert, admincert)
-
-    # AdminCert
-    secret_from_file(secret=ca_values['org_admincert'], namespace=namespace, key='cert.pem', filename=admincert,
-                     verbose=verbose)
-
-    # AdminKey
-    adminkey = glob.glob(path.join(dir_config, ca_values['msp'], 'keystore', '*_sk'))[0]
-    secret_from_file(secret=ca_values['org_adminkey'], namespace=namespace, key='key.pem', filename=adminkey,
-                     verbose=verbose)
 
 
 # Runner

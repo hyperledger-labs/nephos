@@ -3,7 +3,7 @@ from unittest.mock import call
 
 import pytest
 
-from nephos.fabric.crypto import (register_node, enroll_node, create_admin, admin_creds, admin_msp,
+from nephos.fabric.crypto import (register_node, enroll_node, create_admin, admin_creds, msp_secrets, admin_msp,
                                   crypto_to_secrets, setup_nodes, genesis_block, channel_tx, PWD)
 
 
@@ -119,6 +119,29 @@ class TestAdminCreds:
         assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
 
 
+
+class TestMspSecrets:
+    @mock.patch('nephos.fabric.crypto.shutil')
+    @mock.patch('nephos.fabric.crypto.secret_from_file')
+    @mock.patch('nephos.fabric.crypto.makedirs')
+    @mock.patch('nephos.fabric.crypto.glob')
+    def test_ca_secrets(self, mock_glob, mock_makedirs, mock_secret_from_file, mock_shutil):
+        ADMIN_CERT = './a_dir/a_MSP/admincerts/cert.pem'
+        ADMIN_KEY = './a_dir/a_MSP/keystore/secret_sk'
+        mock_glob.glob.side_effect = [[ADMIN_KEY]]
+        ca_values = {'msp': 'a_MSP', 'org_admincert': 'a-secret-cert', 'org_adminkey': 'a-secret-key'}
+        msp_secrets(ca_values, 'a-namespace', './a_dir')
+        mock_makedirs.assert_called_once_with('./a_dir/a_MSP/admincerts')
+        mock_shutil.copy.assert_called_once_with('./a_dir/a_MSP/signcerts/cert.pem', './a_dir/a_MSP/admincerts/cert.pem')
+        mock_glob.glob.assert_called_once_with('./a_dir/a_MSP/keystore/*_sk')
+        mock_secret_from_file.assert_has_calls([
+            call(secret='a-secret-cert', namespace='a-namespace', key='cert.pem', filename=ADMIN_CERT,
+                     verbose=False),
+            call(secret='a-secret-key', namespace='a-namespace', key='key.pem', filename=ADMIN_KEY,
+                     verbose=False)
+        ])
+
+
 # TODO: Add verbosity test
 class TestAdminMsp:
     OPTS = {
@@ -130,7 +153,7 @@ class TestAdminMsp:
     @mock.patch('nephos.fabric.crypto.ingress_read')
     @mock.patch('nephos.fabric.crypto.get_pod')
     @mock.patch('nephos.fabric.crypto.create_admin')
-    @mock.patch('nephos.fabric.crypto.ca_secrets')
+    @mock.patch('nephos.fabric.crypto.msp_secrets')
     @mock.patch('nephos.fabric.crypto.admin_creds')
     def test_admin_msp(self, mock_ca_creds, mock_ca_secrets, mock_create_admin, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = ['pod-exec']

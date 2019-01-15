@@ -1,7 +1,8 @@
+import glob
+import shutil
 from collections import namedtuple
-from os import path, chdir, getcwd, listdir
+from os import path, chdir, getcwd, listdir, makedirs
 
-from nephos.fabric.ca import ca_secrets
 from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
 from nephos.helpers.k8s import ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
@@ -76,6 +77,26 @@ def admin_creds(opts, msp_name, verbose=False):
     msp_values['org_adminpw'] = secret_data['CA_PASSWORD']
 
 
+def msp_secrets(ca_values, namespace, dir_config, verbose=False):
+    # Copy cert to admincerts
+    signcert = path.join(dir_config, ca_values['msp'], 'signcerts', 'cert.pem')
+    admincert = path.join(dir_config, ca_values['msp'], 'admincerts', 'cert.pem')
+    if not path.isfile(admincert):
+        admin_dir = path.split(admincert)[0]
+        if not path.isdir(admin_dir):
+            makedirs(admin_dir)
+        shutil.copy(signcert, admincert)
+
+    # AdminCert
+    secret_from_file(secret=ca_values['org_admincert'], namespace=namespace, key='cert.pem', filename=admincert,
+                     verbose=verbose)
+
+    # AdminKey
+    adminkey = glob.glob(path.join(dir_config, ca_values['msp'], 'keystore', '*_sk'))[0]
+    secret_from_file(secret=ca_values['org_adminkey'], namespace=namespace, key='key.pem', filename=adminkey,
+                     verbose=verbose)
+
+
 def admin_msp(opts, msp_name, verbose=False):
     # Get MSP
     msp_values = opts['msps'][msp_name]
@@ -99,8 +120,8 @@ def admin_msp(opts, msp_name, verbose=False):
                  dir_config=opts['core']['dir_config'], ca_values=ca_values,
                  verbose=verbose)
 
-    ca_secrets(ca_values=ca_values,
-               namespace=opts['core']['namespace'], dir_config=opts['core']['dir_config'], verbose=verbose)
+    msp_secrets(ca_values=ca_values,
+                namespace=opts['core']['namespace'], dir_config=opts['core']['dir_config'], verbose=verbose)
 
 
 # General helpers
