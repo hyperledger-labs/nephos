@@ -13,6 +13,7 @@ CURRENT_DIR = path.abspath(path.split(__file__)[0])
 
 
 # Core sub-functions
+# TODO: This relates to the MSP credentials, not the CAs creds, so move to crypto section instead
 def ca_creds(ca_values, namespace, verbose=False):
     secret_data = credentials_secret(ca_values['org_admincred'], namespace,
                                      username=ca_values['org_admin'], password=ca_values.get('org_adminpw'),
