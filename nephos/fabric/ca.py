@@ -1,5 +1,5 @@
 import glob
-from os import listdir, makedirs, path
+from os import makedirs, path
 import shutil
 from time import sleep
 
@@ -7,7 +7,7 @@ from kubernetes.client.rest import ApiException
 from nephos.fabric.utils import credentials_secret, get_pod
 from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
 from nephos.helpers.k8s import (ingress_read, secret_from_file, secret_read)
-from nephos.helpers.misc import execute, execute_until_success
+from nephos.helpers.misc import execute_until_success
 
 CURRENT_DIR = path.abspath(path.split(__file__)[0])
 
@@ -77,31 +77,6 @@ def check_ca(ingress_host, verbose=False):
     # Check that CA ingress is operational
     command = 'curl https://{ingress}/cainfo'.format(ingress=ingress_host)
     execute_until_success(command, verbose=verbose)
-
-
-# TODO: Org admin registration/enrollment should be in the crypto.py section
-def register_admin(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
-    # Register the Organisation with the CAs
-    admin_id = pod_exec.execute(
-        ('fabric-ca-client identity list --id {id}'
-         ).format(id=ca_values['org_admin']))
-
-    # If we cannot find the identity, we must create it
-    if not admin_id:
-        pod_exec.execute(
-            ("fabric-ca-client register --id.name {id} --id.secret {pw} --id.attrs 'admin=true:ecert'"
-             ).format(id=ca_values['org_admin'], pw=ca_values['org_adminpw']))
-
-    # If our keystore does not exist or is empty, we need to enroll the identity...
-    keystore = path.join(dir_config, ca_values['msp'], 'keystore')
-    if not path.isdir(keystore) or not listdir(keystore):
-        execute(
-            ('FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client enroll ' +
-             '-u https://{id}:{pw}@{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}').format(
-                dir=dir_config, id=ca_values['org_admin'], pw=ca_values['org_adminpw'],
-                ingress=ingress_host, msp_dir=ca_values['msp'],
-                ca_server_tls=ca_values['tls_cert']
-            ), verbose=verbose)
 
 
 def ca_secrets(ca_values, namespace, dir_config, verbose=False):

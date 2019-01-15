@@ -3,7 +3,7 @@ from unittest.mock import call
 
 from kubernetes.client.rest import ApiException
 from nephos.fabric.ca import (ca_creds, ca_chart,
-                              ca_enroll, check_ca, register_admin, ca_secrets, setup_ca)
+                              ca_enroll, check_ca, ca_secrets, setup_ca)
 
 
 class TestCaCreds:
@@ -130,30 +130,6 @@ class CheckCa:
     def test_check_ca_verbose(self, mock_execute_until_success):
         check_ca('an-ingress', verbose=True)
         mock_execute_until_success.assert_called_once_with('curl https://an-ingress/cainfo', verbose=True)
-
-
-# TODO: Add verbosity test
-class TestRegisterAdmin:
-    @mock.patch('nephos.fabric.ca.execute')
-    def test_ca_register_admin(self, mock_execute):
-        ca_values = {'msp': 'a_MSP',
-                     'org_admincred': 'a_secret',
-                     'org_admin': 'an_admin',
-                     'org_adminpw': 'a_password',
-                     'tls_cert': './a_cert.pem'}
-        mock_pod_exec = mock.Mock()
-        mock_pod_exec.execute.side_effect = [
-            None,  # List CA identities
-            'registration'
-        ]
-        register_admin(mock_pod_exec, 'an-ingress', './a_dir', ca_values)
-        mock_pod_exec.execute.assert_has_calls([
-            call('fabric-ca-client identity list --id an_admin'),
-            call("fabric-ca-client register --id.name an_admin --id.secret a_password --id.attrs 'admin=true:ecert'")
-        ])
-        mock_execute.assert_called_once_with(
-            'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client enroll ' +
-            '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ./a_cert.pem', verbose=False)
 
 
 class TestCaSecrets:

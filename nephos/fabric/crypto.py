@@ -1,7 +1,7 @@
 from collections import namedtuple
-from os import path, chdir, getcwd
+from os import path, chdir, getcwd, listdir
 
-from nephos.fabric.ca import ca_creds, ca_secrets, register_admin
+from nephos.fabric.ca import ca_creds, ca_secrets
 from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
 from nephos.helpers.k8s import ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
@@ -44,6 +44,30 @@ def enroll_node(opts, ca, username, password, verbose=False):
     return msp_path
 
 
+def create_admin(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
+    # Register the Organisation with the CAs
+    admin_id = pod_exec.execute(
+        ('fabric-ca-client identity list --id {id}'
+         ).format(id=ca_values['org_admin']))
+
+    # If we cannot find the identity, we must create it
+    if not admin_id:
+        pod_exec.execute(
+            ("fabric-ca-client register --id.name {id} --id.secret {pw} --id.attrs 'admin=true:ecert'"
+             ).format(id=ca_values['org_admin'], pw=ca_values['org_adminpw']))
+
+    # If our keystore does not exist or is empty, we need to enroll the identity...
+    keystore = path.join(dir_config, ca_values['msp'], 'keystore')
+    if not path.isdir(keystore) or not listdir(keystore):
+        execute(
+            ('FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client enroll ' +
+             '-u https://{id}:{pw}@{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}').format(
+                dir=dir_config, id=ca_values['org_admin'], pw=ca_values['org_adminpw'],
+                ingress=ingress_host, msp_dir=ca_values['msp'],
+                ca_server_tls=ca_values['tls_cert']
+            ), verbose=verbose)
+
+
 def admin_msp(opts, ca_name, verbose=False):
     # CA values
     ca_values = opts['cas'][ca_name]
@@ -59,10 +83,9 @@ def admin_msp(opts, ca_name, verbose=False):
     ca_creds(ca_values, namespace=opts['core']['namespace'], verbose=verbose)
 
     # Crypto material for Admin
-    # TODO: Move this function to this module
-    register_admin(pod_exec=pod_exec, ingress_host=ca_ingress,
-                   dir_config=opts['core']['dir_config'], ca_values=ca_values,
-                   verbose=verbose)
+    create_admin(pod_exec=pod_exec, ingress_host=ca_ingress,
+                 dir_config=opts['core']['dir_config'], ca_values=ca_values,
+                 verbose=verbose)
 
     ca_secrets(ca_values=ca_values,
                namespace=opts['core']['namespace'], dir_config=opts['core']['dir_config'], verbose=verbose)

@@ -3,7 +3,7 @@ from unittest.mock import call
 
 import pytest
 
-from nephos.fabric.crypto import (register_node, enroll_node, crypto_to_secrets, setup_nodes, genesis_block, channel_tx, PWD)
+from nephos.fabric.crypto import (register_node, enroll_node, create_admin, crypto_to_secrets, setup_nodes, genesis_block, channel_tx, PWD)
 
 
 class TestRegisterNode:
@@ -69,6 +69,30 @@ class TestEnrollNode:
             'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client enroll ' +
             '-u https://a-peer:a-password@an-ingress -M a-peer_MSP ' +
             '--tls.certfiles /some_msp/tls_cert.pem')
+
+
+# TODO: Add verbosity test
+class TestCreateAdmin:
+    @mock.patch('nephos.fabric.crypto.execute')
+    def test_ca_create_admin(self, mock_execute):
+        ca_values = {'msp': 'a_MSP',
+                     'org_admincred': 'a_secret',
+                     'org_admin': 'an_admin',
+                     'org_adminpw': 'a_password',
+                     'tls_cert': './a_cert.pem'}
+        mock_pod_exec = mock.Mock()
+        mock_pod_exec.execute.side_effect = [
+            None,  # List CA identities
+            'registration'
+        ]
+        create_admin(mock_pod_exec, 'an-ingress', './a_dir', ca_values)
+        mock_pod_exec.execute.assert_has_calls([
+            call('fabric-ca-client identity list --id an_admin'),
+            call("fabric-ca-client register --id.name an_admin --id.secret a_password --id.attrs 'admin=true:ecert'")
+        ])
+        mock_execute.assert_called_once_with(
+            'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client enroll ' +
+            '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ./a_cert.pem', verbose=False)
 
 
 class TestCryptoToSecrets:
