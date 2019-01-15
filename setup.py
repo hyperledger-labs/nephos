@@ -6,6 +6,8 @@
 
 # Note: To use the 'upload' functionality of this file, you must:
 #   $ pip install twine
+# To actually upload latest version of package:
+#   $ python setup.py upload
 
 import io
 import os
@@ -21,7 +23,7 @@ URL = 'https://github.com/aidtechnology/nephos'
 EMAIL = 'sasha@aid.technology'
 AUTHOR = 'Alejandro (Sasha) Vicente Grabovetsky'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '0.1.3'
+VERSION = '0.1.4'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
