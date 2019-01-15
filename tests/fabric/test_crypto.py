@@ -3,7 +3,7 @@ from unittest.mock import call
 
 import pytest
 
-from nephos.fabric.crypto import (register_node, enroll_node, crypto_to_secrets, setup_nodes, setup_blocks, PWD)
+from nephos.fabric.crypto import (register_node, enroll_node, crypto_to_secrets, setup_nodes, genesis_block, channel_tx, PWD)
 
 
 class TestRegisterNode:
@@ -174,9 +174,52 @@ class TestSetupNodes:
         ])
 
 
-class TestSetupBlocks:
+class TestGenesisBlock:
     OPTS = {'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
-            'orderers': {'secret_genesis': 'a-genesis-secret'},
+            'orderers': {'secret_genesis': 'a-genesis-secret'}}
+
+    @mock.patch('nephos.fabric.crypto.secret_from_file')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.path')
+    @mock.patch('nephos.fabric.crypto.execute')
+    @mock.patch('nephos.fabric.crypto.chdir')
+    def test_blocks(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
+        mock_path.exists.side_effect = [False, False]
+        genesis_block(self.OPTS)
+        mock_chdir.assert_has_calls([
+            call('./a_dir'),
+            call(PWD)
+        ])
+        mock_path.exists.assert_called_once_with('genesis.block')
+        mock_execute.assert_called_once_with(
+            'configtxgen -profile OrdererGenesis -outputBlock genesis.block', verbose=False)
+        mock_print.assert_not_called()
+        mock_secret_from_file.assert_called_once_with(
+            secret='a-genesis-secret', namespace='a-namespace',
+            key='genesis.block', filename='genesis.block', verbose=False)
+
+    @mock.patch('nephos.fabric.crypto.secret_from_file')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.path')
+    @mock.patch('nephos.fabric.crypto.execute')
+    @mock.patch('nephos.fabric.crypto.chdir')
+    def test_again(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
+        mock_path.exists.side_effect = [True, True]
+        genesis_block(self.OPTS, True)
+        mock_chdir.assert_has_calls([
+            call('./a_dir'),
+            call(PWD)
+        ])
+        mock_path.exists.assert_called_once_with('genesis.block')
+        mock_execute.assert_not_called()
+        mock_print.assert_called_once_with('genesis.block already exists')
+        mock_secret_from_file.assert_called_once_with(
+            secret='a-genesis-secret', namespace='a-namespace',
+            key='genesis.block', filename='genesis.block', verbose=True)
+
+
+class TestChannelTx:
+    OPTS = {'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
             'peers': {'secret_channel': 'a-channel-secret',
                       'channel_name': 'a-channel', 'channel_profile': 'AProfile'}}
 
@@ -187,26 +230,19 @@ class TestSetupBlocks:
     @mock.patch('nephos.fabric.crypto.chdir')
     def test_blocks(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
         mock_path.exists.side_effect = [False, False]
-        setup_blocks(self.OPTS)
+        channel_tx(self.OPTS)
         mock_chdir.assert_has_calls([
             call('./a_dir'),
             call(PWD)
         ])
-        mock_path.exists.has_calls([
-            call('genesis.block'),
-            call('a-channel.tx')
-        ])
-        mock_execute.assert_has_calls([
-            call('configtxgen -profile OrdererGenesis -outputBlock genesis.block', verbose=False),
-            call('configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx a-channel.tx', verbose=False)
-        ])
+        mock_path.exists.assert_called_once_with('a-channel.tx')
+        mock_execute.assert_called_once_with(
+            'configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx a-channel.tx', verbose=False)
         mock_print.assert_not_called()
-        mock_secret_from_file.assert_has_calls([
-            call(secret='a-genesis-secret', namespace='a-namespace',
-                 key='genesis.block', filename='genesis.block', verbose=False),
-            call(secret='a-channel-secret', namespace='a-namespace',
-                 key='a-channel.tx', filename='a-channel.tx', verbose=False)
-        ])
+        mock_secret_from_file.assert_called_once_with(
+            secret='a-channel-secret', namespace='a-namespace',
+            key='a-channel.tx', filename='a-channel.tx', verbose=False
+        )
 
     @mock.patch('nephos.fabric.crypto.secret_from_file')
     @mock.patch('nephos.fabric.crypto.print')
@@ -215,23 +251,15 @@ class TestSetupBlocks:
     @mock.patch('nephos.fabric.crypto.chdir')
     def test_again(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
         mock_path.exists.side_effect = [True, True]
-        setup_blocks(self.OPTS, True)
+        channel_tx(self.OPTS, True)
         mock_chdir.assert_has_calls([
             call('./a_dir'),
             call(PWD)
         ])
-        mock_path.exists.has_calls([
-            call('genesis.block'),
-            call('a-channel.tx')
-        ])
+        mock_path.exists.assert_called_once_with('a-channel.tx')
         mock_execute.assert_not_called()
-        mock_print.assert_has_calls([
-            call('genesis.block already exists'),
-            call('a-channel.tx already exists')
-        ])
-        mock_secret_from_file.assert_has_calls([
-            call(secret='a-genesis-secret', namespace='a-namespace',
-                 key='genesis.block', filename='genesis.block', verbose=True),
-            call(secret='a-channel-secret', namespace='a-namespace',
-                 key='a-channel.tx', filename='a-channel.tx', verbose=True)
-        ])
+        mock_print.assert_called_once_with('a-channel.tx already exists')
+        mock_secret_from_file.assert_called_once_with(
+            secret='a-channel-secret', namespace='a-namespace',
+            key='a-channel.tx', filename='a-channel.tx', verbose=True
+        )

@@ -9,7 +9,7 @@ from blessings import Terminal
 from nephos.helpers.k8s import ns_create
 from nephos.fabric.settings import load_config
 from nephos.fabric.ca import setup_ca
-from nephos.fabric.crypto import setup_blocks, setup_nodes
+from nephos.fabric.crypto import genesis_block, channel_tx, setup_nodes
 from nephos.fabric.ord import setup_ord
 from nephos.fabric.peer import setup_peer, setup_channel
 from nephos.composer.install import deploy_composer, install_network, setup_admin
@@ -55,11 +55,13 @@ def composer(ctx):  # pragma: no cover
 def crypto(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
     ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
-    setup_blocks(opts, verbose=ctx.obj['verbose'])
+    genesis_block(opts, verbose=ctx.obj['verbose'])
+    channel_tx(opts, verbose=ctx.obj['verbose'])
     setup_nodes(opts, 'orderer', verbose=ctx.obj['verbose'])
     setup_nodes(opts, 'peer', verbose=ctx.obj['verbose'])
 
 
+# TODO: Can we compose several CLI commands here to avoid copied code?
 @cli.command(help=TERM.cyan('Install end-to-end Fabric/Composer network'))
 @click.pass_context
 def deploy(ctx):  # pragma: no cover
@@ -67,7 +69,8 @@ def deploy(ctx):  # pragma: no cover
     ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     setup_ca(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
     # Crypto material
-    setup_blocks(opts, verbose=ctx.obj['verbose'])
+    genesis_block(opts, verbose=ctx.obj['verbose'])
+    channel_tx(opts, verbose=ctx.obj['verbose'])
     setup_nodes(opts, 'orderer', verbose=ctx.obj['verbose'])
     setup_nodes(opts, 'peer', verbose=ctx.obj['verbose'])
     # Orderers
@@ -86,7 +89,8 @@ def fabric(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
     ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     setup_ca(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
-    setup_blocks(opts, verbose=ctx.obj['verbose'])
+    genesis_block(opts, verbose=ctx.obj['verbose'])
+    channel_tx(opts, verbose=ctx.obj['verbose'])
     setup_nodes(opts, 'orderer', verbose=ctx.obj['verbose'])
     setup_nodes(opts, 'peer', verbose=ctx.obj['verbose'])
     setup_ord(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])

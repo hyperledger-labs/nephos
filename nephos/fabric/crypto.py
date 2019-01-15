@@ -88,11 +88,9 @@ def setup_nodes(opts, node_type, verbose=False):
         crypto_to_secrets(namespace=opts['core']['namespace'], msp_path=msp_path, user=release, verbose=verbose)
 
 
-# TODO: Split this for the Genesis and Channel block
-def setup_blocks(opts, verbose=False):
+def genesis_block(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts['core']['dir_config'])
-
     # Create the genesis block
     if not path.exists('genesis.block'):
         # Genesis block creation and storage
@@ -104,8 +102,14 @@ def setup_blocks(opts, verbose=False):
     # Create the genesis block secret
     secret_from_file(secret=opts['orderers']['secret_genesis'], namespace=opts['core']['namespace'],
                      key='genesis.block', filename='genesis.block', verbose=verbose)
+    # Return to original directory
+    chdir(PWD)
 
-    # And the Channel
+
+def channel_tx(opts, verbose=False):
+    # Change to blockchain materials directory
+    chdir(opts['core']['dir_config'])
+    # Create Channel Tx
     channel_file = '{channel}.tx'.format(channel=opts['peers']['channel_name'])
     if not path.exists(channel_file):
         # Channel transaction creation and storage
