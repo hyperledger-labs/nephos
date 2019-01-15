@@ -2,28 +2,8 @@ from unittest import mock
 from unittest.mock import call
 
 from kubernetes.client.rest import ApiException
-from nephos.fabric.ca import (ca_creds, ca_chart,
+from nephos.fabric.ca import (ca_chart,
                               ca_enroll, check_ca, ca_secrets, setup_ca)
-
-
-class TestCaCreds:
-    @mock.patch('nephos.fabric.ca.credentials_secret')
-    def test_ca_creds(self, mock_credentials_secret):
-        mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
-        ca_values = {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}
-        ca_creds(ca_values, 'a-namespace')
-        mock_credentials_secret.assert_called_once_with(
-            'a_secret', 'a-namespace', username='an_admin', password=None, verbose=False)
-        assert ca_values['org_adminpw'] == 'a_password'
-
-    @mock.patch('nephos.fabric.ca.credentials_secret')
-    def test_ca_creds_verbose(self, mock_credentials_secret):
-        mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
-        ca_values = {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}
-        ca_creds(ca_values, 'a-namespace', verbose=True)
-        mock_credentials_secret.assert_called_once_with(
-            'a_secret', 'a-namespace', username='an_admin', password=None, verbose=True)
-        assert ca_values['org_adminpw'] == 'a_password'
 
 
 class TestCaChart:

@@ -1,7 +1,7 @@
 from collections import namedtuple
 from os import path, chdir, getcwd, listdir
 
-from nephos.fabric.ca import ca_creds, ca_secrets
+from nephos.fabric.ca import ca_secrets
 from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
 from nephos.helpers.k8s import ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
@@ -68,6 +68,13 @@ def create_admin(pod_exec, ingress_host, dir_config, ca_values, verbose=False):
             ), verbose=verbose)
 
 
+def admin_creds(ca_values, namespace, verbose=False):
+    secret_data = credentials_secret(ca_values['org_admincred'], namespace,
+                                     username=ca_values['org_admin'], password=ca_values.get('org_adminpw'),
+                                     verbose=verbose)
+    ca_values['org_adminpw'] = secret_data['CA_PASSWORD']
+
+
 def admin_msp(opts, ca_name, verbose=False):
     # CA values
     ca_values = opts['cas'][ca_name]
@@ -80,7 +87,7 @@ def admin_msp(opts, ca_name, verbose=False):
     ca_ingress = ingress_urls[0]
 
     # Get/set credentials
-    ca_creds(ca_values, namespace=opts['core']['namespace'], verbose=verbose)
+    admin_creds(ca_values, namespace=opts['core']['namespace'], verbose=verbose)
 
     # Crypto material for Admin
     create_admin(pod_exec=pod_exec, ingress_host=ca_ingress,

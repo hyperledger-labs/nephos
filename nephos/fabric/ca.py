@@ -4,7 +4,7 @@ import shutil
 from time import sleep
 
 from kubernetes.client.rest import ApiException
-from nephos.fabric.utils import credentials_secret, get_pod
+from nephos.fabric.utils import get_pod
 from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
 from nephos.helpers.k8s import (ingress_read, secret_from_file, secret_read)
 from nephos.helpers.misc import execute_until_success
@@ -13,14 +13,6 @@ CURRENT_DIR = path.abspath(path.split(__file__)[0])
 
 
 # Core sub-functions
-# TODO: This relates to the MSP credentials, not the CAs creds, so move to crypto section instead
-def ca_creds(ca_values, namespace, verbose=False):
-    secret_data = credentials_secret(ca_values['org_admincred'], namespace,
-                                     username=ca_values['org_admin'], password=ca_values.get('org_adminpw'),
-                                     verbose=verbose)
-    ca_values['org_adminpw'] = secret_data['CA_PASSWORD']
-
-
 def ca_chart(opts, release, upgrade=False, verbose=False):
     values_dir = opts['core']['dir_values']
     repository = opts['core']['chart_repo']

@@ -3,7 +3,7 @@ from unittest.mock import call
 
 import pytest
 
-from nephos.fabric.crypto import (register_node, enroll_node, create_admin, admin_msp,
+from nephos.fabric.crypto import (register_node, enroll_node, create_admin, admin_creds, admin_msp,
                                   crypto_to_secrets, setup_nodes, genesis_block, channel_tx, PWD)
 
 
@@ -96,6 +96,26 @@ class TestCreateAdmin:
             '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ./a_cert.pem', verbose=False)
 
 
+class TestAdminCreds:
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
+    def test_admin_creds(self, mock_credentials_secret):
+        mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
+        ca_values = {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}
+        admin_creds(ca_values, 'a-namespace')
+        mock_credentials_secret.assert_called_once_with(
+            'a_secret', 'a-namespace', username='an_admin', password=None, verbose=False)
+        assert ca_values['org_adminpw'] == 'a_password'
+
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
+    def test_admin_creds_verbose(self, mock_credentials_secret):
+        mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
+        ca_values = {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}
+        admin_creds(ca_values, 'a-namespace', verbose=True)
+        mock_credentials_secret.assert_called_once_with(
+            'a_secret', 'a-namespace', username='an_admin', password=None, verbose=True)
+        assert ca_values['org_adminpw'] == 'a_password'
+
+
 # TODO: Add verbosity test
 class TestAdminMsp:
     OPTS = {
@@ -107,7 +127,7 @@ class TestAdminMsp:
     @mock.patch('nephos.fabric.crypto.get_pod')
     @mock.patch('nephos.fabric.crypto.create_admin')
     @mock.patch('nephos.fabric.crypto.ca_secrets')
-    @mock.patch('nephos.fabric.crypto.ca_creds')
+    @mock.patch('nephos.fabric.crypto.admin_creds')
     def test_admin_msp(self, mock_ca_creds, mock_ca_secrets, mock_create_admin, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = ['pod-exec']
         mock_ingress_read.side_effect = [['an-ingress']]

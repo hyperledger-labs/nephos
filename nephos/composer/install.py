@@ -3,7 +3,7 @@ from kubernetes.client.rest import ApiException
 
 from nephos.composer.connection_template import json_ct
 from nephos.fabric.utils import get_pod
-from nephos.fabric.ca import ca_creds
+from nephos.fabric.crypto import admin_creds
 from nephos.helpers.helm import helm_install, helm_upgrade
 from nephos.helpers.k8s import (get_app_info,
                                 cm_create, cm_read, ingress_read, secret_from_file)
@@ -91,7 +91,7 @@ def install_network(opts, verbose=False):
     bna_version, _ = bna_rem.split('.bna')
     peer_ca = opts['peers']['ca']
     bna_admin = opts['cas'][peer_ca]['org_admin']
-    ca_creds(opts['cas'][peer_ca], opts['core']['namespace'], verbose=verbose)
+    admin_creds(opts['cas'][peer_ca], opts['core']['namespace'], verbose=verbose)
     bna_pw = opts['cas'][peer_ca]['org_adminpw']
 
     ls_res = hlc_cli_ex.execute('composer card list --card {bna_admin}@{bna_name}'.format(
