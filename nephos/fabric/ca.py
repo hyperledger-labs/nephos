@@ -3,6 +3,7 @@ from os import listdir, makedirs, path
 import shutil
 from time import sleep
 
+from kubernetes.client.rest import ApiException
 from nephos.fabric.utils import credentials_secret, get_pod
 from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
 from nephos.helpers.k8s import (ingress_read, secret_from_file, secret_read)
@@ -125,28 +126,22 @@ def ca_secrets(ca_values, namespace, dir_config, verbose=False):
 
 # Runner
 def setup_ca(opts, upgrade=False, verbose=False):
-    for ca_key, ca_values in opts['cas'].items():
+    for ca_name, ca_values in opts['cas'].items():
         # Install Charts
-        ca_chart(opts=opts, release=ca_key,
+        ca_chart(opts=opts, release=ca_name,
                  upgrade=upgrade, verbose=verbose)
 
-        # Obtain CA pod
-        pod_exec = get_pod(namespace=opts['core']['namespace'], release=ca_key, app='hlf-ca', verbose=verbose)
-
+        # Obtain CA pod and Enroll
+        pod_exec = get_pod(namespace=opts['core']['namespace'], release=ca_name, app='hlf-ca', verbose=verbose)
         ca_enroll(pod_exec)
 
-        if 'msp' in ca_values:
-            # Get/set credentials
-            ca_creds(ca_values, namespace=opts['core']['namespace'], verbose=verbose)
+        # Get CA Ingress and check it is running
+        try:
+            # Get ingress of CA
+            ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
+        except ApiException:
+            print('No ingress found for CA')
+            continue
 
-            # Get CA Ingress and check it is running
-            ingress_urls = ingress_read(ca_key + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
-            check_ca(ingress_host=ingress_urls[0], verbose=verbose)
-
-            # Crypto material for Admin
-            register_admin(pod_exec=pod_exec, ingress_host=ingress_urls[0],
-                           dir_config=opts['core']['dir_config'], ca_values=ca_values,
-                           verbose=verbose)
-
-            ca_secrets(ca_values=ca_values,
-                       namespace=opts['core']['namespace'], dir_config=opts['core']['dir_config'], verbose=verbose)
+        # Check the CA is running
+        check_ca(ingress_host=ingress_urls[0], verbose=verbose)

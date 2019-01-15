@@ -1,10 +1,9 @@
-import os
 from unittest import mock
 from unittest.mock import call
 
+from kubernetes.client.rest import ApiException
 from nephos.fabric.ca import (ca_creds, ca_chart,
-                              ca_enroll, check_ca, register_admin, ca_secrets, setup_ca,
-                              CURRENT_DIR)
+                              ca_enroll, check_ca, register_admin, ca_secrets, setup_ca)
 
 
 class TestCaCreds:
@@ -185,18 +184,15 @@ class TestSetupCa:
     int_executer = mock.Mock()
     int_executer.pod = 'int-pod'
 
-    @mock.patch('nephos.fabric.ca.register_admin')
     @mock.patch('nephos.fabric.ca.ingress_read')
     @mock.patch('nephos.fabric.ca.get_pod')
     @mock.patch('nephos.fabric.ca.check_ca')
-    @mock.patch('nephos.fabric.ca.ca_secrets')
     @mock.patch('nephos.fabric.ca.ca_enroll')
-    @mock.patch('nephos.fabric.ca.ca_creds')
     @mock.patch('nephos.fabric.ca.ca_chart')
-    def test_ca(self, mock_ca_chart, mock_ca_creds, mock_ca_enroll, mock_ca_secrets,
-                mock_check_ca, mock_get_pod, mock_ingress_read, mock_register_admin):
+    def test_ca(self, mock_ca_chart, mock_ca_enroll,
+                mock_check_ca, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
-        mock_ingress_read.side_effect =[['an-ingress']]
+        mock_ingress_read.side_effect = [ApiException, ['an-ingress']]
         ROOT_CA = {'org_admincert': 'root-secret-cert', 'org_adminkey': 'root-secret-key'}
         INT_CA = {'msp': 'int_MSP', 'org_admincert': 'int-secret-cert', 'org_adminkey': 'int-secret-key'}
         OPTS = {
@@ -216,34 +212,29 @@ class TestSetupCa:
             call(self.root_executer),
             call(self.int_executer),
             ])
-        mock_ca_creds.assert_called_once_with(INT_CA, namespace='a-namespace', verbose=False)
-        mock_ingress_read.assert_called_once_with('int-ca-hlf-ca', namespace='a-namespace', verbose=False)
+        mock_ingress_read.assert_has_calls([
+            call('root-ca-hlf-ca', namespace='a-namespace', verbose=False),
+            call('int-ca-hlf-ca', namespace='a-namespace', verbose=False)
+        ])
         mock_check_ca.assert_called_once_with(ingress_host='an-ingress', verbose=False)
-        mock_register_admin.assert_called_once_with(
-            pod_exec=self.int_executer, ingress_host='an-ingress', dir_config='./a_dir',
-            ca_values=INT_CA, verbose=False)
-        mock_ca_secrets.assert_called_once_with(
-            ca_values=INT_CA, namespace='a-namespace', dir_config='./a_dir', verbose=False)
 
-    @mock.patch('nephos.fabric.ca.ca_secrets')
     @mock.patch('nephos.fabric.ca.ingress_read')
     @mock.patch('nephos.fabric.ca.get_pod')
+    @mock.patch('nephos.fabric.ca.check_ca')
     @mock.patch('nephos.fabric.ca.ca_enroll')
-    @mock.patch('nephos.fabric.ca.ca_creds')
     @mock.patch('nephos.fabric.ca.ca_chart')
-    def test_ca_upgrade(self, mock_ca_chart, mock_ca_creds,
-                        mock_ca_enroll, mock_get_pod, mock_ingress_read, mock_ca_secrets):
+    def test_ca_upgrade(self, mock_ca_chart, mock_ca_enroll,
+                        mock_check_ca, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
-        mock_ingress_read.side_effect =[['an-ingress']]
+        mock_ingress_read.side_effect =[ApiException]
         ROOT_CA = {'org_admincert': 'root-secret-cert', 'org_adminkey': 'root-secret-key'}
         OPTS = {
             'core': {'namespace': 'a-namespace', 'dir_config': './a_dir'},
             'cas': {'root-ca': ROOT_CA}
             }
-        setup_ca(OPTS, upgrade=True)
-        mock_ca_chart.assert_called_once_with(opts=OPTS, release='root-ca', upgrade=True, verbose=False)
-        mock_get_pod.assert_called_once_with(namespace='a-namespace', release='root-ca', app='hlf-ca', verbose=False)
+        setup_ca(OPTS, upgrade=True, verbose=True)
+        mock_ca_chart.assert_called_once_with(opts=OPTS, release='root-ca', upgrade=True, verbose=True)
+        mock_get_pod.assert_called_once_with(namespace='a-namespace', release='root-ca', app='hlf-ca', verbose=True)
         mock_ca_enroll.assert_called_once_with(self.root_executer)
-        mock_ca_creds.assert_not_called()
-        mock_ingress_read.assert_not_called()
-        mock_ca_secrets.assert_not_called()
+        mock_ingress_read.assert_called_once_with('root-ca-hlf-ca', namespace='a-namespace', verbose=True)
+        mock_check_ca.assert_not_called()

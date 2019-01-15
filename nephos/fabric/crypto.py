@@ -1,6 +1,7 @@
 from collections import namedtuple
 from os import path, chdir, getcwd
 
+from nephos.fabric.ca import ca_creds, ca_secrets, register_admin
 from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
 from nephos.helpers.k8s import ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
@@ -41,6 +42,30 @@ def enroll_node(opts, ca, username, password, verbose=False):
             ca_server_tls=path.abspath(opts['cas'][ca]['tls_cert']))
         execute_until_success(command)
     return msp_path
+
+
+def admin_msp(opts, ca_name, verbose=False):
+    # CA values
+    ca_values = opts['cas'][ca_name]
+
+    # Obtain CA pod
+    pod_exec = get_pod(namespace=opts['core']['namespace'], release=ca_name, app='hlf-ca', verbose=verbose)
+
+    # Get CA ingress
+    ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
+    ca_ingress = ingress_urls[0]
+
+    # Get/set credentials
+    ca_creds(ca_values, namespace=opts['core']['namespace'], verbose=verbose)
+
+    # Crypto material for Admin
+    # TODO: Move this function to this module
+    register_admin(pod_exec=pod_exec, ingress_host=ca_ingress,
+                   dir_config=opts['core']['dir_config'], ca_values=ca_values,
+                   verbose=verbose)
+
+    ca_secrets(ca_values=ca_values,
+               namespace=opts['core']['namespace'], dir_config=opts['core']['dir_config'], verbose=verbose)
 
 
 # General helpers
@@ -88,6 +113,7 @@ def setup_nodes(opts, node_type, verbose=False):
         crypto_to_secrets(namespace=opts['core']['namespace'], msp_path=msp_path, user=release, verbose=verbose)
 
 
+# ConfigTxGen helpers
 def genesis_block(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts['core']['dir_config'])
