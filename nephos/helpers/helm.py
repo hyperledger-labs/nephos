@@ -73,9 +73,9 @@ def helm_init():
 
 # General function to check if a release exists and install it
 # TODO: Rename name to release
-def helm_install(repo, app, name, namespace, config_yaml=None, env_vars=None, verbose=False, pod_num=1):
-    ls_res = execute('helm status {name}'.format(
-        name=name
+def helm_install(repo, app, release, namespace, config_yaml=None, env_vars=None, verbose=False, pod_num=1):
+    ls_res = execute('helm status {release}'.format(
+        release=release
     ))
 
     # TODO: Refactor this into separate helper function
@@ -92,7 +92,7 @@ def helm_install(repo, app, name, namespace, config_yaml=None, env_vars=None, ve
 
     if not ls_res:
         command = 'helm install {repo}/{app} -n {name} --namespace {ns}'.format(
-            app=app, name=name, ns=namespace, repo=repo
+            app=app, name=release, ns=namespace, repo=repo
         )
         if config_yaml:
             command += ' -f {}'.format(config_yaml)
@@ -106,12 +106,12 @@ def helm_install(repo, app, name, namespace, config_yaml=None, env_vars=None, ve
         command += env_vars_string
         # Execute
         execute(command, verbose=verbose)
-    helm_check(app, name, namespace, pod_num)
+    helm_check(app, release, namespace, pod_num)
 
 
-def helm_upgrade(repo, app, name, namespace, config_yaml=None, env_vars=None, preserve=None, verbose=False, pod_num=1):
-    ls_res = execute('helm status {name}'.format(
-        name=name
+def helm_upgrade(repo, app, release, namespace, config_yaml=None, env_vars=None, preserve=None, verbose=False, pod_num=1):
+    ls_res = execute('helm status {release}'.format(
+        release=release
     ))
 
     # TODO: Refactor this into separate helper function
@@ -138,7 +138,7 @@ def helm_upgrade(repo, app, name, namespace, config_yaml=None, env_vars=None, pr
 
     if ls_res:
         command = 'helm upgrade {name} {repo}/{app}'.format(
-            app=app, name=name, repo=repo
+            app=app, name=release, repo=repo
         )
         if config_yaml:
             command += ' -f {}'.format(config_yaml)
@@ -154,4 +154,4 @@ def helm_upgrade(repo, app, name, namespace, config_yaml=None, env_vars=None, pr
         execute(command, verbose=verbose)
     else:
         raise Exception('Cannot update a Helm release that is not running')
-    helm_check(app, name, namespace, pod_num)
+    helm_check(app, release, namespace, pod_num)
