@@ -14,11 +14,10 @@ secrets:
   peer:
     cert: hlf--peer1-idcert
     key: hlf--peer1-idkey
-    # TODO: This should not be numbered
-    caCert: hlf--peer1-cacert
+    caCert: hlf--peeradmin-cacert
   channel: hlf--channel
-  adminCert: hlf--peer-admincert
-  adminKey: hlf--peer-adminkey
+  adminCert: hlf--peeradmin-idcert
+  adminKey: hlf--peeradmin-idkey
 
 affinity:
   podAntiAffinity:

@@ -3,8 +3,11 @@ from unittest.mock import call
 
 import pytest
 
-from nephos.fabric.crypto import (register_node, enroll_node, create_admin, admin_creds, msp_secrets, admin_msp,
-                                  crypto_to_secrets, setup_nodes, genesis_block, channel_tx, PWD)
+from nephos.fabric.crypto import (
+    CryptoInfo,
+    register_node, enroll_node, create_admin, admin_creds, msp_secrets, admin_msp,
+    item_to_secret, id_to_secrets, cacerts_to_secrets,
+    setup_nodes, genesis_block, channel_tx, PWD)
 
 
 class TestRegisterNode:
@@ -138,27 +141,23 @@ class TestMspSecrets:
         'core': {'dir_config': './a_dir'},
         'msps': {
             'a_MSP': {
-                'namespace': 'msp-namespace', 'org_admincert': 'a-secret-cert', 'org_adminkey': 'a-secret-key'
+                'namespace': 'msp-namespace', 'org_admin': 'an-admin'
             }
         }
     }
 
     @mock.patch('nephos.fabric.crypto.shutil')
-    @mock.patch('nephos.fabric.crypto.secret_from_file')
     @mock.patch('nephos.fabric.crypto.makedirs')
-    @mock.patch('nephos.fabric.crypto.glob')
-    def test_ca_secrets(self, mock_glob, mock_makedirs, mock_secret_from_file, mock_shutil):
-        ADMIN_CERT = './a_dir/a_MSP/admincerts/cert.pem'
-        ADMIN_KEY = './a_dir/a_MSP/keystore/secret_sk'
-        mock_glob.glob.side_effect = [[ADMIN_KEY]]
+    @mock.patch('nephos.fabric.crypto.id_to_secrets')
+    @mock.patch('nephos.fabric.crypto.cacerts_to_secrets')
+    def test_msp_secrets(self, mock_cacerts_to_secrets, mock_id_to_secrets, mock_makedirs, mock_shutil):
         msp_secrets(self.OPTS, 'a_MSP')
         mock_makedirs.assert_called_once_with('./a_dir/a_MSP/admincerts')
         mock_shutil.copy.assert_called_once_with('./a_dir/a_MSP/signcerts/cert.pem', './a_dir/a_MSP/admincerts/cert.pem')
-        mock_glob.glob.assert_called_once_with('./a_dir/a_MSP/keystore/*_sk')
-        mock_secret_from_file.assert_has_calls([
-            call(secret='a-secret-cert', namespace='msp-namespace', key='cert.pem', filename=ADMIN_CERT, verbose=False),
-            call(secret='a-secret-key', namespace='msp-namespace', key='key.pem', filename=ADMIN_KEY, verbose=False)
-        ])
+        mock_cacerts_to_secrets.assert_called_once_with(
+            'msp-namespace', './a_dir/a_MSP', 'an-admin', verbose=False)
+        mock_id_to_secrets.assert_called_once_with(
+            'msp-namespace', './a_dir/a_MSP', 'an-admin', verbose=False)
 
 
 # TODO: Add verbosity test
@@ -185,51 +184,80 @@ class TestAdminMsp:
         mock_msp_secrets.assert_called_once_with(self.OPTS, 'an-msp', verbose=False)
 
 
-class TestCryptoToSecrets:
+class TestItemToSecret:
     @mock.patch('nephos.fabric.crypto.print')
     @mock.patch('nephos.fabric.crypto.crypto_secret')
-    def test_crypto_to_secrets(self, mock_crypto_secret, mock_print):
-        mock_crypto_secret.side_effect = [None, None, None, None]
-        crypto_to_secrets('msp-namespace', './a_dir', 'a-user')
-        mock_crypto_secret.assert_has_calls([
-            call('hlf--a-user-idcert', 'msp-namespace',
-                 file_path='./a_dir/signcerts', key='cert.pem', verbose=False),
-            call('hlf--a-user-idkey', 'msp-namespace',
-                 file_path='./a_dir/keystore', key='key.pem', verbose=False),
-            call('hlf--a-user-cacert', 'msp-namespace',
-                 file_path='./a_dir/cacerts', key='cacert.pem', verbose=False),
-            call('hlf--a-user-caintcert', 'msp-namespace',
-                 file_path='./a_dir/intermediatecerts', key='intermediatecacert.pem', verbose=False)
-        ])
+    def test_item_to_secret(self, mock_crypto_secret, mock_print):
+        item_to_secret('msp-namespace', './a_dir', 'a-user', CryptoInfo('a-type', 'a_subfolder', 'a-key', True))
+        mock_crypto_secret.assert_called_once_with(
+            'hlf--a-user-a-type', 'msp-namespace',
+            file_path='./a_dir/a_subfolder', key='a-key', verbose=False)
         mock_print.assert_not_called()
 
     @mock.patch('nephos.fabric.crypto.print')
     @mock.patch('nephos.fabric.crypto.crypto_secret')
-    def test_crypto_to_secrets_notls(self, mock_crypto_secret, mock_print):
-        mock_crypto_secret.side_effect = [None, None, None, Exception()]
-        crypto_to_secrets('msp-namespace', './a_dir', 'a-user', verbose=True)
-        mock_crypto_secret.assert_has_calls([
-            call('hlf--a-user-idcert', 'msp-namespace',
-                 file_path='./a_dir/signcerts', key='cert.pem', verbose=True),
-            call('hlf--a-user-idkey', 'msp-namespace',
-                 file_path='./a_dir/keystore', key='key.pem', verbose=True),
-            call('hlf--a-user-cacert', 'msp-namespace',
-                 file_path='./a_dir/cacerts', key='cacert.pem', verbose=True),
-            call('hlf--a-user-caintcert', 'msp-namespace',
-                 file_path='./a_dir/intermediatecerts', key='intermediatecacert.pem', verbose=True)
-        ])
+    def test_item_to_secret_unrequired(self, mock_crypto_secret, mock_print):
+        mock_crypto_secret.side_effect = [Exception()]
+        item_to_secret('msp-namespace', './a_dir', 'a-user', CryptoInfo('a-type', 'a_subfolder', 'a-key', False))
+        mock_crypto_secret.assert_called_once_with(
+            'hlf--a-user-a-type', 'msp-namespace',
+            file_path='./a_dir/a_subfolder', key='a-key', verbose=False)
         mock_print.assert_called_once_with(
-            'No ./a_dir/intermediatecerts found, so secret "hlf--a-user-caintcert" was not created')
+            'No ./a_dir/a_subfolder found, so secret "hlf--a-user-a-type" was not created')
 
     @mock.patch('nephos.fabric.crypto.print')
     @mock.patch('nephos.fabric.crypto.crypto_secret')
-    def test_crypto_to_secrets_nofiles(self, mock_crypto_secret, mock_print):
+    def test_item_to_secret_failed(self, mock_crypto_secret, mock_print):
         mock_crypto_secret.side_effect = [Exception()]
         with pytest.raises(Exception):
-            crypto_to_secrets('msp-namespace', './a_dir', 'a-user')
+            item_to_secret('msp-namespace', './a_dir', 'a-user', CryptoInfo('a-type', 'a_subfolder', 'a-key', True))
         mock_crypto_secret.assert_called_once_with(
-            'hlf--a-user-idcert', 'msp-namespace', file_path='./a_dir/signcerts', key='cert.pem', verbose=False)
+            'hlf--a-user-a-type', 'msp-namespace', file_path='./a_dir/a_subfolder', key='a-key', verbose=False)
         mock_print.assert_not_called()
+
+
+class TestIdToSecrets:
+    @mock.patch('nephos.fabric.crypto.item_to_secret')
+    def test_id_to_secrets(self, mock_item_to_secret):
+        mock_item_to_secret.side_effect = [None, None]
+        id_to_secrets('msp-namespace', './a_dir', 'a-user')
+        mock_item_to_secret.assert_has_calls([
+            call('msp-namespace', './a_dir', 'a-user',
+                 CryptoInfo('idcert', 'signcerts', 'cert.pem', True), verbose=False),
+            call('msp-namespace', './a_dir', 'a-user',
+                 CryptoInfo('idkey', 'keystore', 'key.pem', True), verbose=False),
+        ])
+
+    @mock.patch('nephos.fabric.crypto.item_to_secret')
+    def test_id_to_secrets_nocert(self, mock_item_to_secret):
+        mock_item_to_secret.side_effect = [Exception()]
+        with pytest.raises(Exception):
+            id_to_secrets('msp-namespace', './a_dir', 'a-user', verbose=True)
+        mock_item_to_secret.assert_called_once_with(
+            'msp-namespace', './a_dir', 'a-user',
+            CryptoInfo('idcert', 'signcerts', 'cert.pem', True), verbose=True)
+
+
+class TestCaCertsToSecrets:
+    @mock.patch('nephos.fabric.crypto.item_to_secret')
+    def test_cacerts_to_secrets(self, mock_item_to_secret):
+        mock_item_to_secret.side_effect = [None, None]
+        cacerts_to_secrets('msp-namespace', './a_dir', 'a-user')
+        mock_item_to_secret.assert_has_calls([
+            call('msp-namespace', './a_dir', 'a-user',
+                 CryptoInfo('cacert', 'cacerts', 'cacert.pem', True), verbose=False),
+            call('msp-namespace', './a_dir', 'a-user',
+                 CryptoInfo('caintcert', 'intermediatecerts', 'intermediatecacert.pem', False), verbose=False),
+        ])
+
+    @mock.patch('nephos.fabric.crypto.item_to_secret')
+    def test_cacerts_to_secrets_nocacert(self, mock_item_to_secret):
+        mock_item_to_secret.side_effect = [Exception()]
+        with pytest.raises(Exception):
+            cacerts_to_secrets('msp-namespace', './a_dir', 'a-user')
+        mock_item_to_secret.assert_called_once_with(
+            'msp-namespace', './a_dir', 'a-user',
+            CryptoInfo('cacert', 'cacerts', 'cacert.pem', True), verbose=False)
 
 
 class TestSetupNodes:
@@ -248,7 +276,7 @@ class TestSetupNodes:
 
     @mock.patch('nephos.fabric.crypto.register_node')
     @mock.patch('nephos.fabric.crypto.enroll_node')
-    @mock.patch('nephos.fabric.crypto.crypto_to_secrets')
+    @mock.patch('nephos.fabric.crypto.id_to_secrets')
     @mock.patch('nephos.fabric.crypto.credentials_secret')
     def test_setup_nodes(self, mock_credentials_secret, mock_crypto_to_secrets,
                          mock_enroll_node, mock_register_node):
@@ -275,7 +303,7 @@ class TestSetupNodes:
 
     @mock.patch('nephos.fabric.crypto.register_node')
     @mock.patch('nephos.fabric.crypto.enroll_node')
-    @mock.patch('nephos.fabric.crypto.crypto_to_secrets')
+    @mock.patch('nephos.fabric.crypto.id_to_secrets')
     @mock.patch('nephos.fabric.crypto.credentials_secret')
     def test_setup_nodes_ord(self, mock_credentials_secret, mock_crypto_to_secrets,
                          mock_enroll_node, mock_register_node):

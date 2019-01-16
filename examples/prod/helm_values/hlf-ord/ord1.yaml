@@ -13,10 +13,9 @@ secrets:
   ord:
     cert: hlf--ord1-idcert
     key: hlf--ord1-idkey
-    # TODO: This should not be numbered
-    caCert: hlf--ord1-cacert
+    caCert: hlf--ordadmin-cacert
   genesis: hlf--genesis
-  adminCert: hlf--ord-admincert
+  adminCert: hlf--ordadmin-idcert
 
 affinity:
   podAntiAffinity:

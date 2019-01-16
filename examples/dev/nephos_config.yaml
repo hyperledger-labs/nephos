@@ -21,22 +21,14 @@ msps:
     # TODO: Remove dependency on CA
     ca: ca
     namespace: orderers
-    org_admin: ord-admin
+    org_admin: ordadmin
     # org_passwd:  # Set implicitly
-    # Secrets
-    org_admincred: hlf--ord-admincred
-    org_admincert: hlf--ord-admincert
-    org_adminkey: hlf--ord-adminkey
   PeerMSP:
     # TODO: Remove dependency on CA
     ca: ca
     namespace: peers
-    org_admin: peer-admin
+    org_admin: peeradmin
     # org_passwd:  # Set implicitly
-    # Secrets
-    org_admincred: hlf--peer-admincred
-    org_admincert: hlf--peer-admincert
-    org_adminkey: hlf--peer-adminkey
 orderers:
   domain: orderers.svc.cluster.local
   msp: OrdererMSP
