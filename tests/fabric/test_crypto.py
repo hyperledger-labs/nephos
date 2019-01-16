@@ -77,7 +77,6 @@ class TestCreateAdmin:
     OPTS = {
         'core': {'dir_config': './a_dir'},
         'msps': {'a_MSP': {'ca': 'a-ca',
-                           'org_admincred': 'a_secret',
                            'org_admin': 'an_admin',
                            'org_adminpw': 'a_password'}
                  },
@@ -113,7 +112,7 @@ class TestAdminCreds:
     OPTS = {
         'msps': {
             'an-msp': {
-                'namespace': 'msp-namespace', 'org_admincred': 'a_secret', 'org_admin': 'an_admin'
+                'namespace': 'msp-namespace', 'org_admin': 'an-admin'
             }
         }
     }
@@ -123,7 +122,7 @@ class TestAdminCreds:
         mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
         admin_creds(self.OPTS, 'an-msp')
         mock_credentials_secret.assert_called_once_with(
-            'a_secret', 'msp-namespace', username='an_admin', password=None, verbose=False)
+            'hlf--an-admin-admincred', 'msp-namespace', username='an-admin', password=None, verbose=False)
         assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
 
     @mock.patch('nephos.fabric.crypto.credentials_secret')
@@ -131,7 +130,7 @@ class TestAdminCreds:
         mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
         admin_creds(self.OPTS, 'an-msp', verbose=True)
         mock_credentials_secret.assert_called_once_with(
-            'a_secret', 'msp-namespace', username='an_admin', password='a_password', verbose=True)
+            'hlf--an-admin-admincred', 'msp-namespace', username='an-admin', password='a_password', verbose=True)
         assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
 
 
@@ -166,7 +165,7 @@ class TestAdminMsp:
         'core': {'dir_config': './a-dir'},
         'msps': {
             'an-msp': {
-                'namespace': 'msp-namespace', 'ca': 'a-ca', 'org_admincred': 'a_secret', 'org_admin': 'an_admin'
+                'namespace': 'msp-namespace', 'ca': 'a-ca', 'org_admin': 'an_admin'
             }
         }
     }

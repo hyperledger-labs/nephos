@@ -87,9 +87,10 @@ def create_admin(opts, msp_name, verbose=False):
 
 def admin_creds(opts, msp_name, verbose=False):
     msp_namespace = get_namespace(opts, msp=msp_name)
-
     msp_values = opts['msps'][msp_name]
-    secret_data = credentials_secret(msp_values['org_admincred'], msp_namespace,
+
+    admin_cred_secret = 'hlf--{}-admincred'.format(msp_values['org_admin'])
+    secret_data = credentials_secret(admin_cred_secret, msp_namespace,
                                      username=msp_values['org_admin'], password=msp_values.get('org_adminpw'),
                                      verbose=verbose)
     msp_values['org_adminpw'] = secret_data['CA_PASSWORD']
