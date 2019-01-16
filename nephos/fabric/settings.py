@@ -27,6 +27,19 @@ def check_cluster(cluster_name):
         raise ValueError(message)
 
 
+def get_namespace(opts, msp_name):
+    if 'msps' in opts and msp_name in opts['msps']:
+        msp_values = opts['msps'][msp_name]
+    else:
+        raise KeyError('Settings dict does not contain MSP "{}"'.format(msp_name))
+    if 'namespace' in msp_values:
+        # Specific MSP-based namespace
+        return msp_values['namespace']
+    else:
+        # Core namespace
+        return opts['core']['namespace']
+
+
 def load_config(settings_file):
     with open(settings_file) as f:
         data = yaml.load(f)
