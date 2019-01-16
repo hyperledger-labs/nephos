@@ -9,12 +9,12 @@ ingress:
   path: /
   hosts:
     # TODO: Change this to your Domain Name
-    - ca.hlf.aidtech-test.xyz
+    - ca.nephos.aidtech-test.xyz
   tls:
     - secretName: ca--tls
       hosts:
         # TODO: Change this to your Domain Name
-        - ca.hlf.aidtech-test.xyz
+        - ca.nephos.aidtech-test.xyz
 
 persistence:
   accessMode: ReadWriteOnce
