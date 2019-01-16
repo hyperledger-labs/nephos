@@ -3,7 +3,8 @@ from unittest.mock import call
 
 import pytest
 
-from nephos.fabric.crypto import (register_node, enroll_node, crypto_to_secrets, setup_nodes, setup_blocks, PWD)
+from nephos.fabric.crypto import (register_node, enroll_node, create_admin, admin_creds, msp_secrets, admin_msp,
+                                  crypto_to_secrets, setup_nodes, genesis_block, channel_tx, PWD)
 
 
 class TestRegisterNode:
@@ -71,8 +72,111 @@ class TestEnrollNode:
             '--tls.certfiles /some_msp/tls_cert.pem')
 
 
-class TestCryptoToSecrets:
+# TODO: Add verbosity test
+class TestCreateAdmin:
+    OPTS = {
+        'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
+        'msps': {'a_MSP': {'ca': 'a-ca',
+                           'org_admincred': 'a_secret',
+                           'org_admin': 'an_admin',
+                           'org_adminpw': 'a_password'}
+                 },
+        'cas': {'a-ca': {'tls_cert': './a_cert.pem'}}
+    }
 
+    @mock.patch('nephos.fabric.crypto.ingress_read')
+    @mock.patch('nephos.fabric.crypto.get_pod')
+    @mock.patch('nephos.fabric.crypto.execute')
+    def test_ca_create_admin(self, mock_execute, mock_get_pod, mock_ingress_read):
+        mock_pod_exec = mock.Mock()
+        mock_pod_exec.execute.side_effect = [
+            None,  # List CA identities
+            'registration'
+        ]
+        mock_get_pod.side_effect = [mock_pod_exec]
+        mock_ingress_read.side_effect = [['an-ingress']]
+        create_admin(self.OPTS, 'a_MSP')
+        mock_get_pod.assert_called_once_with(
+            namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=False)
+        mock_ingress_read.assert_called_once_with(
+            'a-ca-hlf-ca', namespace='a-namespace', verbose=False)
+        mock_pod_exec.execute.assert_has_calls([
+            call('fabric-ca-client identity list --id an_admin'),
+            call("fabric-ca-client register --id.name an_admin --id.secret a_password --id.attrs 'admin=true:ecert'")
+        ])
+        mock_execute.assert_called_once_with(
+            'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client enroll ' +
+            '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ./a_cert.pem', verbose=False)
+
+
+class TestAdminCreds:
+    OPTS = {
+        'core': {'namespace': 'a-namespace'},
+        'msps': {'an-msp': {'org_admincred': 'a_secret', 'org_admin': 'an_admin'}}
+    }
+
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
+    def test_admin_creds(self, mock_credentials_secret):
+        mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
+        admin_creds(self.OPTS, 'an-msp')
+        mock_credentials_secret.assert_called_once_with(
+            'a_secret', 'a-namespace', username='an_admin', password=None, verbose=False)
+        assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
+
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
+    def test_admin_creds_again(self, mock_credentials_secret):
+        mock_credentials_secret.side_effect = [{'CA_PASSWORD': 'a_password'}]
+        admin_creds(self.OPTS, 'an-msp', verbose=True)
+        mock_credentials_secret.assert_called_once_with(
+            'a_secret', 'a-namespace', username='an_admin', password='a_password', verbose=True)
+        assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
+
+
+# TODO: Add verbose test
+class TestMspSecrets:
+    OPTS = {
+        'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
+        'msps': {'a_MSP': {'org_admincert': 'a-secret-cert', 'org_adminkey': 'a-secret-key'}}
+    }
+
+    @mock.patch('nephos.fabric.crypto.shutil')
+    @mock.patch('nephos.fabric.crypto.secret_from_file')
+    @mock.patch('nephos.fabric.crypto.makedirs')
+    @mock.patch('nephos.fabric.crypto.glob')
+    def test_ca_secrets(self, mock_glob, mock_makedirs, mock_secret_from_file, mock_shutil):
+        ADMIN_CERT = './a_dir/a_MSP/admincerts/cert.pem'
+        ADMIN_KEY = './a_dir/a_MSP/keystore/secret_sk'
+        mock_glob.glob.side_effect = [[ADMIN_KEY]]
+        msp_secrets(self.OPTS, 'a_MSP')
+        mock_makedirs.assert_called_once_with('./a_dir/a_MSP/admincerts')
+        mock_shutil.copy.assert_called_once_with('./a_dir/a_MSP/signcerts/cert.pem', './a_dir/a_MSP/admincerts/cert.pem')
+        mock_glob.glob.assert_called_once_with('./a_dir/a_MSP/keystore/*_sk')
+        mock_secret_from_file.assert_has_calls([
+            call(secret='a-secret-cert', namespace='a-namespace', key='cert.pem', filename=ADMIN_CERT, verbose=False),
+            call(secret='a-secret-key', namespace='a-namespace', key='key.pem', filename=ADMIN_KEY, verbose=False)
+        ])
+
+
+# TODO: Add verbosity test
+class TestAdminMsp:
+    OPTS = {
+        'core': {'dir_config': './a-dir', 'namespace': 'a-namespace'},
+        'cas': {'a-ca': 'ca-values'},
+        'msps': {'an-msp': {'ca': 'a-ca', 'org_admincred': 'a_secret', 'org_admin': 'an_admin'}}
+    }
+
+    @mock.patch('nephos.fabric.crypto.create_admin')
+    @mock.patch('nephos.fabric.crypto.msp_secrets')
+    @mock.patch('nephos.fabric.crypto.admin_creds')
+    def test_admin_msp(self, mock_ca_creds, mock_msp_secrets, mock_create_admin):
+        admin_msp(self.OPTS, 'an-msp')
+        mock_ca_creds.assert_called_once_with(
+            self.OPTS, 'an-msp', verbose=False)
+        mock_create_admin.assert_called_once_with(self.OPTS, 'an-msp', verbose=False)
+        mock_msp_secrets.assert_called_once_with(self.OPTS, 'an-msp', verbose=False)
+
+
+class TestCryptoToSecrets:
     @mock.patch('nephos.fabric.crypto.print')
     @mock.patch('nephos.fabric.crypto.crypto_secret')
     def test_crypto_to_secrets(self, mock_crypto_secret, mock_print):
@@ -130,7 +234,9 @@ class TestSetupNodes:
                                                {'CA_USERNAME': 'peer1', 'CA_PASSWORD': 'peer1-pw'}]
         mock_enroll_node.side_effect = ['./peer0_MSP', './peer1_MSP']
         OPTS = {'core': {'namespace': 'a-namespace'},
-                'peers': {'names': ['peer0', 'peer1'], 'ca': 'ca-peer'}}
+                'msps': {'peer_MSP': {'ca': 'ca-peer'}},
+                'peers': {'names': ['peer0', 'peer1'], 'msp': 'peer_MSP'}
+                }
         setup_nodes(OPTS, 'peer')
         mock_credentials_secret.assert_has_calls([
             call('hlf--peer0-cred', 'a-namespace', username='peer0', verbose=False),
@@ -158,7 +264,8 @@ class TestSetupNodes:
         mock_credentials_secret.side_effect = [{'CA_USERNAME': 'ord0', 'CA_PASSWORD': 'ord0-pw'}]
         mock_enroll_node.side_effect = ['./ord0_MSP']
         OPTS = {'core': {'namespace': 'a-namespace'},
-                'orderers': {'names': ['ord0'], 'ca': 'ca-ord'}}
+                'msps': {'ord_MSP': {'ca': 'ca-ord'}},
+                'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}}
         setup_nodes(OPTS, 'orderer')
         mock_credentials_secret.assert_has_calls([
             call('hlf--ord0-cred', 'a-namespace', username='ord0', verbose=False)
@@ -174,9 +281,52 @@ class TestSetupNodes:
         ])
 
 
-class TestSetupBlocks:
+class TestGenesisBlock:
     OPTS = {'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
-            'orderers': {'secret_genesis': 'a-genesis-secret'},
+            'orderers': {'secret_genesis': 'a-genesis-secret'}}
+
+    @mock.patch('nephos.fabric.crypto.secret_from_file')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.path')
+    @mock.patch('nephos.fabric.crypto.execute')
+    @mock.patch('nephos.fabric.crypto.chdir')
+    def test_blocks(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
+        mock_path.exists.side_effect = [False, False]
+        genesis_block(self.OPTS)
+        mock_chdir.assert_has_calls([
+            call('./a_dir'),
+            call(PWD)
+        ])
+        mock_path.exists.assert_called_once_with('genesis.block')
+        mock_execute.assert_called_once_with(
+            'configtxgen -profile OrdererGenesis -outputBlock genesis.block', verbose=False)
+        mock_print.assert_not_called()
+        mock_secret_from_file.assert_called_once_with(
+            secret='a-genesis-secret', namespace='a-namespace',
+            key='genesis.block', filename='genesis.block', verbose=False)
+
+    @mock.patch('nephos.fabric.crypto.secret_from_file')
+    @mock.patch('nephos.fabric.crypto.print')
+    @mock.patch('nephos.fabric.crypto.path')
+    @mock.patch('nephos.fabric.crypto.execute')
+    @mock.patch('nephos.fabric.crypto.chdir')
+    def test_again(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
+        mock_path.exists.side_effect = [True, True]
+        genesis_block(self.OPTS, True)
+        mock_chdir.assert_has_calls([
+            call('./a_dir'),
+            call(PWD)
+        ])
+        mock_path.exists.assert_called_once_with('genesis.block')
+        mock_execute.assert_not_called()
+        mock_print.assert_called_once_with('genesis.block already exists')
+        mock_secret_from_file.assert_called_once_with(
+            secret='a-genesis-secret', namespace='a-namespace',
+            key='genesis.block', filename='genesis.block', verbose=True)
+
+
+class TestChannelTx:
+    OPTS = {'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
             'peers': {'secret_channel': 'a-channel-secret',
                       'channel_name': 'a-channel', 'channel_profile': 'AProfile'}}
 
@@ -187,26 +337,19 @@ class TestSetupBlocks:
     @mock.patch('nephos.fabric.crypto.chdir')
     def test_blocks(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
         mock_path.exists.side_effect = [False, False]
-        setup_blocks(self.OPTS)
+        channel_tx(self.OPTS)
         mock_chdir.assert_has_calls([
             call('./a_dir'),
             call(PWD)
         ])
-        mock_path.exists.has_calls([
-            call('genesis.block'),
-            call('a-channel.tx')
-        ])
-        mock_execute.assert_has_calls([
-            call('configtxgen -profile OrdererGenesis -outputBlock genesis.block', verbose=False),
-            call('configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx a-channel.tx', verbose=False)
-        ])
+        mock_path.exists.assert_called_once_with('a-channel.tx')
+        mock_execute.assert_called_once_with(
+            'configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx a-channel.tx', verbose=False)
         mock_print.assert_not_called()
-        mock_secret_from_file.assert_has_calls([
-            call(secret='a-genesis-secret', namespace='a-namespace',
-                 key='genesis.block', filename='genesis.block', verbose=False),
-            call(secret='a-channel-secret', namespace='a-namespace',
-                 key='a-channel.tx', filename='a-channel.tx', verbose=False)
-        ])
+        mock_secret_from_file.assert_called_once_with(
+            secret='a-channel-secret', namespace='a-namespace',
+            key='a-channel.tx', filename='a-channel.tx', verbose=False
+        )
 
     @mock.patch('nephos.fabric.crypto.secret_from_file')
     @mock.patch('nephos.fabric.crypto.print')
@@ -215,23 +358,15 @@ class TestSetupBlocks:
     @mock.patch('nephos.fabric.crypto.chdir')
     def test_again(self, mock_chdir, mock_execute, mock_path, mock_print, mock_secret_from_file):
         mock_path.exists.side_effect = [True, True]
-        setup_blocks(self.OPTS, True)
+        channel_tx(self.OPTS, True)
         mock_chdir.assert_has_calls([
             call('./a_dir'),
             call(PWD)
         ])
-        mock_path.exists.has_calls([
-            call('genesis.block'),
-            call('a-channel.tx')
-        ])
+        mock_path.exists.assert_called_once_with('a-channel.tx')
         mock_execute.assert_not_called()
-        mock_print.assert_has_calls([
-            call('genesis.block already exists'),
-            call('a-channel.tx already exists')
-        ])
-        mock_secret_from_file.assert_has_calls([
-            call(secret='a-genesis-secret', namespace='a-namespace',
-                 key='genesis.block', filename='genesis.block', verbose=True),
-            call(secret='a-channel-secret', namespace='a-namespace',
-                 key='a-channel.tx', filename='a-channel.tx', verbose=True)
-        ])
+        mock_print.assert_called_once_with('a-channel.tx already exists')
+        mock_secret_from_file.assert_called_once_with(
+            secret='a-channel-secret', namespace='a-namespace',
+            key='a-channel.tx', filename='a-channel.tx', verbose=True
+        )

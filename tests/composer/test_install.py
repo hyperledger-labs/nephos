@@ -154,7 +154,7 @@ class TestInstallNetwork:
     }
 
     @mock.patch('nephos.composer.install.get_pod')
-    @mock.patch('nephos.composer.install.ca_creds')
+    @mock.patch('nephos.composer.install.admin_creds')
     def test_install_network(self, mock_ca_creds, mock_get_pod):
         mock_pod = mock.Mock()
         mock_pod.execute.side_effect = [
@@ -183,7 +183,7 @@ class TestInstallNetwork:
         mock_ca_creds.assert_called_once_with(self.OPTS['cas']['peer-ca'], 'a-namespace', verbose=False)
 
     @mock.patch('nephos.composer.install.get_pod')
-    @mock.patch('nephos.composer.install.ca_creds')
+    @mock.patch('nephos.composer.install.admin_creds')
     def test_install_network_again(self, mock_ca_creds, mock_get_pod):
 
         mock_pod = mock.Mock()
