@@ -161,7 +161,7 @@ def crypto_to_secrets(namespace, msp_path, user, verbose=False):
 def setup_nodes(opts, node_type, verbose=False):
     nodes = opts[node_type + 's']
     msp_values = opts['msps'][nodes['msp']]
-    node_namespace = get_namespace(opts, msp_values['namespace'])
+    node_namespace = get_namespace(opts, nodes['msp'])
     for release in nodes['names']:
         # Create secret with Orderer credentials
         secret_name = 'hlf--{}-cred'.format(release)

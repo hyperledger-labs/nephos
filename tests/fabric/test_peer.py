@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import mock
 from unittest.mock import call
 
@@ -64,49 +65,57 @@ class TestCheckPeer:
 
 
 class TestSetupPeer:
+    OPTS = {
+        'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir'},
+        'msps': {'peer_MSP': {'namespace': 'peer-namespace'}},
+        'peers': {'msp': 'peer_MSP', 'names': ['peer0', 'peer1']}
+    }
+
     @mock.patch('nephos.fabric.peer.helm_upgrade')
     @mock.patch('nephos.fabric.peer.helm_install')
     @mock.patch('nephos.fabric.peer.check_peer')
     def test_peer(self, mock_check_peer, mock_helm_install, mock_helm_upgrade):
-        OPTS = {'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir', 'namespace': 'a-namespace'},
-                'peers': {'names': ['peer0', 'peer1']}}
+        OPTS = deepcopy(self.OPTS)
         setup_peer(OPTS)
         mock_helm_install.assert_has_calls([
-            call('a-repo', 'hlf-couchdb', 'cdb-peer0', 'a-namespace',
+            call('a-repo', 'hlf-couchdb', 'cdb-peer0', 'peer-namespace',
                  config_yaml='./a_dir/hlf-couchdb/cdb-peer0.yaml', verbose=False),
-            call('a-repo', 'hlf-peer', 'peer0', 'a-namespace',
+            call('a-repo', 'hlf-peer', 'peer0', 'peer-namespace',
                  config_yaml='./a_dir/hlf-peer/peer0.yaml', verbose=False),
-            call('a-repo', 'hlf-couchdb', 'cdb-peer1', 'a-namespace',
+            call('a-repo', 'hlf-couchdb', 'cdb-peer1', 'peer-namespace',
                  config_yaml='./a_dir/hlf-couchdb/cdb-peer1.yaml', verbose=False),
-            call('a-repo', 'hlf-peer', 'peer1', 'a-namespace',
+            call('a-repo', 'hlf-peer', 'peer1', 'peer-namespace',
                  config_yaml='./a_dir/hlf-peer/peer1.yaml', verbose=False),
         ])
         mock_helm_upgrade.assert_not_called()
         mock_check_peer.assert_has_calls([
-            call('a-namespace', 'peer0', verbose=False),
-            call('a-namespace', 'peer1', verbose=False)
+            call('peer-namespace', 'peer0', verbose=False),
+            call('peer-namespace', 'peer1', verbose=False)
         ])
 
     @mock.patch('nephos.fabric.peer.helm_upgrade')
     @mock.patch('nephos.fabric.peer.helm_install')
     @mock.patch('nephos.fabric.peer.check_peer')
     def test_peer_upgrade(self, mock_check_peer, mock_helm_install, mock_helm_upgrade):
-        OPTS = {'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir', 'namespace': 'a-namespace'},
-                'peers': {'names': ['peer0']}}
+        OPTS = deepcopy(self.OPTS)
+        OPTS['peers']['names'] = ['peer0']
         setup_peer(OPTS, upgrade=True)
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
-            'a-repo', 'hlf-peer', 'peer0', 'a-namespace',
+            'a-repo', 'hlf-peer', 'peer0', 'peer-namespace',
             config_yaml='./a_dir/hlf-peer/peer0.yaml', verbose=False
         )
-        mock_check_peer.assert_called_once_with('a-namespace', 'peer0', verbose=False)
+        mock_check_peer.assert_called_once_with('peer-namespace', 'peer0', verbose=False)
 
 
 # TODO: Tests too complex, simplify channel creation, etc.
 class TestSetupChannel:
-    OPTS = {'core': {'namespace': 'a-namespace'},
-            'orderers': {'names': ['ord0', 'ord1']},
-            'peers': {'channel_name': 'a-channel', 'names': ['peer0', 'peer1']}}
+    OPTS = {
+        'msps': {'ord_MSP': {'namespace': 'ord-namespace'},
+                 'peer_MSP': {'namespace': 'peer-namespace'}},
+        'orderers': {'msp': 'ord_MSP', 'names': ['ord0', 'ord1']},
+        'peers': {'channel_name': 'a-channel', 'msp': 'peer_MSP', 'names': ['peer0', 'peer1']}
+    }
     CMD_SUFFIX = '--tls --ordererTLSHostnameOverride ord0-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)'
 
     @mock.patch('nephos.fabric.peer.random')
@@ -137,15 +146,15 @@ class TestSetupChannel:
         mock_random.choice.assert_called_once_with(self.OPTS['orderers']['names'])
         mock_check_ord_tls.assert_called_once_with(self.OPTS, verbose=False)
         mock_get_pod.assert_has_calls([
-            call('a-namespace', 'peer0', 'hlf-peer', verbose=False),
-            call('a-namespace', 'peer1', 'hlf-peer', verbose=False),
+            call('peer-namespace', 'peer0', 'hlf-peer', verbose=False),
+            call('peer-namespace', 'peer1', 'hlf-peer', verbose=False),
         ])
         mock_pod0_ex.execute.assert_has_calls([
             call('ls /var/hyperledger/a-channel.block'),
-            call("bash -c 'peer channel create -o ord0-hlf-ord.a-namespace.svc.cluster.local:7050 " +
+            call("bash -c 'peer channel create -o ord0-hlf-ord.ord-namespace.svc.cluster.local:7050 " +
                  "-c a-channel -f /hl_config/channel/a-channel.tx " + self.CMD_SUFFIX + "'"),
             call("bash -c 'peer channel fetch 0 /var/hyperledger/a-channel.block " +
-                 "-c a-channel -o ord0-hlf-ord.a-namespace.svc.cluster.local:7050 " + self.CMD_SUFFIX + "'"),
+                 "-c a-channel -o ord0-hlf-ord.ord-namespace.svc.cluster.local:7050 " + self.CMD_SUFFIX + "'"),
             call('ls /var/hyperledger/a-channel.block'),
             call('peer channel list'),
             call("bash -c 'CORE_PEER_MSPCONFIGPATH=$ADMIN_MSP_PATH " +
@@ -154,7 +163,7 @@ class TestSetupChannel:
         mock_pod1_ex.execute.assert_has_calls([
             call('ls /var/hyperledger/a-channel.block'),
             call("bash -c 'peer channel fetch 0 /var/hyperledger/a-channel.block " +
-                 "-c a-channel -o ord0-hlf-ord.a-namespace.svc.cluster.local:7050 " + self.CMD_SUFFIX + "'"),
+                 "-c a-channel -o ord0-hlf-ord.ord-namespace.svc.cluster.local:7050 " + self.CMD_SUFFIX + "'"),
             call('ls /var/hyperledger/a-channel.block'),
             call('peer channel list'),
             call("bash -c 'CORE_PEER_MSPCONFIGPATH=$ADMIN_MSP_PATH " +
@@ -182,8 +191,8 @@ class TestSetupChannel:
         mock_random.choice.assert_called_once_with(self.OPTS['orderers']['names'])
         mock_check_ord_tls.assert_called_once_with(self.OPTS, verbose=False)
         mock_get_pod.assert_has_calls([
-            call('a-namespace', 'peer0', 'hlf-peer', verbose=False),
-            call('a-namespace', 'peer1', 'hlf-peer', verbose=False),
+            call('peer-namespace', 'peer0', 'hlf-peer', verbose=False),
+            call('peer-namespace', 'peer1', 'hlf-peer', verbose=False),
         ])
         mock_pod0_ex.execute.assert_has_calls([
             call('ls /var/hyperledger/a-channel.block'),
@@ -222,15 +231,15 @@ class TestSetupChannel:
         mock_random.choice.assert_called_once_with(self.OPTS['orderers']['names'])
         mock_check_ord_tls.assert_called_once_with(self.OPTS, verbose=True)
         mock_get_pod.assert_has_calls([
-            call('a-namespace', 'peer0', 'hlf-peer', verbose=True),
-            call('a-namespace', 'peer1', 'hlf-peer', verbose=True),
+            call('peer-namespace', 'peer0', 'hlf-peer', verbose=True),
+            call('peer-namespace', 'peer1', 'hlf-peer', verbose=True),
         ])
         mock_pod0_ex.execute.assert_has_calls([
             call('ls /var/hyperledger/a-channel.block'),
-            call("bash -c 'peer channel create -o ord1-hlf-ord.a-namespace.svc.cluster.local:7050 " +
+            call("bash -c 'peer channel create -o ord1-hlf-ord.ord-namespace.svc.cluster.local:7050 " +
                  "-c a-channel -f /hl_config/channel/a-channel.tx '"),
             call("bash -c 'peer channel fetch 0 /var/hyperledger/a-channel.block " +
-                 "-c a-channel -o ord1-hlf-ord.a-namespace.svc.cluster.local:7050 '"),
+                 "-c a-channel -o ord1-hlf-ord.ord-namespace.svc.cluster.local:7050 '"),
             call('ls /var/hyperledger/a-channel.block'),
             call('peer channel list'),
             call("bash -c 'CORE_PEER_MSPCONFIGPATH=$ADMIN_MSP_PATH " +
@@ -239,7 +248,7 @@ class TestSetupChannel:
         mock_pod1_ex.execute.assert_has_calls([
             call('ls /var/hyperledger/a-channel.block'),
             call("bash -c 'peer channel fetch 0 /var/hyperledger/a-channel.block " +
-                 "-c a-channel -o ord1-hlf-ord.a-namespace.svc.cluster.local:7050 '"),
+                 "-c a-channel -o ord1-hlf-ord.ord-namespace.svc.cluster.local:7050 '"),
             call('ls /var/hyperledger/a-channel.block'),
             call('peer channel list'),
             call("bash -c 'CORE_PEER_MSPCONFIGPATH=$ADMIN_MSP_PATH " +

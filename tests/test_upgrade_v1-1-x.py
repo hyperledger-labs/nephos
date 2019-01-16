@@ -9,9 +9,12 @@ from nephos.upgrade_v11x import extract_credentials, extract_crypto, upgrade_cha
 
 class TestExtractCredentials:
     OPTS = {
-        'core': {'namespace': 'a-namespace'},
-        'orderers': {'names': ['ord0', 'ord1']},
-        'peers': {'names': ['peer0', 'peer1']}
+        'msps': {
+            'ord_MSP': {'namespace': 'ord-namespace'},
+            'peer_MSP': {'namespace': 'peer-namespace'}
+        },
+        'orderers': {'names': ['ord0', 'ord1'], 'msp': 'ord_MSP'},
+        'peers': {'names': ['peer0', 'peer1'], 'msp': 'peer_MSP'}
     }
 
     @mock.patch('nephos.upgrade_v11x.secret_read')
@@ -30,15 +33,15 @@ class TestExtractCredentials:
         ]
         extract_credentials(self.OPTS, 'orderer')
         mock_secret_read.assert_has_calls([
-            call('hlf--ord0-cred', 'a-namespace'),
-            call('ord0-hlf-ord', 'a-namespace'),
-            call('hlf--ord1-cred', 'a-namespace'),
-            call('ord1-hlf-ord', 'a-namespace')
+            call('hlf--ord0-cred', 'ord-namespace'),
+            call('ord0-hlf-ord', 'ord-namespace'),
+            call('hlf--ord1-cred', 'ord-namespace'),
+            call('ord1-hlf-ord', 'ord-namespace')
         ])
         mock_print.assert_not_called()
         mock_secret_create.assert_has_calls([
-            call(secret_data[0], 'hlf--ord0-cred', 'a-namespace', verbose=False),
-            call(secret_data[1], 'hlf--ord1-cred', 'a-namespace', verbose=False),
+            call(secret_data[0], 'hlf--ord0-cred', 'ord-namespace', verbose=False),
+            call(secret_data[1], 'hlf--ord1-cred', 'ord-namespace', verbose=False),
         ])
 
     @mock.patch('nephos.upgrade_v11x.secret_read')
@@ -48,8 +51,8 @@ class TestExtractCredentials:
         mock_secret_read.side_effect = [None, None]
         extract_credentials(self.OPTS, 'peer', verbose=True)
         mock_secret_read.assert_has_calls([
-            call('hlf--peer0-cred', 'a-namespace'),
-            call('hlf--peer1-cred', 'a-namespace')
+            call('hlf--peer0-cred', 'peer-namespace'),
+            call('hlf--peer1-cred', 'peer-namespace')
         ])
         mock_print.assert_has_calls([
             call('hlf--peer0-cred secret already exists'),
@@ -60,9 +63,12 @@ class TestExtractCredentials:
 
 class TestExtractCrypto:
     OPTS = {
-        'core': {'namespace': 'a-namespace'},
-        'orderers': {'names': ['ord0']},
-        'peers': {'names': ['peer0']}
+        'msps': {
+            'ord_MSP': {'namespace': 'ord-namespace'},
+            'peer_MSP': {'namespace': 'peer-namespace'}
+        },
+        'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'},
+        'peers': {'names': ['peer0'], 'msp': 'peer_MSP'}
     }
 
     @mock.patch('nephos.upgrade_v11x.secret_read')
@@ -81,13 +87,13 @@ class TestExtractCrypto:
         mock_secret_read.side_effect = [ApiException, ApiException, ApiException, ApiException]
         extract_crypto(self.OPTS, 'orderer')
         mock_get_pod.assert_has_calls([
-            call('a-namespace', 'ord0', 'hlf-ord')
+            call('ord-namespace', 'ord0', 'hlf-ord')
         ])
         mock_secret_read.assert_has_calls([
-            call('hlf--ord0-idcert', 'a-namespace'),
-            call('hlf--ord0-idkey', 'a-namespace'),
-            call('hlf--ord0-cacert', 'a-namespace'),
-            call('hlf--ord0-caintcert', 'a-namespace')
+            call('hlf--ord0-idcert', 'ord-namespace'),
+            call('hlf--ord0-idkey', 'ord-namespace'),
+            call('hlf--ord0-cacert', 'ord-namespace'),
+            call('hlf--ord0-caintcert', 'ord-namespace')
         ])
         mock_pod_ex.execute.assert_has_calls([
             call("bash -c 'ls /var/hyperledger/msp/signcerts' | wc -l"),
@@ -100,9 +106,9 @@ class TestExtractCrypto:
         ])
         mock_print.assert_called_once_with('Wrong number of files in intermediatecerts directory')
         mock_secret_create.assert_has_calls([
-            call({'cert.pem': 'a-secret'}, 'hlf--ord0-idcert', 'a-namespace', verbose=False),
-            call({'key.pem': 'a-secret'}, 'hlf--ord0-idkey', 'a-namespace', verbose=False),
-            call({'cacert.pem': 'a-secret'}, 'hlf--ord0-cacert', 'a-namespace', verbose=False)
+            call({'cert.pem': 'a-secret'}, 'hlf--ord0-idcert', 'ord-namespace', verbose=False),
+            call({'key.pem': 'a-secret'}, 'hlf--ord0-idkey', 'ord-namespace', verbose=False),
+            call({'cacert.pem': 'a-secret'}, 'hlf--ord0-cacert', 'ord-namespace', verbose=False)
         ])
 
     @mock.patch('nephos.upgrade_v11x.secret_read')
@@ -114,13 +120,13 @@ class TestExtractCrypto:
         mock_get_pod.side_effect = [mock_pod_ex]
         extract_crypto(self.OPTS, 'peer', verbose=True)
         mock_get_pod.assert_has_calls([
-            call('a-namespace', 'peer0', 'hlf-peer')
+            call('peer-namespace', 'peer0', 'hlf-peer')
         ])
         mock_secret_read.assert_has_calls([
-            call('hlf--peer0-idcert', 'a-namespace'),
-            call('hlf--peer0-idkey', 'a-namespace'),
-            call('hlf--peer0-cacert', 'a-namespace'),
-            call('hlf--peer0-caintcert', 'a-namespace')
+            call('hlf--peer0-idcert', 'peer-namespace'),
+            call('hlf--peer0-idkey', 'peer-namespace'),
+            call('hlf--peer0-cacert', 'peer-namespace'),
+            call('hlf--peer0-caintcert', 'peer-namespace')
         ])
         mock_pod_ex.execute.assert_not_called()
         mock_print.assert_has_calls([
@@ -145,9 +151,9 @@ class TestExtractCrypto:
         with pytest.raises(ValueError):
             extract_crypto(self.OPTS, 'peer')
         mock_get_pod.assert_has_calls([
-            call('a-namespace', 'peer0', 'hlf-peer')
+            call('peer-namespace', 'peer0', 'hlf-peer')
         ])
-        mock_secret_read.assert_called_once_with('hlf--peer0-idcert', 'a-namespace')
+        mock_secret_read.assert_called_once_with('hlf--peer0-idcert', 'peer-namespace')
         mock_pod_ex.execute.assert_called_once_with("bash -c 'ls /var/hyperledger/msp/signcerts' | wc -l")
         mock_print.assert_not_called()
         mock_secret_create.assert_not_called()
@@ -155,9 +161,13 @@ class TestExtractCrypto:
 
 class TestUpgradeCharts:
     OPTS = {
-        'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir', 'namespace': 'a-namespace'},
-        'orderers': {'names': ['ord0']},
-        'peers': {'names': ['peer0']}
+        'core': {'chart_repo': 'a-repo', 'dir_values': './a_dir'},
+        'msps': {
+            'ord_MSP': {'namespace': 'ord-namespace'},
+            'peer_MSP': {'namespace': 'peer-namespace'}
+        },
+        'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'},
+        'peers': {'names': ['peer0'], 'msp': 'peer_MSP'}
     }
 
     @mock.patch('nephos.upgrade_v11x.print')
@@ -177,8 +187,8 @@ class TestUpgradeCharts:
         ])
         mock_print.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
-            'a-repo', 'hlf-ord', 'ord0', 'a-namespace', config_yaml='./a_dir/hlf-ord/ord0.yaml', verbose=False)
-        mock_check_ord.assert_called_once_with('a-namespace', 'ord0', verbose=False)
+            'a-repo', 'hlf-ord', 'ord0', 'ord-namespace', config_yaml='./a_dir/hlf-ord/ord0.yaml', verbose=False)
+        mock_check_ord.assert_called_once_with('ord-namespace', 'ord0', verbose=False)
         mock_check_peer.assert_not_called()
 
     @mock.patch('nephos.upgrade_v11x.print')
@@ -197,6 +207,6 @@ class TestUpgradeCharts:
         ])
         mock_print.assert_called_once_with('/var/hyperledger/msp_old already exists')
         mock_helm_upgrade.assert_called_once_with(
-            'a-repo', 'hlf-peer', 'peer0', 'a-namespace', config_yaml='./a_dir/hlf-peer/peer0.yaml', verbose=True)
+            'a-repo', 'hlf-peer', 'peer0', 'peer-namespace', config_yaml='./a_dir/hlf-peer/peer0.yaml', verbose=True)
         mock_check_ord.assert_not_called()
-        mock_check_peer.assert_called_once_with('a-namespace', 'peer0', verbose=True)
+        mock_check_peer.assert_called_once_with('peer-namespace', 'peer0', verbose=True)

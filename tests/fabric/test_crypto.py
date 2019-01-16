@@ -224,66 +224,71 @@ class TestCryptoToSecrets:
 
 
 class TestSetupNodes:
+    OPTS = {
+        'msps': {
+            'ord_MSP': {'ca': 'ca-ord', 'namespace': 'ord-namespace'},
+            'peer_MSP': {'ca': 'ca-peer', 'namespace': 'peer-namespace'}
+        },
+        'peers': {'names': ['peer0', 'peer1'], 'msp': 'peer_MSP'},
+        'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}
+    }
+
     @mock.patch('nephos.fabric.crypto.register_node')
     @mock.patch('nephos.fabric.crypto.enroll_node')
     @mock.patch('nephos.fabric.crypto.crypto_to_secrets')
     @mock.patch('nephos.fabric.crypto.credentials_secret')
-    def test_nodes(self, mock_credentials_secret, mock_crypto_to_secrets,
+    def test_setup_nodes(self, mock_credentials_secret, mock_crypto_to_secrets,
                          mock_enroll_node, mock_register_node):
         mock_credentials_secret.side_effect = [{'CA_USERNAME': 'peer0', 'CA_PASSWORD': 'peer0-pw'},
                                                {'CA_USERNAME': 'peer1', 'CA_PASSWORD': 'peer1-pw'}]
         mock_enroll_node.side_effect = ['./peer0_MSP', './peer1_MSP']
-        OPTS = {'core': {'namespace': 'a-namespace'},
-                'msps': {'peer_MSP': {'ca': 'ca-peer'}},
-                'peers': {'names': ['peer0', 'peer1'], 'msp': 'peer_MSP'}
-                }
-        setup_nodes(OPTS, 'peer')
+        setup_nodes(self.OPTS, 'peer')
         mock_credentials_secret.assert_has_calls([
-            call('hlf--peer0-cred', 'a-namespace', username='peer0', verbose=False),
-            call('hlf--peer1-cred', 'a-namespace', username='peer1', verbose=False)
+            call('hlf--peer0-cred', 'peer-namespace', username='peer0', verbose=False),
+            call('hlf--peer1-cred', 'peer-namespace', username='peer1', verbose=False)
         ])
         mock_register_node.assert_has_calls([
-            call('a-namespace', 'ca-peer', 'peer', 'peer0', 'peer0-pw', verbose=False),
-            call('a-namespace', 'ca-peer', 'peer', 'peer1', 'peer1-pw', verbose=False)
+            call('peer-namespace', 'ca-peer', 'peer', 'peer0', 'peer0-pw', verbose=False),
+            call('peer-namespace', 'ca-peer', 'peer', 'peer1', 'peer1-pw', verbose=False)
         ])
         mock_enroll_node.assert_has_calls([
-            call(OPTS, 'ca-peer', 'peer0', 'peer0-pw', verbose=False),
-            call(OPTS, 'ca-peer', 'peer1', 'peer1-pw', verbose=False)
+            call(self.OPTS, 'ca-peer', 'peer0', 'peer0-pw', verbose=False),
+            call(self.OPTS, 'ca-peer', 'peer1', 'peer1-pw', verbose=False)
         ])
         mock_crypto_to_secrets.assert_has_calls([
-            call(namespace='a-namespace', msp_path='./peer0_MSP', user='peer0', verbose=False),
-            call(namespace='a-namespace', msp_path='./peer1_MSP', user='peer1', verbose=False)
+            call(namespace='peer-namespace', msp_path='./peer0_MSP', user='peer0', verbose=False),
+            call(namespace='peer-namespace', msp_path='./peer1_MSP', user='peer1', verbose=False)
         ])
 
     @mock.patch('nephos.fabric.crypto.register_node')
     @mock.patch('nephos.fabric.crypto.enroll_node')
     @mock.patch('nephos.fabric.crypto.crypto_to_secrets')
     @mock.patch('nephos.fabric.crypto.credentials_secret')
-    def test_nodes_ord(self, mock_credentials_secret, mock_crypto_to_secrets,
+    def test_setup_nodes_ord(self, mock_credentials_secret, mock_crypto_to_secrets,
                          mock_enroll_node, mock_register_node):
         mock_credentials_secret.side_effect = [{'CA_USERNAME': 'ord0', 'CA_PASSWORD': 'ord0-pw'}]
         mock_enroll_node.side_effect = ['./ord0_MSP']
-        OPTS = {'core': {'namespace': 'a-namespace'},
-                'msps': {'ord_MSP': {'ca': 'ca-ord'}},
-                'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}}
-        setup_nodes(OPTS, 'orderer')
+        setup_nodes(self.OPTS, 'orderer')
         mock_credentials_secret.assert_has_calls([
-            call('hlf--ord0-cred', 'a-namespace', username='ord0', verbose=False)
+            call('hlf--ord0-cred', 'ord-namespace', username='ord0', verbose=False)
         ])
         mock_register_node.assert_has_calls([
-            call('a-namespace', 'ca-ord', 'orderer', 'ord0', 'ord0-pw', verbose=False)
+            call('ord-namespace', 'ca-ord', 'orderer', 'ord0', 'ord0-pw', verbose=False)
         ])
         mock_enroll_node.assert_has_calls([
-            call(OPTS, 'ca-ord', 'ord0', 'ord0-pw', verbose=False)
+            call(self.OPTS, 'ca-ord', 'ord0', 'ord0-pw', verbose=False)
         ])
         mock_crypto_to_secrets.assert_has_calls([
-            call(namespace='a-namespace', msp_path='./ord0_MSP', user='ord0', verbose=False)
+            call(namespace='ord-namespace', msp_path='./ord0_MSP', user='ord0', verbose=False)
         ])
 
 
 class TestGenesisBlock:
-    OPTS = {'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
-            'orderers': {'secret_genesis': 'a-genesis-secret'}}
+    OPTS = {
+        'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
+        'msps': {'ord_MSP': {'namespace': 'ord-namespace'}},
+        'orderers': {'secret_genesis': 'a-genesis-secret', 'msp': 'ord_MSP'}
+    }
 
     @mock.patch('nephos.fabric.crypto.secret_from_file')
     @mock.patch('nephos.fabric.crypto.print')
@@ -302,7 +307,7 @@ class TestGenesisBlock:
             'configtxgen -profile OrdererGenesis -outputBlock genesis.block', verbose=False)
         mock_print.assert_not_called()
         mock_secret_from_file.assert_called_once_with(
-            secret='a-genesis-secret', namespace='a-namespace',
+            secret='a-genesis-secret', namespace='ord-namespace',
             key='genesis.block', filename='genesis.block', verbose=False)
 
     @mock.patch('nephos.fabric.crypto.secret_from_file')
@@ -321,14 +326,19 @@ class TestGenesisBlock:
         mock_execute.assert_not_called()
         mock_print.assert_called_once_with('genesis.block already exists')
         mock_secret_from_file.assert_called_once_with(
-            secret='a-genesis-secret', namespace='a-namespace',
+            secret='a-genesis-secret', namespace='ord-namespace',
             key='genesis.block', filename='genesis.block', verbose=True)
 
 
 class TestChannelTx:
-    OPTS = {'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
-            'peers': {'secret_channel': 'a-channel-secret',
-                      'channel_name': 'a-channel', 'channel_profile': 'AProfile'}}
+    OPTS = {
+        'core': {'dir_config': './a_dir', 'namespace': 'a-namespace'},
+        'msps': {'peer_MSP': {'namespace': 'peer-namespace'}},
+        'peers': {
+            'channel_name': 'a-channel', 'channel_profile': 'AProfile',
+            'msp': 'peer_MSP', 'secret_channel': 'a-channel-secret'
+        }
+    }
 
     @mock.patch('nephos.fabric.crypto.secret_from_file')
     @mock.patch('nephos.fabric.crypto.print')
@@ -347,7 +357,7 @@ class TestChannelTx:
             'configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx a-channel.tx', verbose=False)
         mock_print.assert_not_called()
         mock_secret_from_file.assert_called_once_with(
-            secret='a-channel-secret', namespace='a-namespace',
+            secret='a-channel-secret', namespace='peer-namespace',
             key='a-channel.tx', filename='a-channel.tx', verbose=False
         )
 
@@ -367,6 +377,6 @@ class TestChannelTx:
         mock_execute.assert_not_called()
         mock_print.assert_called_once_with('a-channel.tx already exists')
         mock_secret_from_file.assert_called_once_with(
-            secret='a-channel-secret', namespace='a-namespace',
+            secret='a-channel-secret', namespace='peer-namespace',
             key='a-channel.tx', filename='a-channel.tx', verbose=True
         )
