@@ -2,37 +2,40 @@ from kubernetes.client.rest import ApiException
 
 
 from nephos.composer.connection_template import json_ct
-from nephos.fabric.utils import get_pod
 from nephos.fabric.crypto import admin_creds
+from nephos.fabric.utils import get_pod
+from nephos.fabric.settings import get_namespace
 from nephos.helpers.helm import helm_install, helm_upgrade
-from nephos.helpers.k8s import (get_app_info,
-                                cm_create, cm_read, ingress_read, secret_from_file)
+from nephos.helpers.k8s import get_app_info, cm_create, cm_read, ingress_read, secret_from_file
 
 
 def get_composer_data(opts, verbose=False):
+    peer_namespace = get_namespace(opts, opts['peers']['msp'])
     composer_name = opts['composer']['name'] + '-hl-composer-rest'
-    data = get_app_info(opts['core']['namespace'], composer_name, composer_name,
+    data = get_app_info(peer_namespace, composer_name, composer_name,
                         secret_key='COMPOSER_APIKEY', verbose=verbose)
     return data
 
 
 def composer_connection(opts, verbose=False):
+    peer_namespace = get_namespace(opts, opts['peers']['msp'])
+    ord_namespace = get_namespace(opts, opts['orderers']['msp'])
     # TODO: This could be a single function
     peer_ca = opts['peers']['ca']
     peer_ca_msp = opts['cas'][peer_ca]['msp']
-    ingress_urls = ingress_read(peer_ca + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
+    ingress_urls = ingress_read(peer_ca + '-hlf-ca', namespace=peer_namespace, verbose=verbose)
     peer_ca_url = ingress_urls[0]
     try:
-        cm_read(opts['composer']['secret_connection'], opts['core']['namespace'], verbose=verbose)
+        cm_read(opts['composer']['secret_connection'], peer_namespace, verbose=verbose)
     except ApiException:
         # Set up connection.json
         # TODO: Improve json_ct to work directly with opts structure
         cm_data = {'connection.json': json_ct(
             opts['peers']['names'],
             opts['orderers']['names'],
-            [peer + '-hlf-peer.{ns}.svc.cluster.local'.format(ns=opts['core']['namespace']) for peer in
+            [peer + '-hlf-peer.{ns}.svc.cluster.local'.format(ns=peer_namespace) for peer in
              opts['peers']['names']],
-            [orderer + '-hlf-ord.{ns}.svc.cluster.local'.format(ns=opts['core']['namespace']) for orderer in
+            [orderer + '-hlf-ord.{ns}.svc.cluster.local'.format(ns=ord_namespace) for orderer in
              opts['orderers']['names']],
             peer_ca,
             peer_ca_url,
@@ -41,18 +44,19 @@ def composer_connection(opts, verbose=False):
             peer_ca_msp,
             opts['peers']['channel_name']
         )}
-        cm_create(opts['core']['namespace'], opts['composer']['secret_connection'], cm_data)
+        cm_create(peer_namespace, opts['composer']['secret_connection'], cm_data)
 
 
 def deploy_composer(opts, upgrade=False, verbose=False):
+    peer_namespace = get_namespace(opts, opts['peers']['msp'])
     # Ensure BNA exists
-    secret_from_file(secret=opts['composer']['secret_bna'], namespace=opts['core']['namespace'],
+    secret_from_file(secret=opts['composer']['secret_bna'], namespace=peer_namespace,
                      verbose=verbose)
     composer_connection(opts, verbose=verbose)
 
     # Start Composer
     if not upgrade:
-        helm_install(opts['core']['chart_repo'], 'hl-composer', opts['composer']['name'], opts['core']['namespace'],
+        helm_install(opts['core']['chart_repo'], 'hl-composer', opts['composer']['name'], peer_namespace,
                      pod_num=3,
                      config_yaml='{dir}/hl-composer/{release}.yaml'.format(
                          dir=opts['core']['dir_values'], release=opts['composer']['name']),
@@ -63,7 +67,8 @@ def deploy_composer(opts, upgrade=False, verbose=False):
 
 
 def setup_admin(opts, verbose=False):
-    hlc_cli_ex = get_pod(opts['core']['namespace'], opts['composer']['name'], 'hl-composer', verbose=verbose)
+    peer_namespace = get_namespace(opts, opts['peers']['msp'])
+    hlc_cli_ex = get_pod(peer_namespace, opts['composer']['name'], 'hl-composer', verbose=verbose)
 
     # Set up the PeerAdmin card
     ls_res = hlc_cli_ex.execute('composer card list --card PeerAdmin@hlfv1')
@@ -82,7 +87,8 @@ def setup_admin(opts, verbose=False):
 
 
 def install_network(opts, verbose=False):
-    hlc_cli_ex = get_pod(opts['core']['namespace'], opts['composer']['name'], 'hl-composer', verbose=verbose)
+    peer_namespace = get_namespace(opts, opts['peers']['msp'])
+    hlc_cli_ex = get_pod(peer_namespace, opts['composer']['name'], 'hl-composer', verbose=verbose)
 
     # Install network
     # TODO: Getting BNA could be a helper function
@@ -91,7 +97,7 @@ def install_network(opts, verbose=False):
     bna_version, _ = bna_rem.split('.bna')
     peer_ca = opts['peers']['ca']
     bna_admin = opts['cas'][peer_ca]['org_admin']
-    admin_creds(opts['cas'][peer_ca], opts['core']['namespace'], verbose=verbose)
+    admin_creds(opts['cas'][peer_ca], peer_namespace, verbose=verbose)
     bna_pw = opts['cas'][peer_ca]['org_adminpw']
 
     ls_res = hlc_cli_ex.execute('composer card list --card {bna_admin}@{bna_name}'.format(

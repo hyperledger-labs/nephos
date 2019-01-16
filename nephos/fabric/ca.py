@@ -2,6 +2,7 @@ from os import path
 from time import sleep
 
 from kubernetes.client.rest import ApiException
+from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_pod
 from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
 from nephos.helpers.k8s import (ingress_read, secret_read)
@@ -14,19 +15,19 @@ CURRENT_DIR = path.abspath(path.split(__file__)[0])
 def ca_chart(opts, release, upgrade=False, verbose=False):
     values_dir = opts['core']['dir_values']
     repository = opts['core']['chart_repo']
-    namespace = opts['core']['namespace']
+    ca_namespace = get_namespace(opts, ca=release)
     # PostgreSQL (Upgrades here are dangerous, deactivated by default)
-    helm_install('stable', 'postgresql', '{}-pg'.format(release), namespace,
+    helm_install('stable', 'postgresql', '{}-pg'.format(release), ca_namespace,
                  config_yaml='{dir}/postgres-ca/{name}-pg.yaml'.format(dir=values_dir, name=release),
                  verbose=verbose)
-    psql_secret = secret_read('{}-pg-postgresql'.format(release), namespace,
+    psql_secret = secret_read('{}-pg-postgresql'.format(release), ca_namespace,
                               verbose=verbose)
     # Different key depending of PostgreSQL version
     psql_password = psql_secret.get('postgres-password') or psql_secret['postgresql-password']
     env_vars = [('externalDatabase.password', psql_password)]
     # Fabric CA
     if not upgrade:
-        helm_install(repository, 'hlf-ca', release, namespace,
+        helm_install(repository, 'hlf-ca', release, ca_namespace,
                      config_yaml='{dir}/hlf-ca/{name}.yaml'.format(dir=values_dir, name=release),
                      env_vars=env_vars,
                      verbose=verbose)
@@ -35,14 +36,14 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
         try:
             preserve = (HelmPreserve('{}-hlf-ca'.format(release), 'CA_ADMIN', 'adminUsername'),
                         HelmPreserve('{}-hlf-ca'.format(release), 'CA_PASSWORD', 'adminPassword'))
-            helm_upgrade(repository, 'hlf-ca', release, namespace,
+            helm_upgrade(repository, 'hlf-ca', release, ca_namespace,
                          config_yaml='{dir}/hlf-ca/{name}.yaml'.format(dir=values_dir, name=release),
                          env_vars=env_vars, preserve=preserve,
                          verbose=verbose)
         except:
             preserve = (HelmPreserve('{}-hlf-ca--ca'.format(release), 'CA_ADMIN', 'adminUsername'),
                         HelmPreserve('{}-hlf-ca--ca'.format(release), 'CA_PASSWORD', 'adminPassword'))
-            helm_upgrade(repository, 'hlf-ca', release, namespace,
+            helm_upgrade(repository, 'hlf-ca', release, ca_namespace,
                          config_yaml='{dir}/hlf-ca/{name}.yaml'.format(dir=values_dir, name=release),
                          env_vars=env_vars, preserve=preserve,
                          verbose=verbose)
@@ -73,18 +74,19 @@ def check_ca(ingress_host, verbose=False):
 # Runner
 def setup_ca(opts, upgrade=False, verbose=False):
     for ca_name, ca_values in opts['cas'].items():
+        ca_namespace = get_namespace(opts, ca=ca_name)
         # Install Charts
         ca_chart(opts=opts, release=ca_name,
                  upgrade=upgrade, verbose=verbose)
 
         # Obtain CA pod and Enroll
-        pod_exec = get_pod(namespace=opts['core']['namespace'], release=ca_name, app='hlf-ca', verbose=verbose)
+        pod_exec = get_pod(namespace=ca_namespace, release=ca_name, app='hlf-ca', verbose=verbose)
         ca_enroll(pod_exec)
 
         # Get CA Ingress and check it is running
         try:
             # Get ingress of CA
-            ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
+            ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=ca_namespace, verbose=verbose)
         except ApiException:
             print('No ingress found for CA')
             continue

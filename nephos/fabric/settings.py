@@ -27,6 +27,27 @@ def check_cluster(cluster_name):
         raise ValueError(message)
 
 
+def get_namespace(opts, msp=None, ca=None):
+    if msp is not None:
+        if 'msps' in opts and msp in opts['msps']:
+            msp_values = opts['msps'][msp]
+        else:
+            raise KeyError('Settings dict does not contain MSP "{}"'.format(msp))
+        if 'namespace' in msp_values:
+            # Specific MSP-based namespace
+            return msp_values['namespace']
+    elif ca is not None:
+        if 'cas' in opts and ca in opts['cas']:
+            ca_values = opts['cas'][ca]
+        else:
+            raise KeyError('Settings dict does not contain CA "{}"'.format(ca))
+        if 'namespace' in ca_values:
+            # Specific MSP-based namespace
+            return ca_values['namespace']
+    # Default case is to return core namespace
+    return opts['core']['namespace']
+
+
 def load_config(settings_file):
     with open(settings_file) as f:
         data = yaml.load(f)

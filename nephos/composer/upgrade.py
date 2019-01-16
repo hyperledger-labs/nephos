@@ -4,7 +4,7 @@ import os
 
 import click
 
-from nephos.fabric.settings import load_config
+from nephos.fabric.settings import get_namespace, load_config
 from nephos.fabric.utils import get_pod
 from nephos.helpers.k8s import ns_create
 
@@ -13,7 +13,7 @@ CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
 
 def upgrade_network(opts, verbose=False):
     # Set up the PeerAdmin card
-    hlc_cli_ex = get_pod(opts['core']['namespace'], 'hlc', 'hl-composer', verbose=verbose)
+    hlc_cli_ex = get_pod(get_namespace(opts, opts['peers']['msp']), 'hlc', 'hl-composer', verbose=verbose)
 
     bna = hlc_cli_ex.execute('ls /hl_config/blockchain_network')
     bna_name, bna_rem = bna.split('_')
@@ -45,7 +45,6 @@ def upgrade_network(opts, verbose=False):
 @click.option('--verbose/--quiet', '-v/-q', default=False)
 def main(settings_file, verbose=False):  # pragma: no cover
     opts = load_config(settings_file)
-    ns_create(opts['core']['namespace'], verbose=verbose)
     upgrade_network(opts, verbose=verbose)
 
 

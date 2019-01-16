@@ -6,7 +6,7 @@ import os
 import click
 from kubernetes.client.rest import ApiException
 
-from nephos.fabric.settings import load_config
+from nephos.fabric.settings import get_namespace, load_config
 from nephos.fabric.utils import get_pod
 from nephos.fabric.ord import check_ord
 from nephos.fabric.peer import check_peer
@@ -21,29 +21,31 @@ NODE_MAPPER = {'orderer': 'hlf-ord', 'peer': 'hlf-peer'}
 
 def extract_credentials(opts, node_type, verbose=False):
     chart = NODE_MAPPER[node_type]
+    node_namespace = get_namespace(opts, opts[node_type + 's']['msp'])
     # Loop over the nodes
     for release in opts[node_type + 's']['names']:
         secret_name = 'hlf--{}-cred'.format(release)
         try:
-            secret_read(secret_name, opts['core']['namespace'])
+            secret_read(secret_name, node_namespace)
             if verbose:
                 print('{} secret already exists'.format(secret_name))
         except ApiException:
             # Obtain secret data from original chart secret
-            original_data = secret_read('{}-{}'.format(release, chart), opts['core']['namespace'])
+            original_data = secret_read('{}-{}'.format(release, chart), node_namespace)
             # Create secret with Orderer credentials
             secret_data = {
                 'CA_USERNAME': original_data['CA_USERNAME'],
                 'CA_PASSWORD': original_data['CA_PASSWORD']
             }
-            secret_create(secret_data, secret_name, opts['core']['namespace'], verbose=verbose)
+            secret_create(secret_data, secret_name, node_namespace, verbose=verbose)
 
 
 def extract_crypto(opts, node_type, verbose=False):
     # Get chart type
     chart = NODE_MAPPER[node_type]
+    node_namespace = get_namespace(opts, opts[node_type + 's']['msp'])
     for release in opts[node_type + 's']['names']:
-        pod_ex = get_pod(opts['core']['namespace'], release, chart)
+        pod_ex = get_pod(node_namespace, release, chart)
         # Secrets
         crypto_info = [
             CryptoInfo('idcert', 'signcerts', 'cert.pem', True),
@@ -54,7 +56,7 @@ def extract_crypto(opts, node_type, verbose=False):
         for item in crypto_info:
             secret_name = 'hlf--{}-{}'.format(release, item.secret_type)
             try:
-                secret_read(secret_name, opts['core']['namespace'])
+                secret_read(secret_name, node_namespace)
                 if verbose:
                     print('{} secret already exists'.format(secret_name))
             except ApiException:
@@ -71,14 +73,15 @@ def extract_crypto(opts, node_type, verbose=False):
                     secret_data = {
                         item.key: content
                     }
-                    secret_create(secret_data, secret_name, opts['core']['namespace'], verbose=verbose)
+                    secret_create(secret_data, secret_name, node_namespace, verbose=verbose)
 
 
 def upgrade_charts(opts, node_type, verbose=False):
     # Get chart type
     chart = NODE_MAPPER[node_type]
+    node_namespace = get_namespace(opts, opts[node_type + 's']['msp'])
     for release in opts[node_type + 's']['names']:
-        pod_ex = get_pod(opts['core']['namespace'], release, chart)
+        pod_ex = get_pod(node_namespace, release, chart)
         res = pod_ex.execute('ls /var/hyperledger/msp_old')
         if not res:
             pod_ex.execute('mv /var/hyperledger/msp /var/hyperledger/msp_old')
@@ -86,13 +89,13 @@ def upgrade_charts(opts, node_type, verbose=False):
             print('/var/hyperledger/msp_old already exists')
         config_yaml = '{dir}/{chart}/{name}.yaml'.format(
                          dir=opts['core']['dir_values'], chart=chart, name=release)
-        helm_upgrade(opts['core']['chart_repo'], chart, release, opts['core']['namespace'],
+        helm_upgrade(opts['core']['chart_repo'], chart, release, node_namespace,
                      config_yaml=config_yaml,
                      verbose=verbose)
         if node_type == 'orderer':
-            check_ord(opts['core']['namespace'], release, verbose=verbose)
+            check_ord(node_namespace, release, verbose=verbose)
         elif node_type == 'peer':
-            check_peer(opts['core']['namespace'], release, verbose=verbose)
+            check_peer(node_namespace, release, verbose=verbose)
 
 
 @click.command()
@@ -100,7 +103,6 @@ def upgrade_charts(opts, node_type, verbose=False):
 @click.option('--verbose/--quiet', '-v/-q', default=False)
 def main(settings_file, verbose=False):  # pragma: no cover
     opts = load_config(settings_file)
-    ns_create(opts['core']['namespace'], verbose=verbose)
     extract_credentials(opts, 'orderer', verbose=verbose)
     extract_credentials(opts, 'peer', verbose=verbose)
     extract_crypto(opts, 'orderer', verbose=verbose)

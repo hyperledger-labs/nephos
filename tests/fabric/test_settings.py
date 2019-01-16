@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from nephos.fabric.settings import check_cluster, load_config
+from nephos.fabric.settings import check_cluster, get_namespace, load_config
 
 
 class TestCheckCluster:
@@ -22,6 +22,48 @@ class TestCheckCluster:
             {'context': {'cluster': 'another-cluster'}}
         ]
         mock_context_get.assert_called_once_with()
+
+
+class TestGetNamespace:
+    OPTS = {
+        'core': {'namespace': 'core-namespace'},
+        'msps': {
+            'namespaced_MSP': {'namespace': 'msp-namespace'},
+            'core_MSP': {}
+        },
+        'cas': {
+            'a-ca': {'namespace': 'ca-namespace'},
+            'core-ca': {}
+        }
+    }
+
+    def test_get_namespace_empty(self):
+        result = get_namespace(self.OPTS)
+        assert result == 'core-namespace'
+
+    def test_get_namespace_msp(self):
+        result = get_namespace(self.OPTS, 'namespaced_MSP')
+        assert result == 'msp-namespace'
+
+    def test_get_namespace_msp_core(self):
+        result = get_namespace(self.OPTS, 'core_MSP')
+        assert result == 'core-namespace'
+
+    def test_get_namespace_msp_error(self):
+        with pytest.raises(KeyError):
+            get_namespace(self.OPTS, 'nonexistent_MSP')
+
+    def test_get_namespace_ca(self):
+        result = get_namespace(self.OPTS, ca='a-ca')
+        assert result == 'ca-namespace'
+
+    def test_get_namespace_ca_core(self):
+        result = get_namespace(self.OPTS, ca='core-ca')
+        assert result == 'core-namespace'
+
+    def test_get_namespace_ca_error(self):
+        with pytest.raises(KeyError):
+            get_namespace(self.OPTS, ca='nonexistent-ca')
 
 
 class TestLoadHlfConfig:

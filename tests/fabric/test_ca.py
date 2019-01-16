@@ -7,62 +7,64 @@ from nephos.fabric.ca import (ca_chart,
 
 
 class TestCaChart:
+    OPTS = {
+        'core': {'dir_values': './some_dir', 'chart_repo': 'a_repo'},
+        'cas': {'a-release': {'namespace': 'ca-namespace'}}
+    }
+
     @mock.patch('nephos.fabric.ca.secret_read')
     @mock.patch('nephos.fabric.ca.helm_upgrade')
     @mock.patch('nephos.fabric.ca.helm_install')
     def test_ca_chart(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{'postgresql-password': 'a_password'}]
-        opts = {'core': {'dir_values': './some_dir', 'chart_repo': 'a_repo', 'namespace': 'a-namespace'}}
         env_vars = [('externalDatabase.password', 'a_password')]
-        ca_chart(opts, 'a-release')
+        ca_chart(self.OPTS, 'a-release')
         mock_helm_install.assert_has_calls([
-            call('stable', 'postgresql', 'a-release-pg', 'a-namespace',
+            call('stable', 'postgresql', 'a-release-pg', 'ca-namespace',
                  config_yaml='./some_dir/postgres-ca/a-release-pg.yaml', verbose=False),
-            call('a_repo', 'hlf-ca', 'a-release', 'a-namespace',
+            call('a_repo', 'hlf-ca', 'a-release', 'ca-namespace',
                  config_yaml='./some_dir/hlf-ca/a-release.yaml', env_vars=env_vars, verbose=False)
         ])
         mock_helm_upgrade.assert_not_called()
         mock_secret_read.assert_called_once_with(
-            'a-release-pg-postgresql', 'a-namespace', verbose=False)
+            'a-release-pg-postgresql', 'ca-namespace', verbose=False)
 
     @mock.patch('nephos.fabric.ca.secret_read')
     @mock.patch('nephos.fabric.ca.helm_upgrade')
     @mock.patch('nephos.fabric.ca.helm_install')
     def test_ca_chart_upgrade(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{'postgresql-password': 'a_password'}]
-        opts = {'core': {'dir_values': './some_dir', 'chart_repo': 'a_repo', 'namespace': 'a-namespace'}}
         env_vars = [('externalDatabase.password', 'a_password')]
         preserve = (('a-release-hlf-ca', 'CA_ADMIN', 'adminUsername'),
                     ('a-release-hlf-ca', 'CA_PASSWORD', 'adminPassword'))
-        ca_chart(opts, 'a-release', upgrade=True)
+        ca_chart(self.OPTS, 'a-release', upgrade=True)
         mock_helm_install.assert_called_once_with(
-            'stable', 'postgresql', 'a-release-pg', 'a-namespace',
+            'stable', 'postgresql', 'a-release-pg', 'ca-namespace',
             config_yaml='./some_dir/postgres-ca/a-release-pg.yaml', verbose=False)
         mock_helm_upgrade.assert_called_once_with(
-            'a_repo', 'hlf-ca', 'a-release', 'a-namespace',
+            'a_repo', 'hlf-ca', 'a-release', 'ca-namespace',
             config_yaml='./some_dir/hlf-ca/a-release.yaml',
             env_vars=env_vars, preserve=preserve, verbose=False
         )
         mock_secret_read.assert_called_once_with(
-            'a-release-pg-postgresql', 'a-namespace', verbose=False)
+            'a-release-pg-postgresql', 'ca-namespace', verbose=False)
 
     @mock.patch('nephos.fabric.ca.secret_read')
     @mock.patch('nephos.fabric.ca.helm_upgrade')
     @mock.patch('nephos.fabric.ca.helm_install')
     def test_ca_chart_verbose(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{'postgresql-password': 'a_password'}]
-        opts = {'core': {'dir_values': './some_dir', 'chart_repo': 'a_repo', 'namespace': 'a-namespace'}}
         env_vars = [('externalDatabase.password', 'a_password')]
-        ca_chart(opts, 'a-release', verbose=True)
+        ca_chart(self.OPTS, 'a-release', verbose=True)
         mock_helm_install.assert_has_calls([
-            call('stable', 'postgresql', 'a-release-pg', 'a-namespace',
+            call('stable', 'postgresql', 'a-release-pg', 'ca-namespace',
                  config_yaml='./some_dir/postgres-ca/a-release-pg.yaml', verbose=True),
-            call('a_repo', 'hlf-ca', 'a-release', 'a-namespace',
+            call('a_repo', 'hlf-ca', 'a-release', 'ca-namespace',
                  config_yaml='./some_dir/hlf-ca/a-release.yaml', env_vars=env_vars, verbose=True)
         ])
         mock_helm_upgrade.assert_not_called()
         mock_secret_read.assert_called_once_with(
-            'a-release-pg-postgresql', 'a-namespace', verbose=True)
+            'a-release-pg-postgresql', 'ca-namespace', verbose=True)
 
 
 class TestCaEnroll:
@@ -113,6 +115,13 @@ class CheckCa:
 
 
 class TestSetupCa:
+    OPTS = {
+        'core': {'dir_config': './a_dir'},
+        'cas': {
+            'root-ca': {'namespace': 'root-namespace'},
+            'int-ca': {'namespace': 'int-namespace'}}
+    }
+
     root_executer = mock.Mock()
     root_executer.pod = 'root-pod'
     int_executer = mock.Mock()
@@ -127,26 +136,23 @@ class TestSetupCa:
                 mock_check_ca, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
         mock_ingress_read.side_effect = [ApiException, ['an-ingress']]
-        OPTS = {
-            'core': {'namespace': 'a-namespace', 'dir_config': './a_dir'},
-            'cas': {'root-ca': 'ca-values', 'int-ca': 'other-values'}
-            }
-        setup_ca(OPTS)
+
+        setup_ca(self.OPTS)
         mock_ca_chart.assert_has_calls([
-            call(opts=OPTS, release='root-ca', upgrade=False, verbose=False),
-            call(opts=OPTS, release='int-ca', upgrade=False, verbose=False),
+            call(opts=self.OPTS, release='root-ca', upgrade=False, verbose=False),
+            call(opts=self.OPTS, release='int-ca', upgrade=False, verbose=False),
         ])
         mock_get_pod.assert_has_calls([
-            call(namespace='a-namespace', release='root-ca', app='hlf-ca', verbose=False),
-            call(namespace='a-namespace', release='int-ca', app='hlf-ca', verbose=False)
+            call(namespace='root-namespace', release='root-ca', app='hlf-ca', verbose=False),
+            call(namespace='int-namespace', release='int-ca', app='hlf-ca', verbose=False)
         ])
         mock_ca_enroll.assert_has_calls([
             call(self.root_executer),
             call(self.int_executer),
             ])
         mock_ingress_read.assert_has_calls([
-            call('root-ca-hlf-ca', namespace='a-namespace', verbose=False),
-            call('int-ca-hlf-ca', namespace='a-namespace', verbose=False)
+            call('root-ca-hlf-ca', namespace='root-namespace', verbose=False),
+            call('int-ca-hlf-ca', namespace='int-namespace', verbose=False)
         ])
         mock_check_ca.assert_called_once_with(ingress_host='an-ingress', verbose=False)
 
@@ -158,14 +164,22 @@ class TestSetupCa:
     def test_setup_ca_upgrade(self, mock_ca_chart, mock_ca_enroll,
                         mock_check_ca, mock_get_pod, mock_ingress_read):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
-        mock_ingress_read.side_effect =[ApiException]
-        OPTS = {
-            'core': {'namespace': 'a-namespace', 'dir_config': './a_dir'},
-            'cas': {'root-ca': 'ca-values'}
-            }
-        setup_ca(OPTS, upgrade=True, verbose=True)
-        mock_ca_chart.assert_called_once_with(opts=OPTS, release='root-ca', upgrade=True, verbose=True)
-        mock_get_pod.assert_called_once_with(namespace='a-namespace', release='root-ca', app='hlf-ca', verbose=True)
-        mock_ca_enroll.assert_called_once_with(self.root_executer)
-        mock_ingress_read.assert_called_once_with('root-ca-hlf-ca', namespace='a-namespace', verbose=True)
-        mock_check_ca.assert_not_called()
+        mock_ingress_read.side_effect =[ApiException, ['an-ingress']]
+        setup_ca(self.OPTS, upgrade=True, verbose=True)
+        mock_ca_chart.assert_has_calls([
+            call(opts=self.OPTS, release='root-ca', upgrade=True, verbose=True),
+            call(opts=self.OPTS, release='int-ca', upgrade=True, verbose=True),
+        ])
+        mock_get_pod.assert_has_calls([
+            call(namespace='root-namespace', release='root-ca', app='hlf-ca', verbose=True),
+            call(namespace='int-namespace', release='int-ca', app='hlf-ca', verbose=True)
+        ])
+        mock_ca_enroll.assert_has_calls([
+            call(self.root_executer),
+            call(self.int_executer)
+        ])
+        mock_ingress_read.assert_has_calls([
+            call('root-ca-hlf-ca', namespace='root-namespace', verbose=True),
+            call('int-ca-hlf-ca', namespace='int-namespace', verbose=True)
+        ])
+        mock_check_ca.assert_called_once_with(ingress_host='an-ingress', verbose=True)
