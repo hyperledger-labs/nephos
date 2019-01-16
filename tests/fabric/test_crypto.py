@@ -172,11 +172,13 @@ class TestAdminMsp:
         }
     }
 
-    @mock.patch('nephos.fabric.crypto.create_admin')
+    @mock.patch('nephos.fabric.crypto.ns_create')
     @mock.patch('nephos.fabric.crypto.msp_secrets')
+    @mock.patch('nephos.fabric.crypto.create_admin')
     @mock.patch('nephos.fabric.crypto.admin_creds')
-    def test_admin_msp(self, mock_ca_creds, mock_msp_secrets, mock_create_admin):
+    def test_admin_msp(self, mock_ca_creds,  mock_create_admin, mock_msp_secrets, mock_ns_create):
         admin_msp(self.OPTS, 'an-msp')
+        mock_ns_create.assert_called_once_with('msp-namespace', verbose=False)
         mock_ca_creds.assert_called_once_with(
             self.OPTS, 'an-msp', verbose=False)
         mock_create_admin.assert_called_once_with(self.OPTS, 'an-msp', verbose=False)
@@ -232,6 +234,10 @@ class TestCryptoToSecrets:
 
 class TestSetupNodes:
     OPTS = {
+        'cas': {
+            'ca-ord': {'namespace': 'ca-namespace'},
+            'ca-peer': {'namespace': 'ca-namespace'}
+        },
         'msps': {
             'ord_MSP': {'ca': 'ca-ord', 'namespace': 'ord-namespace'},
             'peer_MSP': {'ca': 'ca-peer', 'namespace': 'peer-namespace'}
@@ -255,8 +261,8 @@ class TestSetupNodes:
             call('hlf--peer1-cred', 'peer-namespace', username='peer1', verbose=False)
         ])
         mock_register_node.assert_has_calls([
-            call('peer-namespace', 'ca-peer', 'peer', 'peer0', 'peer0-pw', verbose=False),
-            call('peer-namespace', 'ca-peer', 'peer', 'peer1', 'peer1-pw', verbose=False)
+            call('ca-namespace', 'ca-peer', 'peer', 'peer0', 'peer0-pw', verbose=False),
+            call('ca-namespace', 'ca-peer', 'peer', 'peer1', 'peer1-pw', verbose=False)
         ])
         mock_enroll_node.assert_has_calls([
             call(self.OPTS, 'ca-peer', 'peer0', 'peer0-pw', verbose=False),
@@ -280,7 +286,7 @@ class TestSetupNodes:
             call('hlf--ord0-cred', 'ord-namespace', username='ord0', verbose=False)
         ])
         mock_register_node.assert_has_calls([
-            call('ord-namespace', 'ca-ord', 'orderer', 'ord0', 'ord0-pw', verbose=False)
+            call('ca-namespace', 'ca-ord', 'orderer', 'ord0', 'ord0-pw', verbose=False)
         ])
         mock_enroll_node.assert_has_calls([
             call(self.OPTS, 'ca-ord', 'ord0', 'ord0-pw', verbose=False)

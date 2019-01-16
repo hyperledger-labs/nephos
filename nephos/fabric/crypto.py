@@ -5,7 +5,7 @@ from os import path, chdir, getcwd, listdir, makedirs
 
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
-from nephos.helpers.k8s import ingress_read, secret_from_file
+from nephos.helpers.k8s import ns_create, ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
 
 PWD = getcwd()
@@ -13,9 +13,9 @@ CryptoInfo = namedtuple('CryptoInfo', ('secret_type', 'subfolder', 'key', 'requi
 
 
 # CA Helpers
-def register_node(namespace, ca, node_type, username, password, verbose=False):
+def register_node(ca_namespace, ca, node_type, username, password, verbose=False):
     # Get CA
-    ca_exec = get_pod(namespace=namespace, release=ca, app='hlf-ca', verbose=verbose)
+    ca_exec = get_pod(namespace=ca_namespace, release=ca, app='hlf-ca', verbose=verbose)
     # Check if Orderer is registered with the relevant CA
     ord_id = ca_exec.execute(
         'fabric-ca-client identity list --id {id}'.format(id=username))
@@ -122,6 +122,9 @@ def msp_secrets(opts, msp_name, verbose=False):
 
 
 def admin_msp(opts, msp_name, verbose=False):
+    admin_namespace = get_namespace(opts, msp_name)
+    ns_create(admin_namespace, verbose=verbose)
+
     # Get/set credentials
     admin_creds(opts, msp_name, verbose=verbose)
 
@@ -162,6 +165,7 @@ def setup_nodes(opts, node_type, verbose=False):
     nodes = opts[node_type + 's']
     msp_values = opts['msps'][nodes['msp']]
     node_namespace = get_namespace(opts, nodes['msp'])
+    ca_namespace = get_namespace(opts, ca=opts['msps'][nodes['msp']]['ca'])
     for release in nodes['names']:
         # Create secret with Orderer credentials
         secret_name = 'hlf--{}-cred'.format(release)
@@ -169,7 +173,7 @@ def setup_nodes(opts, node_type, verbose=False):
                                          username=release,
                                          verbose=verbose)
         # Register node
-        register_node(node_namespace, msp_values['ca'],
+        register_node(ca_namespace, msp_values['ca'],
                       node_type, secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
                       verbose=verbose)
         # Enroll node
