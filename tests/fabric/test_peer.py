@@ -24,7 +24,7 @@ class TestCheckOrdTls:
 
 
 class TestCheckPeer:
-    OPTS = {'core': {'namespace': 'a-namespace'}}
+    OPTS = 'opt-values'
 
     @mock.patch('nephos.fabric.peer.sleep')
     @mock.patch('nephos.fabric.peer.get_pod')

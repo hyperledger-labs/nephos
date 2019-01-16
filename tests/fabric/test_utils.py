@@ -87,8 +87,6 @@ class TestCryptoSecret:
 
 
 class TestGetPod:
-    OPTS = {'core': {'namespace': 'a-namespace'}}
-
     @mock.patch('nephos.fabric.utils.Executer')
     @mock.patch('nephos.fabric.utils.execute')
     def test_get_pod(self, mock_execute, mock_Executer):

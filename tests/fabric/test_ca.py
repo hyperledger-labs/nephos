@@ -9,7 +9,7 @@ from nephos.fabric.ca import (ca_chart,
 class TestCaChart:
     OPTS = {
         'core': {'dir_values': './some_dir', 'chart_repo': 'a_repo'},
-        'cas': {'a-release': {'namespace': 'a-namespace'}}
+        'cas': {'a-release': {'namespace': 'ca-namespace'}}
     }
 
     @mock.patch('nephos.fabric.ca.secret_read')
@@ -20,14 +20,14 @@ class TestCaChart:
         env_vars = [('externalDatabase.password', 'a_password')]
         ca_chart(self.OPTS, 'a-release')
         mock_helm_install.assert_has_calls([
-            call('stable', 'postgresql', 'a-release-pg', 'a-namespace',
+            call('stable', 'postgresql', 'a-release-pg', 'ca-namespace',
                  config_yaml='./some_dir/postgres-ca/a-release-pg.yaml', verbose=False),
-            call('a_repo', 'hlf-ca', 'a-release', 'a-namespace',
+            call('a_repo', 'hlf-ca', 'a-release', 'ca-namespace',
                  config_yaml='./some_dir/hlf-ca/a-release.yaml', env_vars=env_vars, verbose=False)
         ])
         mock_helm_upgrade.assert_not_called()
         mock_secret_read.assert_called_once_with(
-            'a-release-pg-postgresql', 'a-namespace', verbose=False)
+            'a-release-pg-postgresql', 'ca-namespace', verbose=False)
 
     @mock.patch('nephos.fabric.ca.secret_read')
     @mock.patch('nephos.fabric.ca.helm_upgrade')
@@ -39,15 +39,15 @@ class TestCaChart:
                     ('a-release-hlf-ca', 'CA_PASSWORD', 'adminPassword'))
         ca_chart(self.OPTS, 'a-release', upgrade=True)
         mock_helm_install.assert_called_once_with(
-            'stable', 'postgresql', 'a-release-pg', 'a-namespace',
+            'stable', 'postgresql', 'a-release-pg', 'ca-namespace',
             config_yaml='./some_dir/postgres-ca/a-release-pg.yaml', verbose=False)
         mock_helm_upgrade.assert_called_once_with(
-            'a_repo', 'hlf-ca', 'a-release', 'a-namespace',
+            'a_repo', 'hlf-ca', 'a-release', 'ca-namespace',
             config_yaml='./some_dir/hlf-ca/a-release.yaml',
             env_vars=env_vars, preserve=preserve, verbose=False
         )
         mock_secret_read.assert_called_once_with(
-            'a-release-pg-postgresql', 'a-namespace', verbose=False)
+            'a-release-pg-postgresql', 'ca-namespace', verbose=False)
 
     @mock.patch('nephos.fabric.ca.secret_read')
     @mock.patch('nephos.fabric.ca.helm_upgrade')
@@ -57,14 +57,14 @@ class TestCaChart:
         env_vars = [('externalDatabase.password', 'a_password')]
         ca_chart(self.OPTS, 'a-release', verbose=True)
         mock_helm_install.assert_has_calls([
-            call('stable', 'postgresql', 'a-release-pg', 'a-namespace',
+            call('stable', 'postgresql', 'a-release-pg', 'ca-namespace',
                  config_yaml='./some_dir/postgres-ca/a-release-pg.yaml', verbose=True),
-            call('a_repo', 'hlf-ca', 'a-release', 'a-namespace',
+            call('a_repo', 'hlf-ca', 'a-release', 'ca-namespace',
                  config_yaml='./some_dir/hlf-ca/a-release.yaml', env_vars=env_vars, verbose=True)
         ])
         mock_helm_upgrade.assert_not_called()
         mock_secret_read.assert_called_once_with(
-            'a-release-pg-postgresql', 'a-namespace', verbose=True)
+            'a-release-pg-postgresql', 'ca-namespace', verbose=True)
 
 
 class TestCaEnroll:
