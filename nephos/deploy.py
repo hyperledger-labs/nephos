@@ -36,7 +36,6 @@ def cli(ctx, settings_file, upgrade, verbose):
 @click.pass_context
 def ca(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
-    ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     setup_ca(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
 
 
@@ -44,7 +43,6 @@ def ca(ctx):  # pragma: no cover
 @click.pass_context
 def composer(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
-    ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     deploy_composer(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
     setup_admin(opts, verbose=ctx.obj['verbose'])
     install_network(opts, verbose=ctx.obj['verbose'])
@@ -54,7 +52,6 @@ def composer(ctx):  # pragma: no cover
 @click.pass_context
 def crypto(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
-    ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     # Set up Admin MSPs
     admin_msp(opts, opts['orderers']['msp'], verbose=ctx.obj['verbose'])
     admin_msp(opts, opts['peers']['msp'], verbose=ctx.obj['verbose'])
@@ -71,7 +68,6 @@ def crypto(ctx):  # pragma: no cover
 @click.pass_context
 def deploy(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
-    ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     # Setup CA
     setup_ca(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
     # Crypto material
@@ -96,7 +92,6 @@ def deploy(ctx):  # pragma: no cover
 @click.pass_context
 def fabric(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
-    ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     # Setup CA
     setup_ca(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
     # Crypto material
@@ -117,7 +112,6 @@ def fabric(ctx):  # pragma: no cover
 @click.pass_context
 def orderer(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
-    ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     setup_ord(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
 
 
@@ -125,7 +119,6 @@ def orderer(ctx):  # pragma: no cover
 @click.pass_context
 def peer(ctx):  # pragma: no cover
     opts = load_config(ctx.obj['settings_file'])
-    ns_create(opts['core']['namespace'], verbose=ctx.obj['verbose'])
     setup_peer(opts, upgrade=ctx.obj['upgrade'], verbose=ctx.obj['verbose'])
     setup_channel(opts, verbose=ctx.obj['verbose'])
 

@@ -3,6 +3,7 @@ import shutil
 from collections import namedtuple
 from os import path, chdir, getcwd, listdir, makedirs
 
+from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
 from nephos.helpers.k8s import ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
@@ -27,7 +28,8 @@ def register_node(namespace, ca, node_type, username, password, verbose=False):
 
 def enroll_node(opts, ca, username, password, verbose=False):
     dir_config = opts['core']['dir_config']
-    ingress_urls = ingress_read(ca + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
+    ca_namespace = get_namespace(opts, ca=ca)
+    ingress_urls = ingress_read(ca + '-hlf-ca', namespace=ca_namespace, verbose=verbose)
     msp_dir = '{}_MSP'.format(username)
     msp_path = path.join(dir_config, msp_dir)
     if not path.isdir(msp_path):
@@ -52,12 +54,13 @@ def create_admin(opts, msp_name, verbose=False):
 
     # TODO: Refactor this into its own function
     ca_name = msp_values['ca']
+    ca_namespace = get_namespace(opts, ca=ca_name)
 
     # Obtain CA pod
-    pod_exec = get_pod(namespace=opts['core']['namespace'], release=ca_name, app='hlf-ca', verbose=verbose)
+    pod_exec = get_pod(namespace=ca_namespace, release=ca_name, app='hlf-ca', verbose=verbose)
 
     # Get CA ingress
-    ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=opts['core']['namespace'], verbose=verbose)
+    ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=ca_namespace, verbose=verbose)
     ca_ingress = ingress_urls[0]
 
     # Register the Organisation with the CAs
@@ -84,8 +87,10 @@ def create_admin(opts, msp_name, verbose=False):
 
 
 def admin_creds(opts, msp_name, verbose=False):
+    msp_namespace = get_namespace(opts, msp=msp_name)
+
     msp_values = opts['msps'][msp_name]
-    secret_data = credentials_secret(msp_values['org_admincred'], opts['core']['namespace'],
+    secret_data = credentials_secret(msp_values['org_admincred'], msp_namespace,
                                      username=msp_values['org_admin'], password=msp_values.get('org_adminpw'),
                                      verbose=verbose)
     msp_values['org_adminpw'] = secret_data['CA_PASSWORD']
@@ -93,7 +98,7 @@ def admin_creds(opts, msp_name, verbose=False):
 
 def msp_secrets(opts, msp_name, verbose=False):
     # Relevant variables
-    namespace = opts['core']['namespace']
+    msp_namespace = get_namespace(opts, msp=msp_name)
     dir_config = opts['core']['dir_config']
     msp_values = opts['msps'][msp_name]
 
@@ -107,12 +112,12 @@ def msp_secrets(opts, msp_name, verbose=False):
         shutil.copy(signcert, admincert)
 
     # AdminCert
-    secret_from_file(secret=msp_values['org_admincert'], namespace=namespace, key='cert.pem', filename=admincert,
+    secret_from_file(secret=msp_values['org_admincert'], namespace=msp_namespace, key='cert.pem', filename=admincert,
                      verbose=verbose)
 
     # AdminKey
     adminkey = glob.glob(path.join(dir_config, msp_name, 'keystore', '*_sk'))[0]
-    secret_from_file(secret=msp_values['org_adminkey'], namespace=namespace, key='key.pem', filename=adminkey,
+    secret_from_file(secret=msp_values['org_adminkey'], namespace=msp_namespace, key='key.pem', filename=adminkey,
                      verbose=verbose)
 
 
@@ -156,14 +161,15 @@ def crypto_to_secrets(namespace, msp_path, user, verbose=False):
 def setup_nodes(opts, node_type, verbose=False):
     nodes = opts[node_type + 's']
     msp_values = opts['msps'][nodes['msp']]
+    node_namespace = get_namespace(opts, msp_values['namespace'])
     for release in nodes['names']:
         # Create secret with Orderer credentials
         secret_name = 'hlf--{}-cred'.format(release)
-        secret_data = credentials_secret(secret_name, opts['core']['namespace'],
+        secret_data = credentials_secret(secret_name, node_namespace,
                                          username=release,
                                          verbose=verbose)
         # Register node
-        register_node(opts['core']['namespace'], msp_values['ca'],
+        register_node(node_namespace, msp_values['ca'],
                       node_type, secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
                       verbose=verbose)
         # Enroll node
@@ -171,11 +177,12 @@ def setup_nodes(opts, node_type, verbose=False):
                                secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
                                verbose=verbose)
         # Secrets
-        crypto_to_secrets(namespace=opts['core']['namespace'], msp_path=msp_path, user=release, verbose=verbose)
+        crypto_to_secrets(namespace=node_namespace, msp_path=msp_path, user=release, verbose=verbose)
 
 
 # ConfigTxGen helpers
 def genesis_block(opts, verbose=False):
+    ord_namespace = get_namespace(opts, opts['orderers']['msp'])
     # Change to blockchain materials directory
     chdir(opts['core']['dir_config'])
     # Create the genesis block
@@ -187,13 +194,14 @@ def genesis_block(opts, verbose=False):
     else:
         print('genesis.block already exists')
     # Create the genesis block secret
-    secret_from_file(secret=opts['orderers']['secret_genesis'], namespace=opts['core']['namespace'],
+    secret_from_file(secret=opts['orderers']['secret_genesis'], namespace=ord_namespace,
                      key='genesis.block', filename='genesis.block', verbose=verbose)
     # Return to original directory
     chdir(PWD)
 
 
 def channel_tx(opts, verbose=False):
+    peer_namespace = get_namespace(opts, opts['peers']['msp'])
     # Change to blockchain materials directory
     chdir(opts['core']['dir_config'])
     # Create Channel Tx
@@ -210,7 +218,7 @@ def channel_tx(opts, verbose=False):
     else:
         print('{channel}.tx already exists'.format(channel=opts['peers']['channel_name']))
     # Create the channel transaction secret
-    secret_from_file(secret=opts['peers']['secret_channel'], namespace=opts['core']['namespace'],
+    secret_from_file(secret=opts['peers']['secret_channel'], namespace=peer_namespace,
                      key=channel_file, filename=channel_file, verbose=verbose)
     # Return to original directory
     chdir(PWD)
