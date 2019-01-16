@@ -101,7 +101,7 @@ def upgrade_charts(opts, node_type, verbose=False):
 @click.command()
 @click.option('--settings_file', '-f', required=True, help='YAML file containing HLF options')
 @click.option('--verbose/--quiet', '-v/-q', default=False)
-def main(settings_file, verbose=False):  # pragma: no cover
+def main(settings_file, verbose=False):
     opts = load_config(settings_file)
     extract_credentials(opts, 'orderer', verbose=verbose)
     extract_credentials(opts, 'peer', verbose=verbose)
@@ -111,5 +111,5 @@ def main(settings_file, verbose=False):  # pragma: no cover
     upgrade_charts(opts, 'peer', verbose=verbose)
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     main()
