@@ -1,0 +1,56 @@
+core:
+  # Comment out to make it work on your cluster
+  cluster: hlf-dev-bis-aks
+  # ChartMuseum repository or directory holding charts
+  chart_repo: stable
+  # Directory where we hold configtx.yaml, and where we will save:
+  # 1) cryptographic material
+  # 2) genesis block and
+  # 3) channel transaction
+  dir_config: ./examples/prod/config
+  # Directory where the Helm Chart values reside
+  dir_values: ./examples/prod/helm_values
+cas:
+  ca:
+    namespace: cas
+    # TODO: We should be able to set up a relative path
+    tls_cert: /Users/sasha/Aid_Tech/nephos/nephos/extras/Lets_Encrypt_Authority_X3.pem
+msps:
+  OrdererMSP:
+    ca: ca
+    namespace: orderers
+    org_admin: ord-admin
+    # Secrets
+    org_admincred: hlf--ord-admincred
+    org_admincert: hlf--ord-admincert
+    org_adminkey: hlf--ord-adminkey
+  PeerMSP:
+    ca: ca
+    namespace: peers
+    org_admin: peer-admin
+    # Secrets
+    org_admincred: hlf--peer-admincred
+    org_admincert: hlf--peer-admincert
+    org_adminkey: hlf--peer-adminkey
+orderers:
+  domain: orderers.svc.cluster.local
+  msp: OrdererMSP
+  names:
+  - ord1
+  - ord2
+  secret_genesis: hlf--genesis
+  kafka:
+    pod_num: 4
+peers:
+  domain: peers.svc.cluster.local
+  msp: PeerMSP
+  names:
+  - peer1
+  - peer2
+  channel_name: composerchannel
+  channel_profile: MyChannel
+  secret_channel: hlf--channel
+composer:
+  name: hlc
+  secret_bna: bc--bna
+  secret_connection: hlc--connection
