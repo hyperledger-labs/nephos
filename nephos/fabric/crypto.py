@@ -1,4 +1,3 @@
-import glob
 import shutil
 from collections import namedtuple
 from os import path, chdir, getcwd, listdir, makedirs
@@ -88,9 +87,10 @@ def create_admin(opts, msp_name, verbose=False):
 
 def admin_creds(opts, msp_name, verbose=False):
     msp_namespace = get_namespace(opts, msp=msp_name)
-
     msp_values = opts['msps'][msp_name]
-    secret_data = credentials_secret(msp_values['org_admincred'], msp_namespace,
+
+    admin_cred_secret = 'hlf--{}-admincred'.format(msp_values['org_admin'])
+    secret_data = credentials_secret(admin_cred_secret, msp_namespace,
                                      username=msp_values['org_admin'], password=msp_values.get('org_adminpw'),
                                      verbose=verbose)
     msp_values['org_adminpw'] = secret_data['CA_PASSWORD']
@@ -99,26 +99,23 @@ def admin_creds(opts, msp_name, verbose=False):
 def msp_secrets(opts, msp_name, verbose=False):
     # Relevant variables
     msp_namespace = get_namespace(opts, msp=msp_name)
-    dir_config = opts['core']['dir_config']
     msp_values = opts['msps'][msp_name]
+    msp_path = path.join(opts['core']['dir_config'], msp_name)
 
     # Copy cert to admincerts
-    signcert = path.join(dir_config, msp_name, 'signcerts', 'cert.pem')
-    admincert = path.join(dir_config, msp_name, 'admincerts', 'cert.pem')
+    signcert = path.join(msp_path, 'signcerts', 'cert.pem')
+    admincert = path.join(msp_path, 'admincerts', 'cert.pem')
     if not path.isfile(admincert):
         admin_dir = path.split(admincert)[0]
         if not path.isdir(admin_dir):
             makedirs(admin_dir)
         shutil.copy(signcert, admincert)
 
-    # AdminCert
-    secret_from_file(secret=msp_values['org_admincert'], namespace=msp_namespace, key='cert.pem', filename=admincert,
-                     verbose=verbose)
+    # Create ID secrets from Admin MSP
+    id_to_secrets(msp_namespace, msp_path, msp_values['org_admin'], verbose=verbose)
 
-    # AdminKey
-    adminkey = glob.glob(path.join(dir_config, msp_name, 'keystore', '*_sk'))[0]
-    secret_from_file(secret=msp_values['org_adminkey'], namespace=msp_namespace, key='key.pem', filename=adminkey,
-                     verbose=verbose)
+    # Create CA secrets from Admin MSP
+    cacerts_to_secrets(msp_namespace, msp_path, msp_values['org_admin'], verbose=verbose)
 
 
 def admin_msp(opts, msp_name, verbose=False):
@@ -136,28 +133,39 @@ def admin_msp(opts, msp_name, verbose=False):
 
 
 # General helpers
-def crypto_to_secrets(namespace, msp_path, user, verbose=False):
-    # Secrets
+def item_to_secret(namespace, msp_path, user, item, verbose=False):
+    # Item in form CryptoInfo(name, subfolder, key, required)
+    secret_name = 'hlf--{user}-{type}'.format(user=user, type=item.secret_type)
+    file_path = path.join(msp_path, item.subfolder)
+    try:
+        crypto_secret(secret_name,
+                      namespace,
+                      file_path=file_path,
+                      key=item.key,
+                      verbose=verbose)
+    except Exception as error:
+        if item.required:
+            raise Exception(error)
+        else:
+            print('No {} found, so secret "{}" was not created'.format(file_path, secret_name))
+
+
+def id_to_secrets(namespace, msp_path, user, verbose=False):
     crypto_info = [
         CryptoInfo('idcert', 'signcerts', 'cert.pem', True),
-        CryptoInfo('idkey', 'keystore', 'key.pem', True),
+        CryptoInfo('idkey', 'keystore', 'key.pem', True)
+    ]
+    for item in crypto_info:
+        item_to_secret(namespace, msp_path, user, item, verbose=verbose)
+
+
+def cacerts_to_secrets(namespace, msp_path, user, verbose=False):
+    crypto_info = [
         CryptoInfo('cacert', 'cacerts', 'cacert.pem', True),
         CryptoInfo('caintcert', 'intermediatecerts', 'intermediatecacert.pem', False)
     ]
     for item in crypto_info:
-        secret_name = 'hlf--{user}-{type}'.format(user=user, type=item.secret_type)
-        file_path = path.join(msp_path, item.subfolder)
-        try:
-            crypto_secret(secret_name,
-                          namespace,
-                          file_path=file_path,
-                          key=item.key,
-                          verbose=verbose)
-        except Exception as error:
-            if item.required:
-                raise Exception(error)
-            else:
-                print('No {} found, so secret "{}" was not created'.format(file_path, secret_name))
+        item_to_secret(namespace, msp_path, user, item, verbose=verbose)
 
 
 # TODO: Create single function to enroll/register, separate from loop
@@ -181,7 +189,7 @@ def setup_nodes(opts, node_type, verbose=False):
                                secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
                                verbose=verbose)
         # Secrets
-        crypto_to_secrets(namespace=node_namespace, msp_path=msp_path, user=release, verbose=verbose)
+        id_to_secrets(namespace=node_namespace, msp_path=msp_path, user=release, verbose=verbose)
 
 
 # ConfigTxGen helpers

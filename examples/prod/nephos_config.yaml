@@ -19,19 +19,11 @@ msps:
   OrdererMSP:
     ca: ca
     namespace: orderers
-    org_admin: ord-admin
-    # Secrets
-    org_admincred: hlf--ord-admincred
-    org_admincert: hlf--ord-admincert
-    org_adminkey: hlf--ord-adminkey
+    org_admin: ordadmin
   PeerMSP:
     ca: ca
     namespace: peers
-    org_admin: peer-admin
-    # Secrets
-    org_admincred: hlf--peer-admincred
-    org_admincert: hlf--peer-admincert
-    org_adminkey: hlf--peer-adminkey
+    org_admin: peeradmin
 orderers:
   domain: orderers.svc.cluster.local
   msp: OrdererMSP
@@ -47,7 +39,7 @@ peers:
   names:
   - peer1
   - peer2
-  channel_name: composerchannel
+  channel_name: mychannel
   channel_profile: MyChannel
   secret_channel: hlf--channel
 composer:

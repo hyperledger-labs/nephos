@@ -7,13 +7,13 @@ from nephos.helpers.helm import helm_install, helm_upgrade
 from nephos.helpers.misc import execute
 
 
-# TODO: Perhaps replace opts with orderer name
 # TODO: Move to Ord module
 # TODO: We need a similar check to see if Peer uses client TLS as well
 def check_ord_tls(opts, verbose=False):
-    ord_tls = execute(('kubectl get cm -n blockchain ' +
+    ord_namespace = get_namespace(opts, opts['orderers']['msp'])
+    ord_tls = execute(('kubectl get cm -n {ns} ' +
                        '{release}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
-                       ).format(release=opts['orderers']['names'][0]),
+                       ).format(ns=ord_namespace, release=opts['orderers']['names'][0]),
                       verbose=verbose)
     return ord_tls == 'true'
 
