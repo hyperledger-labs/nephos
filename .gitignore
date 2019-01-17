@@ -107,3 +107,7 @@ venv.bak/
 .envrc
 .idea
 
+# Examples
+genesis.block
+*channel.tx
+*MSP
