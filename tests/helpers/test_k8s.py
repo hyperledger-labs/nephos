@@ -285,7 +285,7 @@ class TestGetAppInfo:
 
     @mock.patch('nephos.helpers.k8s.secret_read')
     @mock.patch('nephos.helpers.k8s.ingress_read')
-    def test_get_app_info_missingingress(self, mock_ingress_read, mock_secret_read):
+    def test_get_app_info_noingress(self, mock_ingress_read, mock_secret_read):
         mock_secret_read.side_effect = [{'CUSTOM_KEY': 'an-api-key'}]
         mock_ingress_read.side_effect = [ApiException]
         with pytest.raises(ApiException):
