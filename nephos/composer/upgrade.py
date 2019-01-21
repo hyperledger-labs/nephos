@@ -6,7 +6,6 @@ import click
 
 from nephos.fabric.settings import get_namespace, load_config
 from nephos.fabric.utils import get_pod
-from nephos.helpers.k8s import ns_create
 
 CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
 
@@ -43,10 +42,10 @@ def upgrade_network(opts, verbose=False):
 @click.command()
 @click.option('--settings_file', '-f', required=True, help='YAML file containing HLF options')
 @click.option('--verbose/--quiet', '-v/-q', default=False)
-def main(settings_file, verbose=False):  # pragma: no cover
+def main(settings_file, verbose=False):
     opts = load_config(settings_file)
     upgrade_network(opts, verbose=verbose)
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     main()
