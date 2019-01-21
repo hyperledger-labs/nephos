@@ -137,23 +137,34 @@ class TestNsRead:
 class TestIngressRead:
     @mock.patch('nephos.helpers.k8s.pretty_print')
     @mock.patch('nephos.helpers.k8s.api_ext')
-    def ingress_read(self, mock_api_ext, mock_pretty_print):
-        mock_ingress = mock.Mock()
-        mock_ingress.spec.rules.side_effect = [IngressHost('a-url'), IngressHost('another-url')]
+    def test_ingress_read(self, mock_api_ext, mock_pretty_print):
+        mock_ingress = mock.MagicMock()
+        mock_ingress.spec.rules.__getitem__.side_effect = [IngressHost('a-url'), IngressHost('another-url')]
         mock_api_ext.read_namespaced_ingress.side_effect = [mock_ingress]
         ingress_read('an_ingress', 'a-namespace')
         mock_api_ext.read_namespaced_ingress.assert_called_once_with(
-            name='an_ingress', namespace='a-namespace', verbose=False)
+            name='an_ingress', namespace='a-namespace')
+        mock_pretty_print.assert_not_called()
+
+    @mock.patch('nephos.helpers.k8s.pretty_print')
+    @mock.patch('nephos.helpers.k8s.api_ext')
+    def test_ingress_read_verbose(self, mock_api_ext, mock_pretty_print):
+        mock_ingress = mock.MagicMock()
+        mock_ingress.spec.rules.__iter__.return_value = [IngressHost('a-url'), IngressHost('another-url')]
+        mock_api_ext.read_namespaced_ingress.side_effect = [mock_ingress]
+        ingress_read('an_ingress', 'a-namespace', verbose=True)
+        mock_api_ext.read_namespaced_ingress.assert_called_once_with(
+            name='an_ingress', namespace='a-namespace')
         mock_pretty_print.assert_called_once_with('["a-url", "another-url"]')
 
     @mock.patch('nephos.helpers.k8s.pretty_print')
     @mock.patch('nephos.helpers.k8s.api_ext')
-    def ingress_read_fail(self, mock_api_ext, mock_pretty_print):
+    def test_ingress_read_fail(self, mock_api_ext, mock_pretty_print):
         mock_api_ext.read_namespaced_ingress.side_effect = [ApiException]
         with pytest.raises(ApiException):
             ingress_read('an_ingress', 'a-namespace', verbose=True)
         mock_api_ext.read_namespaced_ingress.assert_called_once_with(
-            name='an_ingress', namespace='a-namespace', verbose=True)
+            name='an_ingress', namespace='a-namespace')
         mock_pretty_print.assert_not_called()
 
 
