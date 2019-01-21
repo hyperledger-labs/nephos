@@ -1,10 +1,11 @@
 from unittest import mock
 from unittest.mock import call
 
+from click.testing import CliRunner
 import pytest
 from kubernetes.client.rest import ApiException
 
-from nephos.upgrade_v11x import extract_credentials, extract_crypto, upgrade_charts
+from nephos.upgrade_v11x import extract_credentials, extract_crypto, main, upgrade_charts
 
 
 class TestExtractCredentials:
@@ -210,3 +211,30 @@ class TestUpgradeCharts:
             'a-repo', 'hlf-peer', 'peer0', 'peer-namespace', config_yaml='./a_dir/hlf-peer/peer0.yaml', verbose=True)
         mock_check_ord.assert_not_called()
         mock_check_peer.assert_called_once_with('peer-namespace', 'peer0', verbose=True)
+
+
+# Click tests
+class TestUpgradeV11x:
+    RUNNER = CliRunner()
+
+    @mock.patch('nephos.upgrade_v11x.upgrade_charts')
+    @mock.patch('nephos.upgrade_v11x.load_config')
+    @mock.patch('nephos.upgrade_v11x.extract_crypto')
+    @mock.patch('nephos.upgrade_v11x.extract_credentials')
+    def test_(self, mock_extract_credentials, mock_extract_crypto, mock_load_config, mock_upgrade_charts):
+        mock_load_config.side_effect = ['some-opts']
+        result = self.RUNNER.invoke(main, ['--settings_file', 'nephos_config.yaml'])
+        mock_load_config.assert_called_once_with('nephos_config.yaml')
+        mock_extract_credentials.assert_has_calls([
+            call('some-opts', 'orderer', verbose=False),
+            call('some-opts', 'peer', verbose=False),
+        ])
+        mock_extract_crypto.assert_has_calls([
+            call('some-opts', 'orderer', verbose=False),
+            call('some-opts', 'peer', verbose=False),
+        ])
+        mock_upgrade_charts.assert_has_calls([
+            call('some-opts', 'orderer', verbose=False),
+            call('some-opts', 'peer', verbose=False),
+        ])
+        assert result.exit_code == 0
