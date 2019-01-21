@@ -3,6 +3,7 @@ from nephos.fabric.crypto import admin_msp, genesis_block, channel_tx, setup_nod
 from nephos.fabric.ord import setup_ord
 from nephos.fabric.peer import setup_peer, setup_channel
 from nephos.composer.install import deploy_composer, install_network, setup_admin
+from nephos.composer.upgrade import upgrade_network
 
 
 def runner_ca(opts, upgrade=False, verbose=False):
@@ -13,6 +14,10 @@ def runner_composer(opts, upgrade=False, verbose=False):
     deploy_composer(opts, upgrade=upgrade, verbose=verbose)
     setup_admin(opts, verbose=verbose)
     install_network(opts, verbose=verbose)
+
+
+def runner_composer_up(opts, verbose=False):
+    upgrade_network(opts, verbose=verbose)
 
 
 def runner_crypto(opts, verbose=False):

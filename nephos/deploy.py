@@ -6,7 +6,7 @@ import json
 import click
 from blessings import Terminal
 
-from nephos.runners import (runner_ca, runner_composer, runner_crypto,
+from nephos.runners import (runner_ca, runner_composer, runner_composer_up, runner_crypto,
                             runner_deploy, runner_fabric, runner_orderer, runner_peer)
 
 from nephos.fabric.settings import load_config
@@ -44,11 +44,18 @@ def ca(settings):
     runner_ca(opts, upgrade=settings.upgrade, verbose=settings.verbose)
 
 
-@cli.command(help=TERM.cyan('Install Hyperledger  Composer'))
+@cli.command(help=TERM.cyan('Install Hyperledger Composer'))
 @pass_settings
 def composer(settings):
     opts = load_config(settings.settings_file)
     runner_composer(opts, upgrade=settings.upgrade, verbose=settings.verbose)
+
+
+@cli.command(help=TERM.cyan('Upgrade Hyperledger Composer'))
+@pass_settings
+def composer_up(settings):
+    opts = load_config(settings.settings_file)
+    runner_composer_up(opts, verbose=settings.verbose)
 
 
 @cli.command(help=TERM.cyan('Obtain cryptographic materials from CAs'))
