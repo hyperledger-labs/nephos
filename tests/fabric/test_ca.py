@@ -52,6 +52,32 @@ class TestCaChart:
     @mock.patch('nephos.fabric.ca.secret_read')
     @mock.patch('nephos.fabric.ca.helm_upgrade')
     @mock.patch('nephos.fabric.ca.helm_install')
+    def test_ca_chart_upgrade_old(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
+        mock_secret_read.side_effect = [{'postgresql-password': 'a_password'}]
+        mock_helm_upgrade.side_effect = [Exception, None]
+        env_vars = [('externalDatabase.password', 'a_password')]
+        preserves = [(('a-release-hlf-ca', 'CA_ADMIN', 'adminUsername'),
+                     ('a-release-hlf-ca', 'CA_PASSWORD', 'adminPassword')),
+                     (('a-release-hlf-ca--ca', 'CA_ADMIN', 'adminUsername'),
+                      ('a-release-hlf-ca--ca', 'CA_PASSWORD', 'adminPassword'))]
+        ca_chart(self.OPTS, 'a-release', upgrade=True)
+        mock_helm_install.assert_called_once_with(
+            'stable', 'postgresql', 'a-release-pg', 'ca-namespace',
+            config_yaml='./some_dir/postgres-ca/a-release-pg.yaml', verbose=False)
+        mock_helm_upgrade.assert_has_calls([
+            call('a_repo', 'hlf-ca', 'a-release', 'ca-namespace',
+                 config_yaml='./some_dir/hlf-ca/a-release.yaml',
+                 env_vars=env_vars, preserve=preserves[0], verbose=False),
+            call('a_repo', 'hlf-ca', 'a-release', 'ca-namespace',
+                 config_yaml='./some_dir/hlf-ca/a-release.yaml',
+                 env_vars=env_vars, preserve=preserves[1], verbose=False)
+        ])
+        mock_secret_read.assert_called_once_with(
+            'a-release-pg-postgresql', 'ca-namespace', verbose=False)
+
+    @mock.patch('nephos.fabric.ca.secret_read')
+    @mock.patch('nephos.fabric.ca.helm_upgrade')
+    @mock.patch('nephos.fabric.ca.helm_install')
     def test_ca_chart_verbose(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{'postgresql-password': 'a_password'}]
         env_vars = [('externalDatabase.password', 'a_password')]
