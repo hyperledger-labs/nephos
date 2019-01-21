@@ -128,7 +128,7 @@ class TestCaEnroll:
         mock_sleep.assert_not_called()
 
 
-class CheckCa:
+class TestCheckCa:
     @mock.patch('nephos.fabric.ca.execute_until_success')
     def test_check_ca(self, mock_execute_until_success):
         check_ca('an-ingress', verbose=False)
