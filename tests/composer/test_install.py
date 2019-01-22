@@ -36,10 +36,10 @@ class TestComposerConnection:
         'composer': {'name': 'hlc', 'secret_connection': 'connection-secret'},
         'msps': {
             'ord_MSP': {'namespace': 'ord-namespace'},
-            'peer_MSP': {'namespace': 'peer-namespace'}
+            'peer_MSP': {'namespace': 'peer-namespace', 'ca': 'peer-ca'}
         },
         'orderers': {'names': ['ord0', 'ord1'], 'msp': 'ord_MSP'},
-        'peers': {'ca': 'peer-ca', 'channel_name': 'a-channel', 'msp': 'peer_MSP', 'names': ['peer0', 'peer1']},
+        'peers': {'channel_name': 'a-channel', 'msp': 'peer_MSP', 'names': ['peer0', 'peer1']},
     }
 
     @mock.patch('nephos.composer.install.json_ct')
@@ -104,13 +104,12 @@ class TestDeployComposer:
         mock_helm_upgrade.assert_not_called()
 
 
-# TODO: Simplify function and test (too complicated)
 class TestSetupAdmin:
     OPTS = {
         'cas': {'peer-ca': {'org_admin': 'an-admin', 'org_adminpw': 'a-password'}},
         'composer': {'name': 'hlc'},
         'msps': {'peer_MSP': {'namespace': 'peer-namespace'}},
-        'peers': {'ca': 'peer-ca', 'msp': 'peer_MSP'}
+        'peers': {'msp': 'peer_MSP'}
     }
 
     @mock.patch('nephos.composer.install.get_pod')
@@ -151,13 +150,12 @@ class TestSetupAdmin:
         ])
 
 
-# TODO: Simplify function and test (too complicated)
 class TestInstallNetwork:
     OPTS = {
         'cas': {'peer-ca': {'org_admin': 'an-admin', 'org_adminpw': 'a-password'}},
         'composer': {'name': 'hlc'},
-        'msps': {'peer_MSP': {'namespace': 'peer-namespace'}},
-        'peers': {'ca': 'peer-ca', 'msp': 'peer_MSP'}
+        'msps': {'peer_MSP': {'namespace': 'peer-namespace', 'ca': 'peer-ca'}},
+        'peers': {'msp': 'peer_MSP'}
     }
 
     @mock.patch('nephos.composer.install.get_pod')
