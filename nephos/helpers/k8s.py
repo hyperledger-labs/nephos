@@ -33,14 +33,14 @@ class Executer:
 
     # TODO: api.connect_get_namespaced_pod_exec (to do exec using Python API programmatically)
     def execute(self, command):
-        result = execute(
+        result, _ = execute(
             self.prefix_exec + command,
             verbose=self.verbose
         )
         return result
 
     def logs(self, tail=-1):
-        result = execute(
+        result, _ = execute(
             self.prefix_logs + '--tail={}'.format(tail),
             verbose=self.verbose
         )

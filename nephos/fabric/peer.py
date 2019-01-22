@@ -11,10 +11,10 @@ from nephos.helpers.misc import execute
 # TODO: We need a similar check to see if Peer uses client TLS as well
 def check_ord_tls(opts, verbose=False):
     ord_namespace = get_namespace(opts, opts['orderers']['msp'])
-    ord_tls = execute(('kubectl get cm -n {ns} ' +
-                       '{release}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
-                       ).format(ns=ord_namespace, release=opts['orderers']['names'][0]),
-                      verbose=verbose)
+    ord_tls, _ = execute(('kubectl get cm -n {ns} ' +
+                          '{release}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
+                          ).format(ns=ord_namespace, release=opts['orderers']['names'][0]),
+                         verbose=verbose)
     return ord_tls == 'true'
 
 

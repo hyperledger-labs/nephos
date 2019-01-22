@@ -13,6 +13,7 @@ class TestCheckOrdTls:
 
     @mock.patch('nephos.fabric.peer.execute')
     def test_check_ord_tls(self, mock_execute):
+        mock_execute.side_effect = [('value', None)]
         check_ord_tls(self.OPTS)
         mock_execute.assert_called_once_with(
             'kubectl get cm -n orderer-namespace an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"',
@@ -20,6 +21,7 @@ class TestCheckOrdTls:
 
     @mock.patch('nephos.fabric.peer.execute')
     def test_check_ord_tls_verbose(self, mock_execute):
+        mock_execute.side_effect = [('value', None)]
         check_ord_tls(self.OPTS, verbose=True)
         mock_execute.assert_called_once_with(
             'kubectl get cm -n orderer-namespace an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"',

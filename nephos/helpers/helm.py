@@ -25,15 +25,17 @@ def helm_check(app, name, namespace, pod_num=None):
     first_pass = True
     while not running:
         # TODO: Best to generate a function that checks app state
-        states_list = execute(
+        states, _ = execute(
             'kubectl get pods -n {ns} -l "app={app},release={name}" -o jsonpath="{{.items[*].status.phase}}"'.format(
                 app=app, name=name, ns=namespace
-            ), show_command=first_pass).split()
+            ), show_command=first_pass)
+        states_list = states.split()
         # Let us also check the number of pods we have
-        pod_list = execute(
+        pods, _ = execute(
             'kubectl get pods -n {ns} -l "app={app},release={name}" -o jsonpath="{{.items[*].metadata.name}}"'.format(
                 app=app, name=name, ns=namespace
-            ), show_command=first_pass).split()
+            ), show_command=first_pass)
+        pod_list = pods.split()
         first_pass = False
         # We keep checking the state of the pods until they are running
         states = set(states_list)
@@ -48,14 +50,14 @@ def helm_check(app, name, namespace, pod_num=None):
 # TODO: Separate the Helm helpers into a separate script
 # Initialise helm
 def helm_init():
-    res = execute('helm list')
+    res, _ = execute('helm list')
     if res is not None:
         print(t.green('Helm is already installed!'))
     else:
         execute('kubectl create -f {}/../extras/helm-rbac.yaml'.format(CURRENT_DIR))
         execute('helm init --service-account tiller')
         # Fix issue with automountServiceToken
-        res = execute('kubectl -n kube-system get deployment tiller-deploy ' +
+        res, _ = execute('kubectl -n kube-system get deployment tiller-deploy ' +
                       '-o jsonpath="{.spec.template.spec.automountServiceAccountToken}"')
         if res == 'false':
             execute("kubectl -n kube-system patch deployment tiller-deploy " +
@@ -63,7 +65,7 @@ def helm_init():
         # We keep checking the state of helm until everything is running
         running = False
         while not running:
-            res = execute('helm list')
+            res, _ = execute('helm list')
             if res is not None:
                 running = True
             else:
@@ -104,7 +106,7 @@ def helm_env_vars(namespace, env_vars, preserve=None, verbose=False):
 
 # General function to check if a release exists and install it
 def helm_install(repo, app, release, namespace, config_yaml=None, env_vars=None, verbose=False, pod_num=1):
-    ls_res = execute('helm status {release}'.format(
+    ls_res, _ = execute('helm status {release}'.format(
         release=release
     ))
 
@@ -123,8 +125,9 @@ def helm_install(repo, app, release, namespace, config_yaml=None, env_vars=None,
     helm_check(app, release, namespace, pod_num)
 
 
-def helm_upgrade(repo, app, release, namespace, config_yaml=None, env_vars=None, preserve=None, verbose=False, pod_num=1):
-    ls_res = execute('helm status {release}'.format(
+def helm_upgrade(repo, app, release, namespace,
+                 config_yaml=None, env_vars=None, preserve=None, verbose=False, pod_num=1):
+    ls_res, _ = execute('helm status {release}'.format(
         release=release
     ))
 

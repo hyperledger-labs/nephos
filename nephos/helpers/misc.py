@@ -26,18 +26,20 @@ def execute(command, verbose=False, show_command=True, show_errors=True):
         decoded = result.decode("utf-8")
         if verbose:
             print(decoded)
-        return decoded
+        return decoded, None
     except CalledProcessError as e:
+        error_text = e.output.decode("utf-8")
         if show_errors:
             print(t.red("Command failed with CalledProcessError:"))
-            print(e.output.decode("utf-8"))
+            print(error_text)
+        return None, error_text
 
 
 def execute_until_success(command, verbose=False, delay=15):
     res = None
     first_pass = True
     while not res:
-        res = execute(command, show_command=first_pass, verbose=verbose and first_pass, show_errors=first_pass)
+        res, _ = execute(command, show_command=first_pass, verbose=verbose and first_pass, show_errors=first_pass)
         first_pass = False
         if not res:
             print(t.red('.'), end='', flush=True)
