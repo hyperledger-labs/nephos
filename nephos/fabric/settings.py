@@ -7,12 +7,12 @@ from nephos.helpers.k8s import context_get
 
 
 # YAML module will load data using an OrderedDict
-def dict_representer(dumper, data):
-    return dumper.represent_dict(data.iteritems())
-
-
 def dict_constructor(loader, node):
     return OrderedDict(loader.construct_pairs(node))
+
+
+def dict_representer(dumper, data):
+    return dumper.represent_dict(data.iteritems())
 
 
 yaml.add_representer(OrderedDict, dict_representer)
