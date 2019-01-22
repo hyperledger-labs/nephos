@@ -78,7 +78,7 @@ def ns_read(namespace, verbose=False):
 # Ingress
 def ingress_read(name, namespace='default', verbose=False):
     ingress = api_ext.read_namespaced_ingress(name=name, namespace=namespace)
-    hosts = [item.host for item in ingress.spec.rules]
+    hosts = [item.host for item in ingress.spec.rules if item.host]
     if verbose:
         pretty_print(json.dumps(hosts))
     return hosts
@@ -146,8 +146,6 @@ def get_app_info(namespace, ingress, secret, secret_key='API_KEY', verbose=False
     # Get ingress URL
     ingress_data = ingress_read(ingress, namespace=namespace, verbose=verbose)
     url = ingress_data[0]
-    if not url:
-        raise ValueError('Ingress is missing')
     # Get API_KEY from secret
     secret_data = secret_read(secret, namespace, verbose=verbose)
     apikey = secret_data[secret_key]

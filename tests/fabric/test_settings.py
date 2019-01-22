@@ -2,7 +2,28 @@ from unittest import mock
 
 import pytest
 
-from nephos.fabric.settings import check_cluster, get_namespace, load_config
+from nephos.fabric.settings import dict_constructor, dict_representer, check_cluster, get_namespace, load_config
+
+
+class TestDictConstuctor:
+
+    @mock.patch('nephos.fabric.settings.OrderedDict')
+    def test_dict_constructor(self, mock_ordered_dict):
+        mock_loader = mock.Mock()
+        mock_loader.construct_pairs.side_effect = ['pairs']
+        mock_node = mock.Mock()
+        dict_constructor(mock_loader, mock_node)
+        mock_loader.construct_pairs.assert_called_once_with(mock_node)
+        mock_ordered_dict.assert_called_once_with('pairs')
+
+
+class TestDictRepresenter:
+    def test_dict_representer(self):
+        mock_dumper = mock.Mock()
+        mock_data = mock.Mock()
+        mock_data.iteritems.side_effect = [['some-items']]
+        dict_representer(mock_dumper, mock_data)
+        mock_dumper.represent_dict.assert_called_once_with(['some-items'])
 
 
 class TestCheckCluster:

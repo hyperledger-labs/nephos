@@ -111,5 +111,5 @@ def main(settings_file, verbose=False):
     upgrade_charts(opts, 'peer', verbose=verbose)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

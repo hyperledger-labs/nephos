@@ -2,9 +2,7 @@
 
 import os
 
-import click
-
-from nephos.fabric.settings import get_namespace, load_config
+from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_pod
 
 CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
@@ -36,16 +34,3 @@ def upgrade_network(opts, verbose=False):
              '--networkName {bna_name} --networkVersion {bna_version}').format(
                 bna_name=bna_name, bna_version=bna_version
             ))
-
-
-# TODO: Refactor and move to core click
-@click.command()
-@click.option('--settings_file', '-f', required=True, help='YAML file containing HLF options')
-@click.option('--verbose/--quiet', '-v/-q', default=False)
-def main(settings_file, verbose=False):
-    opts = load_config(settings_file)
-    upgrade_network(opts, verbose=verbose)
-
-
-if __name__ == "__main__":
-    main()

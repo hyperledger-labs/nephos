@@ -34,6 +34,16 @@ def test_composer(mock_load_config, mock_runner_composer):
     assert result.exit_code == 0
 
 
+@mock.patch('nephos.deploy.runner_composer_up')
+@mock.patch('nephos.deploy.load_config')
+def test_composer_up(mock_load_config, mock_runner_composer_up):
+    mock_load_config.side_effect = ['some-opts']
+    result = RUNNER.invoke(cli, ['--settings_file', 'nephos_config.yaml', 'composer-up'])
+    mock_load_config.assert_called_once_with('nephos_config.yaml')
+    mock_runner_composer_up.assert_called_once_with('some-opts', verbose=False)
+    assert result.exit_code == 0
+
+
 @mock.patch('nephos.deploy.runner_crypto')
 @mock.patch('nephos.deploy.load_config')
 def test_crypto(mock_load_config, mock_runner_crypto):

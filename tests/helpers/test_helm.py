@@ -98,6 +98,14 @@ class TestHelmEnvVars:
         mock_secret_read.assert_not_called()
 
     @mock.patch('nephos.helpers.helm.secret_read')
+    def test_helm_env_vars_bad(self, mock_secret_read):
+        with pytest.raises(TypeError):
+            helm_env_vars(
+                'a-namespace',
+                env_vars=('foo', 'egg'))
+        mock_secret_read.assert_not_called()
+
+    @mock.patch('nephos.helpers.helm.secret_read')
     def test_helm_env_vars_preserve(self, mock_secret_read):
         mock_secret_read.side_effect = [{'BAR_ENV': 'sausage'}]
         result = helm_env_vars(
@@ -106,6 +114,17 @@ class TestHelmEnvVars:
             preserve=(('a-secret', 'BAR_ENV', 'egg'),))
         assert result == ' --set foo=bar --set egg=sausage'
         mock_secret_read.assert_called_once_with('a-secret', 'a-namespace', verbose=False)
+
+    @mock.patch('nephos.helpers.helm.secret_read')
+    def test_helm_env_vars_preserve_bad(self, mock_secret_read):
+        mock_secret_read.side_effect = [{'BAR_ENV': 'sausage'}]
+        with pytest.raises(TypeError):
+            helm_env_vars(
+                'a-namespace',
+                env_vars=(('foo', 'bar'),),
+                preserve=('a-secret', 'BAR_ENV'))
+        mock_secret_read.assert_not_called()
+
 
 
 class TestHelmInstall:

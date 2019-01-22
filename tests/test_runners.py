@@ -2,7 +2,7 @@ from unittest import mock
 from unittest.mock import call
 
 
-from nephos.runners import (runner_ca, runner_composer, runner_crypto,
+from nephos.runners import (runner_ca, runner_composer, runner_composer_up, runner_crypto,
                             runner_deploy, runner_fabric, runner_orderer, runner_peer)
 
 
@@ -29,6 +29,16 @@ class TestRunnerComposer:
         mock_setup_admin.assert_called_once_with(
             self.OPTS, verbose=False)
         mock_install_network.assert_called_once_with(
+            self.OPTS, verbose=False)
+
+
+class TestRunnerComposerUp:
+    OPTS = 'some-self.OPTS'
+
+    @mock.patch('nephos.runners.upgrade_network')
+    def test_runner_composer_up(self, mock_upgrade_network):
+        runner_composer_up(self.OPTS)
+        mock_upgrade_network.assert_called_once_with(
             self.OPTS, verbose=False)
 
 
