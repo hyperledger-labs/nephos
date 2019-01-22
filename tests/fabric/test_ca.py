@@ -98,8 +98,8 @@ class TestCaEnroll:
     def test_ca_enroll(self, mock_sleep):
         mock_pod_exec = mock.Mock()
         mock_pod_exec.execute.side_effect = [
-            None,  # Get CA cert
-            'enrollment'
+            (None, 'error'),  # Get CA cert
+            ('enrollment', None)
         ]
         mock_pod_exec.logs.side_effect = [
             'Not yet running',
@@ -117,7 +117,7 @@ class TestCaEnroll:
     def test_ca_enroll_again(self, mock_sleep):
         mock_pod_exec = mock.Mock()
         mock_pod_exec.execute.side_effect = [
-            'ca-cert',  # Get CA cert
+            ('ca-cert', None),  # Get CA cert
         ]
         mock_pod_exec.logs.side_effect = [
             'Not yet running\nListening on localhost:7050'
