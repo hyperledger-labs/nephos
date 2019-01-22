@@ -33,11 +33,11 @@ class Executer:
 
     # TODO: api.connect_get_namespaced_pod_exec (to do exec using Python API programmatically)
     def execute(self, command):
-        result, _ = execute(
+        result, error = execute(
             self.prefix_exec + command,
             verbose=self.verbose
         )
-        return result
+        return result, error
 
     def logs(self, tail=-1):
         result, _ = execute(

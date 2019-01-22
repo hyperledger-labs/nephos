@@ -71,7 +71,7 @@ def setup_admin(opts, verbose=False):
     hlc_cli_ex = get_pod(peer_namespace, opts['composer']['name'], 'hl-composer', verbose=verbose)
 
     # Set up the PeerAdmin card
-    ls_res = hlc_cli_ex.execute('composer card list --card PeerAdmin@hlfv1')
+    ls_res, _ = hlc_cli_ex.execute('composer card list --card PeerAdmin@hlfv1')
 
     if not ls_res:
         hlc_cli_ex.execute(
@@ -92,7 +92,7 @@ def install_network(opts, verbose=False):
 
     # Install network
     # TODO: Getting BNA could be a helper function
-    bna = hlc_cli_ex.execute('ls /hl_config/blockchain_network')
+    bna, _ = hlc_cli_ex.execute('ls /hl_config/blockchain_network')
     bna_name, bna_rem = bna.split('_')
     bna_version, _ = bna_rem.split('.bna')
     # TODO: This could be a single function
@@ -102,7 +102,7 @@ def install_network(opts, verbose=False):
     admin_creds(opts['cas'][peer_ca], peer_namespace, verbose=verbose)
     bna_pw = opts['cas'][peer_ca]['org_adminpw']
 
-    ls_res = hlc_cli_ex.execute('composer card list --card {bna_admin}@{bna_name}'.format(
+    ls_res, _ = hlc_cli_ex.execute('composer card list --card {bna_admin}@{bna_name}'.format(
             bna_admin=bna_admin, bna_name=bna_name))
 
     if not ls_res:

@@ -130,20 +130,20 @@ class TestSetupChannel:
         mock_random.choice.side_effect = ['ord0']
         mock_pod0_ex = mock.Mock()
         mock_pod0_ex.execute.side_effect = [
-            None,  # Get block
-            None,  # Create channel
-            None,  # Fetch channel
-            'a-channel.block',  # Get block
-            'Channels peers has joined: ',  # List channels
-            None   # Join channel
+            ('', None),  # Get block
+            ('Create channel', None),
+            ('Fetch channel', None),
+            ('a-channel.block', None),  # Get block
+            ('Channels peers has joined: ', None),  # List channels
+            ('Join channel', None)
         ]
         mock_pod1_ex = mock.Mock()
         mock_pod1_ex.execute.side_effect = [
-            None,  # Get block
-            None,  # Fetch channel
-            'a-channel.block',  # Get block
-            'Channels peers has joined: ',  # List channels
-            None   # Join channel
+            ('', None),  # Get block
+            ('Fetch channel', None),
+            ('a-channel.block', None),  # Get block
+            ('Channels peers has joined: ', None),  # List channels
+            ('Join channel', None)
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         mock_check_ord_tls.side_effect = ['a-tls']
@@ -182,13 +182,13 @@ class TestSetupChannel:
         mock_random.choice.side_effect = ['ord0']
         mock_pod0_ex = mock.Mock()
         mock_pod0_ex.execute.side_effect = [
-            'a-channel.block',  # Get block
-            'Channels peers has joined: a-channel',  # List channels
+            ('a-channel.block', None),  # Get block
+            ('Channels peers has joined: a-channel', None),  # List channels
         ]
         mock_pod1_ex = mock.Mock()
         mock_pod1_ex.execute.side_effect = [
-            'a-channel.block',  # Get block
-            'Channels peers has joined: a-channel',  # List channels
+            ('a-channel.block', None),  # Get block
+            ('Channels peers has joined: a-channel', None),  # List channels
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         mock_check_ord_tls.side_effect = ['a-tls']
@@ -215,20 +215,20 @@ class TestSetupChannel:
         mock_random.choice.side_effect = ['ord1']
         mock_pod0_ex = mock.Mock()
         mock_pod0_ex.execute.side_effect = [
-            None,  # Get block
-            None,  # Create channel
-            None,  # Fetch channel
-            'a-channel.block',  # Get block
-            'Channels peers has joined: ',  # List channels
-            None   # Join channel
+            ('', None),  # Get block
+            ('Create channel', None),
+            ('Fetch channel', None),
+            ('a-channel.block', None),  # Get block
+            ('Channels peers has joined: ', None),  # List channels
+            ('Join channel', None)
         ]
         mock_pod1_ex = mock.Mock()
         mock_pod1_ex.execute.side_effect = [
-            None,  # Get block
-            None,  # Fetch channel
-            'a-channel.block',  # Get block
-            'Channels peers has joined: ',  # List channels
-            None   # Join channel
+            ('', None),  # Get block
+            ('Fetch channel', None),
+            ('a-channel.block', None),  # Get block
+            ('Channels peers has joined: ', None),  # List channels
+            ('Join channel', None)
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         mock_check_ord_tls.side_effect = [None]

@@ -85,7 +85,7 @@ def setup_channel(opts, verbose=False):
         # Check if the file exists
         has_channel = False
         while not has_channel:
-            channel_block = pod_ex.execute('ls /var/hyperledger/{channel}.block'.format(
+            channel_block, _ = pod_ex.execute('ls /var/hyperledger/{channel}.block'.format(
                 channel=opts['peers']['channel_name']))
             if not channel_block:
                 if index == 0:
@@ -109,7 +109,7 @@ def setup_channel(opts, verbose=False):
                         cmd_suffix=cmd_suffix))
             else:
                 has_channel = True
-        res = pod_ex.execute('peer channel list')
+        res, _ = pod_ex.execute('peer channel list')
         channels = (res.split('Channels peers has joined: ')[1]).split()
         if opts['peers']['channel_name'] not in channels:
             pod_ex.execute(

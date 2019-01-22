@@ -15,8 +15,8 @@ class TestRegisterId:
     def test_register_node(self, mock_get_pod):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
-        mock_executor.execute.side_effect = [None,  # List identities
-                                             None]  # Register identities
+        mock_executor.execute.side_effect = [(None, 'error'),  # List identities
+                                             ('Register', None)]  # Register identities
         register_id('a-namespace', 'a-ca', 'an-ord', 'a-password', 'orderer')
         mock_get_pod.assert_called_once_with(namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=False)
         mock_executor.execute.assert_has_calls([
@@ -28,7 +28,7 @@ class TestRegisterId:
     def test_register_node_again(self, mock_get_pod):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
-        mock_executor.execute.side_effect = ['an-ord']  # List identities
+        mock_executor.execute.side_effect = [('an-ord', None)]  # List identities
         register_id('a-namespace', 'a-ca', 'an-ord', 'a-password', 'orderer', verbose=True)
         mock_get_pod.assert_called_once_with(namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=True)
         mock_executor.execute.assert_called_once_with('fabric-ca-client identity list --id an-ord')
@@ -37,8 +37,8 @@ class TestRegisterId:
     def test_register_node_admin(self, mock_get_pod):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
-        mock_executor.execute.side_effect = [None,  # List identities
-                                             None]  # Register identities
+        mock_executor.execute.side_effect = [(None, 'error'),  # List identities
+                                             ('Register', None)]  # Register identities
         register_id('a-namespace', 'a-ca', 'an-admin', 'a-password', admin=True)
         mock_get_pod.assert_called_once_with(namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=False)
         mock_executor.execute.assert_has_calls([

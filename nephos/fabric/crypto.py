@@ -16,7 +16,7 @@ def register_id(ca_namespace, ca, username, password, node_type="client", admin=
     # Get CA
     ca_exec = get_pod(namespace=ca_namespace, release=ca, app='hlf-ca', verbose=verbose)
     # Check if Orderer is registered with the relevant CA
-    ord_id = ca_exec.execute(
+    ord_id, err = ca_exec.execute(
         'fabric-ca-client identity list --id {id}'.format(id=username))
     # Registered if needed
     if not ord_id:

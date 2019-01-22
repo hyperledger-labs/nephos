@@ -15,10 +15,10 @@ class TestUpgradeNetwork:
     def test_upgrade_network(self, mock_get_pod):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
-            'a-network_a-version.bna',
-            'Business network version: another-version',
-            None,  # network install
-            None  # network upgrade
+            ('a-network_a-version.bna', None),
+            ('Business network version: another-version', None),
+            ('Network install', None),  # network install
+            ('Network upgrade', None)  # network upgrade
         ]
         mock_get_pod.side_effect = [mock_pod_ex]
         upgrade_network(self.OPTS)
@@ -36,8 +36,8 @@ class TestUpgradeNetwork:
     def test_upgrade_network_again(self, mock_get_pod):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
-            'a-network_a-version.bna',
-            'Business network version: a-version'
+            ('a-network_a-version.bna', None),
+            ('Business network version: a-version', None)
         ]
         mock_get_pod.side_effect = [mock_pod_ex]
         upgrade_network(self.OPTS, verbose=True)
