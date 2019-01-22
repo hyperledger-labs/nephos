@@ -1,0 +1,58 @@
+persistence:
+  enabled: true
+  # Required since multiple containers need to access same file system
+  accessMode: ReadWriteMany
+  size: 1Gi
+  # e.g. Custom Azure storage class
+  # Using mountOptions "0750" for dir_mode/file_mode and "1000" for uid and gid
+  storageClass: "azurefile0permissive"
+
+cli:
+  image:
+    tag: 0.20.0
+  secrets:
+    # This should contain the packaged .bna network file.
+    blockchainNetwork: bc--bna
+    adminCert: hlf--peeradmin-idcert
+    adminKey: hlf--peeradmin-idkey
+    hlcConnection: hlc--connection
+
+rest:
+  image:
+    tag: 0.20.0
+  # Ingress for Composer REST
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      certmanager.k8s.io/cluster-issuer: "letsencrypt-production"
+    path: /
+    hosts:
+      - hlc-rest.nephos.aidtech-test.xyz
+    tls:
+      - secretName: hlc-rest--tls
+        hosts:
+          - hlc-rest.nephos.aidtech-test.xyz
+
+  config:
+    # Composer REST server API key
+    #apiKey:
+    # Card for network connection
+    composerRestServerCard: peeradmin@test-network
+
+pg:
+  image:
+    tag: 0.20.0
+  # Ingress for Composer PlayGround
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      certmanager.k8s.io/cluster-issuer: "letsencrypt-production"
+    path: /
+    hosts:
+      - hlc-pg.nephos.aidtech-test.xyz
+    tls:
+      - secretName: hl-composer-pg--tls
+        hosts:
+          - hlc-pg.nephos.aidtech-test.xyz
