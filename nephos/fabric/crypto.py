@@ -1,6 +1,7 @@
 import shutil
 from collections import namedtuple
 from os import path, chdir, getcwd, listdir, makedirs
+from time import sleep
 
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
@@ -12,18 +13,37 @@ CryptoInfo = namedtuple('CryptoInfo', ('secret_type', 'subfolder', 'key', 'requi
 
 
 # CA Helpers
+# TODO: We can probably split the part that checks the identity and the part that registers it
 def register_id(ca_namespace, ca, username, password, node_type="client", admin=False, verbose=False):
     # Get CA
     ca_exec = get_pod(namespace=ca_namespace, release=ca, app='hlf-ca', verbose=verbose)
     # Check if Orderer is registered with the relevant CA
-    ord_id, err = ca_exec.execute(
-        'fabric-ca-client identity list --id {id}'.format(id=username))
+    got_id = False
+    while not got_id:
+        ord_id, err = ca_exec.execute(
+            'fabric-ca-client identity list --id {id}'.format(id=username))
+        if err:
+            # Expected error (identity does not exist)
+            if 'no rows in result set' in err:
+                got_id = True
+            # Otherwise, unexpected error, we are having issues connecting to CA
+            else:
+                sleep(10)
+        else:
+            got_id = True
     # Registered if needed
     if not ord_id:
         command = 'fabric-ca-client register --id.name {id} --id.secret {pw} --id.type {type}'
         if admin:
             command += " --id.attrs 'admin=true:ecert'"
-        ca_exec.execute(command.format(id=username, pw=password, type=node_type))
+        registered_id = False
+        while not registered_id:
+            res, err = ca_exec.execute(command.format(id=username, pw=password, type=node_type))
+            if not err:
+                registered_id = True
+# Otherwise, unexpected error, we are having issues connecting to CA
+            else:
+                sleep(10)
 
 
 def enroll_node(opts, ca, username, password, verbose=False):
