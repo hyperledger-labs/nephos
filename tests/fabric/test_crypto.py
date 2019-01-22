@@ -5,19 +5,19 @@ import pytest
 
 from nephos.fabric.crypto import (
     CryptoInfo,
-    register_node, enroll_node, create_admin, admin_creds, msp_secrets, admin_msp,
+    register_id, enroll_node, create_admin, admin_creds, msp_secrets, admin_msp,
     item_to_secret, id_to_secrets, cacerts_to_secrets,
     setup_nodes, genesis_block, channel_tx, PWD)
 
 
-class TestRegisterNode:
+class TestRegisterId:
     @mock.patch('nephos.fabric.crypto.get_pod')
     def test_register_node(self, mock_get_pod):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [None,  # List identities
                                              None]  # Register identities
-        register_node('a-namespace', 'a-ca', 'orderer', 'an-ord', 'a-password')
+        register_id('a-namespace', 'a-ca', 'an-ord', 'a-password', 'orderer')
         mock_get_pod.assert_called_once_with(namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=False)
         mock_executor.execute.assert_has_calls([
             call('fabric-ca-client identity list --id an-ord'),
@@ -29,9 +29,23 @@ class TestRegisterNode:
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = ['an-ord']  # List identities
-        register_node('a-namespace', 'a-ca', 'orderer', 'an-ord', 'a-password', verbose=True)
+        register_id('a-namespace', 'a-ca', 'an-ord', 'a-password', 'orderer', verbose=True)
         mock_get_pod.assert_called_once_with(namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=True)
         mock_executor.execute.assert_called_once_with('fabric-ca-client identity list --id an-ord')
+
+    @mock.patch('nephos.fabric.crypto.get_pod')
+    def test_register_node_admin(self, mock_get_pod):
+        mock_executor = mock.Mock()
+        mock_get_pod.side_effect = [mock_executor]
+        mock_executor.execute.side_effect = [None,  # List identities
+                                             None]  # Register identities
+        register_id('a-namespace', 'a-ca', 'an-admin', 'a-password', admin=True)
+        mock_get_pod.assert_called_once_with(namespace='a-namespace', release='a-ca', app='hlf-ca', verbose=False)
+        mock_executor.execute.assert_has_calls([
+            call('fabric-ca-client identity list --id an-admin'),
+            call("fabric-ca-client register --id.name an-admin --id.secret a-password --id.type client" +
+                 " --id.attrs 'admin=true:ecert'")
+        ])
 
 
 class TestEnrollNode:
@@ -83,26 +97,18 @@ class TestCreateAdmin:
         'cas': {'a-ca': {'namespace': 'ca-namespace', 'tls_cert': './a_cert.pem'}}
     }
 
+    @mock.patch('nephos.fabric.crypto.register_id')
     @mock.patch('nephos.fabric.crypto.ingress_read')
-    @mock.patch('nephos.fabric.crypto.get_pod')
     @mock.patch('nephos.fabric.crypto.execute')
-    def test_ca_create_admin(self, mock_execute, mock_get_pod, mock_ingress_read):
-        mock_pod_exec = mock.Mock()
-        mock_pod_exec.execute.side_effect = [
-            None,  # List CA identities
-            'registration'
-        ]
-        mock_get_pod.side_effect = [mock_pod_exec]
+    def test_ca_create_admin(self, mock_execute, mock_ingress_read, mock_register_id):
         mock_ingress_read.side_effect = [['an-ingress']]
         create_admin(self.OPTS, 'a_MSP')
-        mock_get_pod.assert_called_once_with(
-            namespace='ca-namespace', release='a-ca', app='hlf-ca', verbose=False)
         mock_ingress_read.assert_called_once_with(
             'a-ca-hlf-ca', namespace='ca-namespace', verbose=False)
-        mock_pod_exec.execute.assert_has_calls([
-            call('fabric-ca-client identity list --id an_admin'),
-            call("fabric-ca-client register --id.name an_admin --id.secret a_password --id.attrs 'admin=true:ecert'")
-        ])
+        mock_register_id.assert_called_once_with(
+            'ca-namespace', 'a-ca', 'an_admin', 'a_password', admin=True,
+            verbose=False
+        )
         mock_execute.assert_called_once_with(
             'FABRIC_CA_CLIENT_HOME=./a_dir fabric-ca-client enroll ' +
             '-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ./a_cert.pem', verbose=False)
@@ -273,7 +279,7 @@ class TestSetupNodes:
         'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}
     }
 
-    @mock.patch('nephos.fabric.crypto.register_node')
+    @mock.patch('nephos.fabric.crypto.register_id')
     @mock.patch('nephos.fabric.crypto.enroll_node')
     @mock.patch('nephos.fabric.crypto.id_to_secrets')
     @mock.patch('nephos.fabric.crypto.credentials_secret')
@@ -288,8 +294,8 @@ class TestSetupNodes:
             call('hlf--peer1-cred', 'peer-namespace', username='peer1', verbose=False)
         ])
         mock_register_node.assert_has_calls([
-            call('ca-namespace', 'ca-peer', 'peer', 'peer0', 'peer0-pw', verbose=False),
-            call('ca-namespace', 'ca-peer', 'peer', 'peer1', 'peer1-pw', verbose=False)
+            call('ca-namespace', 'ca-peer', 'peer0', 'peer0-pw', 'peer', verbose=False),
+            call('ca-namespace', 'ca-peer', 'peer1', 'peer1-pw', 'peer', verbose=False)
         ])
         mock_enroll_node.assert_has_calls([
             call(self.OPTS, 'ca-peer', 'peer0', 'peer0-pw', verbose=False),
@@ -300,7 +306,7 @@ class TestSetupNodes:
             call(namespace='peer-namespace', msp_path='./peer1_MSP', user='peer1', verbose=False)
         ])
 
-    @mock.patch('nephos.fabric.crypto.register_node')
+    @mock.patch('nephos.fabric.crypto.register_id')
     @mock.patch('nephos.fabric.crypto.enroll_node')
     @mock.patch('nephos.fabric.crypto.id_to_secrets')
     @mock.patch('nephos.fabric.crypto.credentials_secret')
@@ -313,7 +319,7 @@ class TestSetupNodes:
             call('hlf--ord0-cred', 'ord-namespace', username='ord0', verbose=False)
         ])
         mock_register_node.assert_has_calls([
-            call('ca-namespace', 'ca-ord', 'orderer', 'ord0', 'ord0-pw', verbose=False)
+            call('ca-namespace', 'ca-ord', 'ord0', 'ord0-pw', 'orderer', verbose=False)
         ])
         mock_enroll_node.assert_has_calls([
             call(self.OPTS, 'ca-ord', 'ord0', 'ord0-pw', verbose=False)

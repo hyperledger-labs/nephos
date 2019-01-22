@@ -12,7 +12,7 @@ CryptoInfo = namedtuple('CryptoInfo', ('secret_type', 'subfolder', 'key', 'requi
 
 
 # CA Helpers
-def register_node(ca_namespace, ca, node_type, username, password, verbose=False):
+def register_id(ca_namespace, ca, username, password, node_type="client", admin=False, verbose=False):
     # Get CA
     ca_exec = get_pod(namespace=ca_namespace, release=ca, app='hlf-ca', verbose=verbose)
     # Check if Orderer is registered with the relevant CA
@@ -20,9 +20,10 @@ def register_node(ca_namespace, ca, node_type, username, password, verbose=False
         'fabric-ca-client identity list --id {id}'.format(id=username))
     # Registered if needed
     if not ord_id:
-        ca_exec.execute(
-            'fabric-ca-client register --id.name {id} --id.secret {pw} --id.type {type}'.format(
-                id=username, pw=password, type=node_type))
+        command = 'fabric-ca-client register --id.name {id} --id.secret {pw} --id.type {type}'
+        if admin:
+            command += " --id.attrs 'admin=true:ecert'"
+        ca_exec.execute(command.format(id=username, pw=password, type=node_type))
 
 
 def enroll_node(opts, ca, username, password, verbose=False):
@@ -55,23 +56,13 @@ def create_admin(opts, msp_name, verbose=False):
     ca_name = msp_values['ca']
     ca_namespace = get_namespace(opts, ca=ca_name)
 
-    # Obtain CA pod
-    pod_exec = get_pod(namespace=ca_namespace, release=ca_name, app='hlf-ca', verbose=verbose)
-
     # Get CA ingress
     ingress_urls = ingress_read(ca_name + '-hlf-ca', namespace=ca_namespace, verbose=verbose)
     ca_ingress = ingress_urls[0]
 
     # Register the Organisation with the CAs
-    admin_id = pod_exec.execute(
-        ('fabric-ca-client identity list --id {id}'
-         ).format(id=msp_values['org_admin']))
-
-    # If we cannot find the identity, we must create it
-    if not admin_id:
-        pod_exec.execute(
-            ("fabric-ca-client register --id.name {id} --id.secret {pw} --id.attrs 'admin=true:ecert'"
-             ).format(id=msp_values['org_admin'], pw=msp_values['org_adminpw']))
+    register_id(ca_namespace, msp_values['ca'], msp_values['org_admin'], msp_values['org_adminpw'], admin=True,
+                verbose=verbose)
 
     # If our keystore does not exist or is empty, we need to enroll the identity...
     keystore = path.join(dir_config, msp_name, 'keystore')
@@ -181,9 +172,8 @@ def setup_nodes(opts, node_type, verbose=False):
                                          username=release,
                                          verbose=verbose)
         # Register node
-        register_node(ca_namespace, msp_values['ca'],
-                      node_type, secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
-                      verbose=verbose)
+        register_id(ca_namespace, msp_values['ca'], secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'], node_type,
+                    verbose=verbose)
         # Enroll node
         msp_path = enroll_node(opts, msp_values['ca'],
                                secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
