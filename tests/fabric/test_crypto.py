@@ -61,8 +61,8 @@ class TestRegisterId:
             call('fabric-ca-client register --id.name an-ord --id.secret a-password --id.type orderer')
         ])
         mock_sleep.assert_has_calls([
-            call(10),
-            call(10)
+            call(15),
+            call(15)
         ])
 
     @mock.patch('nephos.fabric.crypto.sleep')

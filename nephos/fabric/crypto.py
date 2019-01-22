@@ -28,7 +28,7 @@ def register_id(ca_namespace, ca, username, password, node_type="client", admin=
                 got_id = True
             # Otherwise, unexpected error, we are having issues connecting to CA
             else:
-                sleep(10)
+                sleep(15)
         else:
             got_id = True
     # Registered if needed
@@ -43,7 +43,7 @@ def register_id(ca_namespace, ca, username, password, node_type="client", admin=
                 registered_id = True
 # Otherwise, unexpected error, we are having issues connecting to CA
             else:
-                sleep(10)
+                sleep(15)
 
 
 def enroll_node(opts, ca, username, password, verbose=False):

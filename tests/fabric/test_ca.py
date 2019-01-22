@@ -114,6 +114,26 @@ class TestCaEnroll:
         mock_sleep.assert_called_once_with(15)
 
     @mock.patch('nephos.fabric.ca.sleep')
+    def test_ca_enroll_serverfail(self, mock_sleep):
+        mock_pod_exec = mock.Mock()
+        mock_pod_exec.execute.side_effect = [
+            (None, 'error'),  # Get CA cert
+            (None, 'error'),  # Enroll
+            ('enrollment', None)
+        ]
+        mock_pod_exec.logs.side_effect = [
+            'Not yet running\nListening on localhost:7050'
+        ]
+        ca_enroll(mock_pod_exec)
+        mock_pod_exec.execute.assert_has_calls([
+            call('cat /var/hyperledger/fabric-ca/msp/signcerts/cert.pem'),
+            call("bash -c 'fabric-ca-client enroll -d -u http://$CA_ADMIN:$CA_PASSWORD@$SERVICE_DNS:7054'"),
+            call("bash -c 'fabric-ca-client enroll -d -u http://$CA_ADMIN:$CA_PASSWORD@$SERVICE_DNS:7054'")
+        ])
+        assert mock_pod_exec.logs.call_count == 1
+        mock_sleep.assert_called_once_with(15)
+
+    @mock.patch('nephos.fabric.ca.sleep')
     def test_ca_enroll_again(self, mock_sleep):
         mock_pod_exec = mock.Mock()
         mock_pod_exec.execute.side_effect = [
