@@ -98,9 +98,9 @@ def install_network(opts, verbose=False):
     # TODO: This could be a single function
     peer_msp = opts['peers']['msp']
     peer_ca = opts['msps'][peer_msp]['ca']
-    bna_admin = opts['cas'][peer_ca]['org_admin']
-    admin_creds(opts['cas'][peer_ca], peer_namespace, verbose=verbose)
-    bna_pw = opts['cas'][peer_ca]['org_adminpw']
+    bna_admin = opts['msps'][peer_msp]['org_admin']
+    admin_creds(opts, peer_msp, verbose=verbose)
+    bna_pw = opts['msps'][peer_msp]['org_adminpw']
 
     ls_res = hlc_cli_ex.execute('composer card list --card {bna_admin}@{bna_name}'.format(
             bna_admin=bna_admin, bna_name=bna_name))
