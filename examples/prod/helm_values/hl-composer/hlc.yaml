@@ -12,7 +12,7 @@ cli:
     tag: 0.20.0
   secrets:
     # This should contain the packaged .bna network file.
-    blockchainNetwork: bc--bna
+    blockchainNetwork: hlc--bna
     adminCert: hlf--peeradmin-idcert
     adminKey: hlf--peeradmin-idkey
     hlcConnection: hlc--connection
