@@ -32,7 +32,7 @@ class TestGetComposerData:
 
 class TestComposerConnection:
     OPTS = {
-        'cas': {'peer-ca': {'msp': 'peer-msp'}},
+        'cas': {'peer-ca': {'msp': 'peer-msp', 'namespace': 'ca-namespace'}},
         'composer': {'name': 'hlc', 'secret_connection': 'connection-secret'},
         'msps': {
             'ord_MSP': {'namespace': 'ord-namespace'},
@@ -50,7 +50,7 @@ class TestComposerConnection:
         mock_cm_read.side_effect = [ApiException]
         mock_json_ct.side_effect = ['cm-data']
         composer_connection(self.OPTS)
-        mock_ingress_read.assert_called_once_with('peer-ca-hlf-ca', namespace='peer-namespace', verbose=False)
+        mock_ingress_read.assert_called_once_with('peer-ca-hlf-ca', namespace='ca-namespace', verbose=False)
         mock_cm_read.assert_called_once_with('connection-secret', 'peer-namespace', verbose=False)
         mock_json_ct.assert_called_once()
         mock_cm_create.assert_called_once_with('peer-namespace', 'connection-secret', {'connection.json': 'cm-data'})
@@ -62,7 +62,7 @@ class TestComposerConnection:
     def test_composer_connection_again(self, mock_cm_create, mock_cm_read, mock_ingress_read, mock_json_ct):
         mock_cm_read.side_effect = [{'connection.json': 'cm-data'}]
         composer_connection(self.OPTS, verbose=True)
-        mock_ingress_read.assert_called_once_with('peer-ca-hlf-ca', namespace='peer-namespace', verbose=True)
+        mock_ingress_read.assert_called_once_with('peer-ca-hlf-ca', namespace='ca-namespace', verbose=True)
         mock_cm_read.assert_called_once_with('connection-secret', 'peer-namespace', verbose=True)
         mock_json_ct.assert_not_called()
         mock_cm_create.assert_not_called()

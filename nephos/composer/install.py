@@ -23,7 +23,8 @@ def composer_connection(opts, verbose=False):
     # TODO: This could be a single function
     peer_msp = opts['peers']['msp']
     peer_ca = opts['msps'][peer_msp]['ca']
-    ingress_urls = ingress_read(peer_ca + '-hlf-ca', namespace=peer_namespace, verbose=verbose)
+    ca_namespace = opts['cas'][peer_ca]['namespace']
+    ingress_urls = ingress_read(peer_ca + '-hlf-ca', namespace=ca_namespace, verbose=verbose)
     peer_ca_url = ingress_urls[0]
     try:
         cm_read(opts['composer']['secret_connection'], peer_namespace, verbose=verbose)
