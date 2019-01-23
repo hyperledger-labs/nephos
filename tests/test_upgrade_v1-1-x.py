@@ -79,10 +79,10 @@ class TestExtractCrypto:
     def test_extract_crypto(self, mock_get_pod, mock_print, mock_secret_create, mock_secret_read):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
-            '1', 'a-secret',  # signcerts
-            '1', 'a-secret',  # keystore
-            '1', 'a-secret',  # cacerts
-            '0'               # intermediatecerts
+            ('1', None), ('a-secret', None),  # signcerts
+            ('1', None), ('a-secret', None),  # keystore
+            ('1', None), ('a-secret', None),  # cacerts
+            ('0', None)               # intermediatecerts
         ]
         mock_get_pod.side_effect = [mock_pod_ex]
         mock_secret_read.side_effect = [ApiException, ApiException, ApiException, ApiException]
@@ -145,7 +145,7 @@ class TestExtractCrypto:
     def test_extract_crypto_fail(self, mock_get_pod, mock_print, mock_secret_create, mock_secret_read):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
-            '0'  # signcerts
+            ('0', None)  # signcerts
         ]
         mock_get_pod.side_effect = [mock_pod_ex]
         mock_secret_read.side_effect = [ApiException]
@@ -179,7 +179,10 @@ class TestUpgradeCharts:
     def test_upgrade_charts(self, mock_check_ord, mock_check_peer,
                             mock_get_pod, mock_helm_upgrade, mock_print):
         mock_pod_ex = mock.Mock()
-        mock_pod_ex.execute.side_effect = ['', None]
+        mock_pod_ex.execute.side_effect = [
+            ('', None),  # ls
+            ('', None)   # cp
+        ]
         mock_get_pod.side_effect = [mock_pod_ex]
         upgrade_charts(self.OPTS, 'orderer')
         mock_pod_ex.execute.assert_has_calls([
@@ -200,7 +203,9 @@ class TestUpgradeCharts:
     def test_upgrade_charts_again(self, mock_check_ord, mock_check_peer,
                                   mock_get_pod, mock_helm_upgrade, mock_print):
         mock_pod_ex = mock.Mock()
-        mock_pod_ex.execute.side_effect = ['a-res']
+        mock_pod_ex.execute.side_effect = [
+            ('a-res', None)  # ls
+        ]
         mock_get_pod.side_effect = [mock_pod_ex]
         upgrade_charts(self.OPTS, 'peer', verbose=True)
         mock_pod_ex.execute.assert_has_calls([

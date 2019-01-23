@@ -36,6 +36,7 @@ class TestExecuter:
 
     @mock.patch('nephos.helpers.k8s.execute')
     def test_executer_execute(self, mock_execute):
+        mock_execute.side_effect = [('result', None)]
         executer = Executer('a_pod', 'a-namespace')
         executer.execute('a_command')
         mock_execute.assert_called_once_with(
@@ -43,6 +44,7 @@ class TestExecuter:
 
     @mock.patch('nephos.helpers.k8s.execute')
     def test_executer_execute_verbose(self, mock_execute):
+        mock_execute.side_effect = [('result', None)]
         executer = Executer('a_pod', 'a-namespace', verbose=True)
         executer.execute('a_command')
         mock_execute.assert_called_once_with(
@@ -50,6 +52,7 @@ class TestExecuter:
 
     @mock.patch('nephos.helpers.k8s.execute')
     def test_executer_logs(self, mock_execute):
+        mock_execute.side_effect = [('result', None)]
         executer = Executer('a_pod', 'a-namespace')
         executer.logs()
         mock_execute.assert_called_once_with(
@@ -57,6 +60,7 @@ class TestExecuter:
 
     @mock.patch('nephos.helpers.k8s.execute')
     def test_executer_logs_tail(self, mock_execute):
+        mock_execute.side_effect = [('result', None)]
         executer = Executer('a_pod', 'a-namespace', container='a_container', verbose=True)
         executer.logs(10)
         mock_execute.assert_called_once_with(

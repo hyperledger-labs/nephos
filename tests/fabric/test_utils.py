@@ -90,7 +90,7 @@ class TestGetPod:
     @mock.patch('nephos.fabric.utils.Executer')
     @mock.patch('nephos.fabric.utils.execute')
     def test_get_pod(self, mock_execute, mock_Executer):
-        mock_execute.side_effect = ['a-pod']
+        mock_execute.side_effect = [('a-pod', None)]
         get_pod('a-namespace', 'a-release', 'an-app')
         mock_execute.assert_called_once_with(
             'kubectl get pods -n a-namespace -l "app=an-app,release=a-release" ' +
@@ -100,7 +100,7 @@ class TestGetPod:
     @mock.patch('nephos.fabric.utils.Executer')
     @mock.patch('nephos.fabric.utils.execute')
     def test_get_pod_fail(self, mock_execute, mock_Executer):
-        mock_execute.side_effect = ['']
+        mock_execute.side_effect = [(None, 'error')]
         with pytest.raises(ValueError):
             get_pod('a-namespace', 'a-release', 'an-app', verbose=True)
         mock_execute.assert_called_once_with(

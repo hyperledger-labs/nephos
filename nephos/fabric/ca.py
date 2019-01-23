@@ -58,11 +58,17 @@ def ca_enroll(pod_exec):
         else:
             sleep(15)
     # Enroll CA Admin if necessary
-    ca_cert = pod_exec.execute(
+    ca_cert, _ = pod_exec.execute(
         'cat /var/hyperledger/fabric-ca/msp/signcerts/cert.pem')
     if not ca_cert:
-        pod_exec.execute(
-            "bash -c 'fabric-ca-client enroll -d -u http://$CA_ADMIN:$CA_PASSWORD@$SERVICE_DNS:7054'")
+        enrolled_id = False
+        while not enrolled_id:
+            res, err = pod_exec.execute(
+                "bash -c 'fabric-ca-client enroll -d -u http://$CA_ADMIN:$CA_PASSWORD@$SERVICE_DNS:7054'")
+            if not err:
+                enrolled_id = True
+            else:
+                sleep(15)
 
 
 def check_ca(ingress_host, verbose=False):

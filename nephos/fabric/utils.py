@@ -42,7 +42,7 @@ def crypto_secret(secret_name, namespace, file_path, key, verbose=False):
 
 
 def get_pod(namespace, release, app, verbose=False):
-    node_pod = execute(
+    node_pod, _ = execute(
         ('kubectl get pods -n {ns} -l "app={app},release={release}" ' +
          '-o jsonpath="{{.items[0].metadata.name}}"').format(
             ns=namespace,
