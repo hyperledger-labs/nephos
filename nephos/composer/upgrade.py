@@ -12,13 +12,13 @@ def upgrade_network(opts, verbose=False):
     # Set up the PeerAdmin card
     hlc_cli_ex = get_pod(get_namespace(opts, opts['peers']['msp']), 'hlc', 'hl-composer', verbose=verbose)
 
-    bna = hlc_cli_ex.execute('ls /hl_config/blockchain_network')
+    bna, _ = hlc_cli_ex.execute('ls /hl_config/blockchain_network')
     bna_name, bna_rem = bna.split('_')
     bna_version, _ = bna_rem.split('.bna')
     peer_ca = opts['peers']['ca']
     bna_admin = opts['cas'][peer_ca]['org_admin']
 
-    res = hlc_cli_ex.execute('composer network ping --card {bna_admin}@{bna_name}'.format(
+    res, _ = hlc_cli_ex.execute('composer network ping --card {bna_admin}@{bna_name}'.format(
         bna_admin=bna_admin, bna_name=bna_name))
 
     curr_version = (res.split('Business network version: ')[1]).split()[0]

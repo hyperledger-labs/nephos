@@ -116,10 +116,10 @@ class TestSetupAdmin:
     def test_setup_admin(self, mock_get_pod):
         mock_pod = mock.Mock()
         mock_pod.execute.side_effect = [
-            None,  # composer card list admin
-            None,  # composer card create
-            None,  # composer card import admin
-            'a-network_a-version.bna',  # ls BNA
+            (None, 'error'),  # composer card list admin
+            ('Create card', None),  # composer card create
+            ('Import card', None),  # composer card import admin
+            ('a-network_a-version.bna', None),  # ls BNA
         ]
         mock_get_pod.side_effect = [mock_pod]
         setup_admin(self.OPTS)
@@ -140,7 +140,7 @@ class TestSetupAdmin:
     def test_setup_admin_again(self, mock_get_pod):
         mock_pod = mock.Mock()
         mock_pod.execute.side_effect = [
-            'an-admin.card',  # composer card list admin
+            ('an-admin.card', None),  # composer card list admin
         ]
         mock_get_pod.side_effect = [mock_pod]
         setup_admin(self.OPTS, verbose=True)
@@ -167,12 +167,12 @@ class TestInstallNetwork:
     def test_install_network(self, mock_admin_creds, mock_get_pod):
         mock_pod = mock.Mock()
         mock_pod.execute.side_effect = [
-            'a-network_a-version.bna',  # ls BNA
-            None,  # composer card list network-admin
-            None,  # composer network install
-            None,  # composer network start
-            None,  # composer card import network-admin
-            None  # composer network ping
+            ('a-network_a-version.bna', None),  # ls BNA
+            (None, 'error'),  # composer card list network-admin
+            ('Network install', None),  # composer network install
+            ('Network start', None),  # composer network start
+            ('Import card', None),  # composer card import network-admin
+            ('Network ping', None)  # composer network ping
         ]
         mock_get_pod.side_effect = [mock_pod]
         install_network(self.OPTS)
@@ -197,9 +197,9 @@ class TestInstallNetwork:
 
         mock_pod = mock.Mock()
         mock_pod.execute.side_effect = [
-            'a-network_a-version.bna',  # ls BNA
-            'a-network.card',  # composer card list network-admin
-            None  # composer network ping
+            ('a-network_a-version.bna', None),  # ls BNA
+            ('a-network.card', None),  # composer card list network-admin
+            ('Network ping', None)  # composer network ping
         ]
         mock_get_pod.side_effect = [mock_pod]
         install_network(self.OPTS, verbose=True)

@@ -18,13 +18,13 @@ class TestHelmInit:
     @mock.patch('nephos.helpers.helm.execute')
     def test_helm_init(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
-            None,
-            'RBAC created',
-            'Helm init',
-            'false',  # automountServiceAccountToken
-            'automountServiceAccountToken updated',
-            None,  # Helm not operational yet
-            'Helm list'
+            (None, 'error'),
+            ('RBAC created', None),
+            ('Helm init', None),
+            ('false', None),  # automountServiceAccountToken
+            ('automountServiceAccountToken updated', None),
+            (None, 'error'),  # Helm not operational yet
+            ('Helm list', None)
         ]
         helm_init()
         assert mock_execute.call_count == 7
@@ -36,7 +36,7 @@ class TestHelmInit:
     @mock.patch('nephos.helpers.helm.execute')
     def test_helm_init_repeat(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
-            'Helm list'
+            ('Helm list', None)
         ]
         helm_init()
         mock_execute.assert_called_once()
@@ -50,10 +50,10 @@ class TestHelmCheck:
     @mock.patch('nephos.helpers.helm.execute')
     def test_helm_check(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
-            'Pending',  # Get states
-            'a_pod',  # Get pods
-            'Running',
-            'a_pod'
+            ('Pending', None),  # Get states
+            ('a_pod', None),  # Get pods
+            ('Running', None),
+            ('a_pod', None)
         ]
         helm_check('an_app', 'a-release', 'a-namespace')
         assert mock_execute.call_count == 4
@@ -67,10 +67,10 @@ class TestHelmCheck:
     @mock.patch('nephos.helpers.helm.execute')
     def test_helm_check_podnum(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
-            'Pending Running',  # Get states
-            'a_pod another_pod',  # Get pods
-            'Running Running',
-            'a_pod another_pod'
+            ('Pending Running', None),  # Get states
+            ('a_pod another_pod', None),  # Get pods
+            ('Running Running', None),
+            ('a_pod another_pod', None)
         ]
         helm_check('an_app', 'a-release', 'a-namespace', pod_num=2)
         assert mock_execute.call_count == 4
@@ -134,8 +134,8 @@ class TestHelmInstall:
     def test_helm_install(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = ['']
         mock_execute.side_effect = [
-            None,  # Helm list
-            None,  # Helm install
+            (None, 'error'),  # Helm list
+            ('Helm install', None),  # Helm install
         ]
         helm_install('a_repo', 'an_app', 'a-release', 'a-namespace')
         mock_helm_env_vars.assert_called_once_with('a-namespace', None, verbose=False)
@@ -151,7 +151,7 @@ class TestHelmInstall:
     def test_helm_install_again(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = ['']
         mock_execute.side_effect = [
-            'a-release',  # Helm list
+            ('a-release', None),  # Helm list
         ]
         helm_install('a_repo', 'an_app', 'a-release', 'a-namespace')
         mock_helm_env_vars.assert_called_once_with('a-namespace', None, verbose=False)
@@ -164,8 +164,8 @@ class TestHelmInstall:
     def test_helm_install_config(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = ['']
         mock_execute.side_effect = [
-            None,  # Helm list
-            None,  # Helm install
+            (None, 'error'),  # Helm list
+            ('Helm install', None),  # Helm install
         ]
         helm_install('a_repo', 'an_app', 'a-release', 'a-namespace', config_yaml='some_config.yaml')
         mock_helm_env_vars.assert_called_once_with('a-namespace', None, verbose=False)
@@ -181,8 +181,8 @@ class TestHelmInstall:
     def test_helm_install_envvars(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = [' --set foo=bar']
         mock_execute.side_effect = [
-            None,  # Helm list
-            None,  # Helm install
+            (None, 'error'),  # Helm list
+            ('Helm install', None),  # Helm install
         ]
         helm_install('a_repo', 'an_app', 'a-release', 'a-namespace', env_vars='env-vars', verbose=True)
         mock_helm_env_vars.assert_called_once_with('a-namespace', 'env-vars', verbose=True)
@@ -201,8 +201,8 @@ class TestHelmUpgrade:
     def test_helm_upgrade(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = ['']
         mock_execute.side_effect = [
-            'a-release',  # Helm list
-            None,  # Helm install
+            ('a-release', None),  # Helm list
+            ('Helm install', None),  # Helm install
         ]
         helm_upgrade('a_repo', 'an_app', 'a-release', 'a-namespace')
         mock_helm_env_vars.assert_called_once_with('a-namespace', None, None, verbose=False)
@@ -218,7 +218,7 @@ class TestHelmUpgrade:
     def test_helm_upgrade_preinstall(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = ['']
         mock_execute.side_effect = [
-            None,  # Helm list
+            (None, 'error'),  # Helm list
         ]
         with pytest.raises(Exception):
             helm_upgrade('a_repo', 'an_app', 'a-release', 'a-namespace')
@@ -232,8 +232,8 @@ class TestHelmUpgrade:
     def test_helm_upgrade_config(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = ['']
         mock_execute.side_effect = [
-            'a-release',  # Helm list
-            None,  # Helm install
+            ('a-release', None),  # Helm list
+            ('Helm upgrade', None),  # Helm upgrade
         ]
         helm_upgrade('a_repo', 'an_app', 'a-release', 'a-namespace', config_yaml='some_config.yaml')
         mock_helm_env_vars.assert_called_once_with('a-namespace', None, None, verbose=False)
@@ -249,8 +249,8 @@ class TestHelmUpgrade:
     def test_helm_upgrade_envvars(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = [' --set foo=bar']
         mock_execute.side_effect = [
-            'a-release',  # Helm list
-            None,  # Helm install
+            ('a-release', None),  # Helm list
+            ('Helm upgrade', None),  # Helm upgrade
         ]
         helm_upgrade('a_repo', 'an_app', 'a-release', 'a-namespace', env_vars='env-vars', verbose=True)
         mock_helm_env_vars.assert_called_once_with('a-namespace', 'env-vars', None, verbose=True)

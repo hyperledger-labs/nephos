@@ -61,7 +61,7 @@ def extract_crypto(opts, node_type, verbose=False):
                     print('{} secret already exists'.format(secret_name))
             except ApiException:
                 command = "bash -c 'ls /var/hyperledger/msp/{}' | wc -l".format(item.subfolder)
-                file_num = pod_ex.execute(command)
+                file_num, _ = pod_ex.execute(command)
                 if file_num.strip() != '1':
                     if item.required:
                         raise ValueError('We should only have 1 file in each of these folders')
@@ -69,7 +69,7 @@ def extract_crypto(opts, node_type, verbose=False):
                         print('Wrong number of files in {} directory'.format(item.subfolder))
                 else:
                     command = "bash -c 'cat /var/hyperledger/msp/{}/*'".format(item.subfolder)
-                    content = pod_ex.execute(command)
+                    content, _ = pod_ex.execute(command)
                     secret_data = {
                         item.key: content
                     }
@@ -82,7 +82,7 @@ def upgrade_charts(opts, node_type, verbose=False):
     node_namespace = get_namespace(opts, opts[node_type + 's']['msp'])
     for release in opts[node_type + 's']['names']:
         pod_ex = get_pod(node_namespace, release, chart)
-        res = pod_ex.execute('ls /var/hyperledger/msp_old')
+        res, _ = pod_ex.execute('ls /var/hyperledger/msp_old')
         if not res:
             pod_ex.execute('mv /var/hyperledger/msp /var/hyperledger/msp_old')
         else:

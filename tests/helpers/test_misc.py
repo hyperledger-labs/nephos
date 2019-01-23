@@ -72,7 +72,9 @@ class TestExecuteUntilSuccess:
     @mock.patch('nephos.helpers.misc.execute')
     @mock.patch('nephos.helpers.misc.print')
     def test_execute(self, mock_print, mock_execute):
-        mock_execute.side_effect = ['', '', '<h1>SomeWebsite</h1>']
+        mock_execute.side_effect = [(None, 'error'),
+                                    (None, 'error'),
+                                    ('<h1>SomeWebsite</h1>', None)]
         execute_until_success('curl example.com', delay=0)
         mock_print.assert_has_calls([call('.', end='', flush=True)] * 2)
         mock_execute.assert_has_calls([call('curl example.com', show_command=True, show_errors=True, verbose=False)] +
@@ -81,7 +83,9 @@ class TestExecuteUntilSuccess:
     @mock.patch('nephos.helpers.misc.execute')
     @mock.patch('nephos.helpers.misc.print')
     def test_execute_verbose(self, mock_print, mock_execute):
-        mock_execute.side_effect = ['', '', '<h1>SomeWebsite</h1>']
+        mock_execute.side_effect = [(None, 'error'),
+                                    (None, 'error'),
+                                    ('<h1>SomeWebsite</h1>', None)]
         execute_until_success('curl example.com', verbose=True, delay=0)
         mock_print.assert_has_calls([call('.', end='', flush=True)] * 2 +
                                     [call('<h1>SomeWebsite</h1>')])

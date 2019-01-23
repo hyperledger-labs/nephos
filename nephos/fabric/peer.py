@@ -11,10 +11,10 @@ from nephos.helpers.misc import execute
 # TODO: We need a similar check to see if Peer uses client TLS as well
 def check_ord_tls(opts, verbose=False):
     ord_namespace = get_namespace(opts, opts['orderers']['msp'])
-    ord_tls = execute(('kubectl get cm -n {ns} ' +
-                       '{release}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
-                       ).format(ns=ord_namespace, release=opts['orderers']['names'][0]),
-                      verbose=verbose)
+    ord_tls, _ = execute(('kubectl get cm -n {ns} ' +
+                          '{release}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
+                          ).format(ns=ord_namespace, release=opts['orderers']['names'][0]),
+                         verbose=verbose)
     return ord_tls == 'true'
 
 
@@ -85,7 +85,7 @@ def setup_channel(opts, verbose=False):
         # Check if the file exists
         has_channel = False
         while not has_channel:
-            channel_block = pod_ex.execute('ls /var/hyperledger/{channel}.block'.format(
+            channel_block, _ = pod_ex.execute('ls /var/hyperledger/{channel}.block'.format(
                 channel=opts['peers']['channel_name']))
             if not channel_block:
                 if index == 0:
@@ -109,7 +109,7 @@ def setup_channel(opts, verbose=False):
                         cmd_suffix=cmd_suffix))
             else:
                 has_channel = True
-        res = pod_ex.execute('peer channel list')
+        res, _ = pod_ex.execute('peer channel list')
         channels = (res.split('Channels peers has joined: ')[1]).split()
         if opts['peers']['channel_name'] not in channels:
             pod_ex.execute(
