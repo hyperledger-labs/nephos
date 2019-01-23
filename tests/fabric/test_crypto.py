@@ -6,7 +6,7 @@ import pytest
 
 from nephos.fabric.crypto import (
     CryptoInfo,
-    register_id, enroll_node, create_admin, admin_creds, msp_secrets, admin_msp,
+    register_id, enroll_node, create_admin, admin_creds, copy_secret, msp_secrets, admin_msp,
     item_to_secret, id_to_secrets, cacerts_to_secrets,
     setup_id, setup_nodes, genesis_block, channel_tx, PWD)
 
@@ -176,6 +176,54 @@ class TestAdminCreds:
         assert self.OPTS['msps']['an-msp'].get('org_adminpw') == 'a_password'
 
 
+class TestCopySecret:
+    @mock.patch('nephos.fabric.crypto.shutil')
+    @mock.patch('nephos.fabric.crypto.makedirs')
+    @mock.patch('nephos.fabric.crypto.isfile')
+    @mock.patch('nephos.fabric.crypto.isdir')
+    @mock.patch('nephos.fabric.crypto.glob')
+    def test_copy_secret(self, mock_glob, mock_isdir, mock_isfile, mock_makedirs, mock_shutil):
+        mock_glob.side_effect = [['./a_dir/a_MSP/signcerts/cert.pem']]
+        mock_isfile.side_effect = [False]
+        mock_isdir.side_effect = [False]
+        copy_secret('./a_dir/a_MSP/signcerts', './a_dir/a_MSP/admincerts')
+        mock_glob.assert_called_once_with('./a_dir/a_MSP/signcerts/*')
+        mock_isfile.assert_called_once_with('./a_dir/a_MSP/admincerts/cert.pem')
+        mock_isdir.assert_called_once_with('./a_dir/a_MSP/admincerts')
+        mock_makedirs.assert_called_once_with('./a_dir/a_MSP/admincerts')
+        mock_shutil.copy.assert_called_once_with('./a_dir/a_MSP/signcerts/cert.pem', './a_dir/a_MSP/admincerts/cert.pem')
+
+    @mock.patch('nephos.fabric.crypto.shutil')
+    @mock.patch('nephos.fabric.crypto.makedirs')
+    @mock.patch('nephos.fabric.crypto.isfile')
+    @mock.patch('nephos.fabric.crypto.isdir')
+    @mock.patch('nephos.fabric.crypto.glob')
+    def test_copy_secret_again(self, mock_glob, mock_isdir, mock_isfile, mock_makedirs, mock_shutil):
+        mock_glob.side_effect = [['./a_dir/a_MSP/signcerts/cert.pem']]
+        mock_isfile.side_effect = [True]
+        copy_secret('./a_dir/a_MSP/signcerts', './a_dir/a_MSP/admincerts')
+        mock_glob.assert_called_once_with('./a_dir/a_MSP/signcerts/*')
+        mock_isfile.assert_called_once_with('./a_dir/a_MSP/admincerts/cert.pem')
+        mock_isdir.assert_not_called()
+        mock_makedirs.assert_not_called()
+        mock_shutil.copy.assert_not_called()
+
+    @mock.patch('nephos.fabric.crypto.shutil')
+    @mock.patch('nephos.fabric.crypto.makedirs')
+    @mock.patch('nephos.fabric.crypto.isfile')
+    @mock.patch('nephos.fabric.crypto.isdir')
+    @mock.patch('nephos.fabric.crypto.glob')
+    def test_copy_secret_fail(self, mock_glob, mock_isdir, mock_isfile, mock_makedirs, mock_shutil):
+        mock_glob.side_effect = [[]]
+        with pytest.raises(ValueError):
+            copy_secret('./a_dir/a_MSP/signcerts', './a_dir/a_MSP/admincerts')
+        mock_glob.assert_called_once_with('./a_dir/a_MSP/signcerts/*')
+        mock_isfile.assert_not_called()
+        mock_isdir.assert_not_called()
+        mock_makedirs.assert_not_called()
+        mock_shutil.copy.assert_not_called()
+
+
 # TODO: Add verbose test
 class TestMspSecrets:
     OPTS = {
@@ -190,52 +238,36 @@ class TestMspSecrets:
         }
     }
 
-    @mock.patch('nephos.fabric.crypto.shutil')
-    @mock.patch('nephos.fabric.crypto.makedirs')
-    @mock.patch('nephos.fabric.crypto.isfile')
-    @mock.patch('nephos.fabric.crypto.isdir')
     @mock.patch('nephos.fabric.crypto.id_to_secrets')
     @mock.patch('nephos.fabric.crypto.glob')
+    @mock.patch('nephos.fabric.crypto.copy_secret')
     @mock.patch('nephos.fabric.crypto.cacerts_to_secrets')
-    def test_msp_secrets(self, mock_cacerts_to_secrets, mock_glob, mock_id_to_secrets,
-                         mock_isdir, mock_isfile, mock_makedirs, mock_shutil):
-        mock_isfile.side_effect = [False]
-        mock_isdir.side_effect = [False]
+    def test_msp_secrets(self, mock_cacerts_to_secrets, mock_copy_secret, mock_glob, mock_id_to_secrets):
         opts = deepcopy(self.OPTS)
         msp_secrets(opts, 'a_MSP')
         mock_glob.assert_not_called()
-        mock_isfile.assert_called_once_with('./a_dir/a_MSP/admincerts/cert.pem')
-        mock_isdir.assert_called_once_with('./a_dir/a_MSP/admincerts')
-        mock_makedirs.assert_called_once_with('./a_dir/a_MSP/admincerts')
-        mock_shutil.copy.assert_called_once_with('./a_dir/a_MSP/signcerts/cert.pem', './a_dir/a_MSP/admincerts/cert.pem')
+        mock_copy_secret.assert_called_once_with(
+            './a_dir/a_MSP/signcerts', './a_dir/a_MSP/admincerts')
         mock_cacerts_to_secrets.assert_called_once_with(
             'msp-ns', './a_dir/a_MSP', 'an-admin', verbose=False)
         mock_id_to_secrets.assert_called_once_with(
             'msp-ns', './a_dir/a_MSP', 'an-admin', verbose=False)
 
-    @mock.patch('nephos.fabric.crypto.shutil')
-    @mock.patch('nephos.fabric.crypto.makedirs')
-    @mock.patch('nephos.fabric.crypto.isfile')
-    @mock.patch('nephos.fabric.crypto.isdir')
     @mock.patch('nephos.fabric.crypto.id_to_secrets')
     @mock.patch('nephos.fabric.crypto.glob')
+    @mock.patch('nephos.fabric.crypto.copy_secret')
     @mock.patch('nephos.fabric.crypto.cacerts_to_secrets')
-    def test_msp_secrets_cryptogen(self, mock_cacerts_to_secrets, mock_glob, mock_id_to_secrets,
-                                   mock_isdir, mock_isfile, mock_makedirs, mock_shutil):
+    def test_msp_secrets_cryptogen(self, mock_cacerts_to_secrets, mock_copy_secret, mock_glob, mock_id_to_secrets):
         mock_glob.side_effect = [
             ['./a_dir/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp']
         ]
-        mock_isfile.side_effect = [True]
         opts = deepcopy(self.OPTS)
         opts['cas'] = {}
         msp_secrets(opts, 'a_MSP')
         mock_glob.assert_called_once_with('./a_dir/crypto-config/*Organizations/msp-ns*/users/Admin*/msp')
-        mock_isfile.assert_called_once_with(
-            './a_dir/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp/admincerts/cert.pem'
-        )
-        mock_isdir.assert_not_called()
-        mock_makedirs.assert_not_called()
-        mock_shutil.copy.assert_not_called()
+        mock_copy_secret.assert_called_once_with(
+            './a_dir/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp/signcerts',
+            './a_dir/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp/admincerts')
         mock_cacerts_to_secrets.assert_called_once_with(
             'msp-ns', './a_dir/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp',
             'an-admin', verbose=False)
@@ -243,29 +275,21 @@ class TestMspSecrets:
             'msp-ns', './a_dir/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp',
             'an-admin', verbose=False)
 
-    @mock.patch('nephos.fabric.crypto.shutil')
-    @mock.patch('nephos.fabric.crypto.makedirs')
-    @mock.patch('nephos.fabric.crypto.isfile')
-    @mock.patch('nephos.fabric.crypto.isdir')
     @mock.patch('nephos.fabric.crypto.id_to_secrets')
     @mock.patch('nephos.fabric.crypto.glob')
+    @mock.patch('nephos.fabric.crypto.copy_secret')
     @mock.patch('nephos.fabric.crypto.cacerts_to_secrets')
-    def test_msp_secrets_cryptogen_fail(self, mock_cacerts_to_secrets, mock_glob, mock_id_to_secrets,
-                                        mock_isfile, mock_isdir, mock_makedirs, mock_shutil):
+    def test_msp_secrets_cryptogen_fail(self, mock_cacerts_to_secrets, mock_copy_secret, mock_glob, mock_id_to_secrets):
         mock_glob.side_effect = [
             ['./a_dir/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp',
              './a_dir/crypto-config/peerOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp']
         ]
-        mock_isfile.side_effect = [True]
         opts = deepcopy(self.OPTS)
         opts['cas'] = {}
         with pytest.raises(ValueError):
             msp_secrets(opts, 'a_MSP')
         mock_glob.assert_called_once_with('./a_dir/crypto-config/*Organizations/msp-ns*/users/Admin*/msp')
-        mock_isfile.assert_not_called()
-        mock_isdir.assert_not_called()
-        mock_makedirs.assert_not_called()
-        mock_shutil.copy.assert_not_called()
+        mock_copy_secret.assert_not_called()
         mock_cacerts_to_secrets.assert_not_called()
         mock_id_to_secrets.assert_not_called()
 

@@ -109,6 +109,22 @@ def admin_creds(opts, msp_name, verbose=False):
     msp_values['org_adminpw'] = secret_data['CA_PASSWORD']
 
 
+def copy_secret(from_dir, to_dir):
+    from_list = glob(join(from_dir, '*'))
+    if len(from_list) == 1:
+        from_file = from_list[0]
+    else:
+        raise ValueError('from_dir contains {} files - {}'.format(
+            len(from_list), from_list
+        ))
+    _, from_filename = split(from_file)
+    to_file = join(to_dir, from_filename)
+    if not isfile(to_file):
+        if not isdir(to_dir):
+            makedirs(to_dir)
+        shutil.copy(from_file, to_file)
+
+
 def msp_secrets(opts, msp_name, verbose=False):
     # Relevant variables
     msp_namespace = get_namespace(opts, msp=msp_name)
@@ -127,15 +143,8 @@ def msp_secrets(opts, msp_name, verbose=False):
                 len(msp_path_list), msp_path_list
             ))
 
-    # TODO: We might want to split this into its own sub-function
     # Copy cert to admincerts
-    signcert = join(msp_path, 'signcerts', 'cert.pem')
-    admincert = join(msp_path, 'admincerts', 'cert.pem')
-    if not isfile(admincert):
-        admin_dir = split(admincert)[0]
-        if not isdir(admin_dir):
-            makedirs(admin_dir)
-        shutil.copy(signcert, admincert)
+    copy_secret(join(msp_path, 'signcerts'), join(msp_path, 'admincerts'))
 
     # Create ID secrets from Admin MSP
     id_to_secrets(msp_namespace, msp_path, msp_values['org_admin'], verbose=verbose)
