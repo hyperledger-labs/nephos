@@ -14,7 +14,7 @@ cas:
   ca:
     namespace: cas
     # TODO: We should be able to set up a relative path
-    tls_cert: /Users/sasha/Aid_Tech/nephos/nephos/extras/Lets_Encrypt_Authority_X3.pem
+    tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
 msps:
   OrdererMSP:
     ca: ca

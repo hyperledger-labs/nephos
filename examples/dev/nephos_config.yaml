@@ -34,8 +34,3 @@ peers:
   channel_name: mychannel
   channel_profile: MyChannel
   secret_channel: hlf--channel
-# This is only used when we implement a Composer network
-composer:
-  name: hlc
-  secret_bna: hlc--bna
-  secret_connection: hlc--connection
