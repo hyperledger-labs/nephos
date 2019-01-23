@@ -134,8 +134,9 @@ def msp_secrets(opts, msp_name, verbose=False):
         msp_path = join(opts['core']['dir_config'], msp_name)
     else:
         # Otherwise we are using Cryptogen
-        msp_path_list = glob('{dir_config}/crypto-config/*Organizations/{ns}*/users/Admin*/msp'.format(
-            dir_config=opts['core']['dir_config'], ns=msp_namespace))
+        glob_target = '{dir_config}/crypto-config/*Organizations/{ns}*/users/Admin*/msp'.format(
+            dir_config=opts['core']['dir_config'], ns=msp_namespace)
+        msp_path_list = glob(glob_target)
         if len(msp_path_list) == 1:
             msp_path = msp_path_list[0]
         else:
@@ -224,8 +225,9 @@ def setup_id(opts, msp, release, id_type, verbose=False):
                                verbose=verbose)
     else:
         # Otherwise we are using Cryptogen
-        msp_path_list = glob('{dir_config}/crypto-config/{node_type}Organizations/{ns}*/{node_type}s/{node_name}*/msp'.format(
-            dir_config=opts['core']['dir_config'], node_type=id_type, node_name=release, ns=node_namespace))
+        glob_target = '{dir_config}/crypto-config/{node_type}Organizations/{ns}*/{node_type}s/{node_name}*/msp'.format(
+            dir_config=opts['core']['dir_config'], node_type=id_type, node_name=release, ns=node_namespace)
+        msp_path_list = glob(glob_target)
         if len(msp_path_list) == 1:
             msp_path = msp_path_list[0]
         else:
