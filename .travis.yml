@@ -9,6 +9,7 @@ python:
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+  - pip install codecov
 # Setup Minikube, needed for testing
 before_script:
   - which chmod
@@ -25,3 +26,6 @@ before_script:
 # command to run tests
 script:
   - PYTHONPATH=. pytest --cov=. --cov-report term-missing
+after_success:
+  - codecov --token=$CODECOV_TOKEN
+
