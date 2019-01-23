@@ -387,13 +387,14 @@ class TestCaCertsToSecrets:
 
 class TestSetupId:
     OPTS = {
+        'core': {'dir_config': './a_dir'},
         'cas': {
             'ca-ord': {'namespace': 'ca-namespace'},
             'ca-peer': {'namespace': 'ca-namespace'}
         },
         'msps': {
-            'ord_MSP': {'ca': 'ca-ord', 'namespace': 'ord-namespace'},
-            'peer_MSP': {'ca': 'ca-peer', 'namespace': 'peer-namespace'}
+            'ord_MSP': {'ca': 'ca-ord', 'namespace': 'ord-ns'},
+            'peer_MSP': {'ca': 'ca-peer', 'namespace': 'peer-ns'}
         },
         'peers': {'names': ['peer0'], 'msp': 'peer_MSP'},
         'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}
@@ -402,47 +403,100 @@ class TestSetupId:
     @mock.patch('nephos.fabric.crypto.register_id')
     @mock.patch('nephos.fabric.crypto.enroll_node')
     @mock.patch('nephos.fabric.crypto.id_to_secrets')
+    @mock.patch('nephos.fabric.crypto.glob')
     @mock.patch('nephos.fabric.crypto.credentials_secret')
-    def test_setup_id(self, mock_credentials_secret, mock_crypto_to_secrets,
+    def test_setup_id(self, mock_credentials_secret, mock_glob, mock_id_to_secrets,
                       mock_enroll_node, mock_register_id):
+        opts = deepcopy(self.OPTS)
         mock_credentials_secret.side_effect = [{'CA_USERNAME': 'peer0', 'CA_PASSWORD': 'peer0-pw'}]
         mock_enroll_node.side_effect = ['./peer0_MSP']
-        setup_id(self.OPTS, 'peer_MSP', 'peer0', 'peer')
+        setup_id(opts, 'peer_MSP', 'peer0', 'peer')
         mock_credentials_secret.assert_called_once_with(
-            'hlf--peer0-cred', 'peer-namespace', username='peer0', verbose=False
+            'hlf--peer0-cred', 'peer-ns', username='peer0', verbose=False
         )
         mock_register_id.assert_called_once_with(
             'ca-namespace', 'ca-peer', 'peer0', 'peer0-pw', 'peer', verbose=False)
         mock_enroll_node.assert_called_once_with(
-            self.OPTS, 'ca-peer', 'peer0', 'peer0-pw', verbose=False)
-        mock_crypto_to_secrets.assert_called_once_with(
-            namespace='peer-namespace', msp_path='./peer0_MSP', user='peer0', verbose=False
+            opts, 'ca-peer', 'peer0', 'peer0-pw', verbose=False)
+        mock_glob.assert_not_called()
+        mock_id_to_secrets.assert_called_once_with(
+            namespace='peer-ns', msp_path='./peer0_MSP', user='peer0', verbose=False
         )
 
     @mock.patch('nephos.fabric.crypto.register_id')
     @mock.patch('nephos.fabric.crypto.enroll_node')
     @mock.patch('nephos.fabric.crypto.id_to_secrets')
+    @mock.patch('nephos.fabric.crypto.glob')
     @mock.patch('nephos.fabric.crypto.credentials_secret')
-    def test_setup_id_ord(self, mock_credentials_secret, mock_crypto_to_secrets,
+    def test_setup_id_ord(self, mock_credentials_secret, mock_glob, mock_id_to_secrets,
                           mock_enroll_node, mock_register_id):
+        opts = deepcopy(self.OPTS)
         mock_credentials_secret.side_effect = [{'CA_USERNAME': 'ord0', 'CA_PASSWORD': 'ord0-pw'}]
         mock_enroll_node.side_effect = ['./ord0_MSP']
-        setup_id(self.OPTS, 'ord_MSP', 'ord0', 'orderer')
+        setup_id(opts, 'ord_MSP', 'ord0', 'orderer')
         mock_credentials_secret.assert_called_once_with(
-            'hlf--ord0-cred', 'ord-namespace', username='ord0', verbose=False
+            'hlf--ord0-cred', 'ord-ns', username='ord0', verbose=False
         )
         mock_register_id.assert_called_once_with(
             'ca-namespace', 'ca-ord', 'ord0', 'ord0-pw', 'orderer', verbose=False
         )
         mock_enroll_node.assert_called_once_with(
-            self.OPTS, 'ca-ord', 'ord0', 'ord0-pw', verbose=False
+            opts, 'ca-ord', 'ord0', 'ord0-pw', verbose=False
         )
-        mock_crypto_to_secrets.assert_called_once_with(
-            namespace='ord-namespace', msp_path='./ord0_MSP', user='ord0', verbose=False
+        mock_glob.assert_not_called()
+        mock_id_to_secrets.assert_called_once_with(
+            namespace='ord-ns', msp_path='./ord0_MSP', user='ord0', verbose=False
+        )
+    
+    @mock.patch('nephos.fabric.crypto.register_id')
+    @mock.patch('nephos.fabric.crypto.enroll_node')
+    @mock.patch('nephos.fabric.crypto.id_to_secrets')
+    @mock.patch('nephos.fabric.crypto.glob')
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
+    def test_setup_id_cryptogen(self, mock_credentials_secret, mock_glob, mock_id_to_secrets,
+                                mock_enroll_node, mock_register_id):
+        opts = deepcopy(self.OPTS)
+        opts['cas'] = {}
+        mock_glob.side_effect = [
+            ['./a_dir/crypto-config/peerOrganizations/peer-ns.domain/peers/peer0.domain/msp']
+        ]
+        setup_id(opts, 'peer_MSP', 'peer0', 'peer')
+        mock_credentials_secret.assert_not_called()
+        mock_register_id.assert_not_called()
+        mock_enroll_node.assert_not_called()
+        mock_glob.assert_called_once_with(
+            './a_dir/crypto-config/peerOrganizations/peer-ns*/peers/peer0*/msp'
+        )
+        mock_id_to_secrets.assert_called_once_with(
+            namespace='peer-ns',
+            msp_path='./a_dir/crypto-config/peerOrganizations/peer-ns.domain/peers/peer0.domain/msp',
+            user='peer0', verbose=False
         )
 
+    @mock.patch('nephos.fabric.crypto.register_id')
+    @mock.patch('nephos.fabric.crypto.enroll_node')
+    @mock.patch('nephos.fabric.crypto.id_to_secrets')
+    @mock.patch('nephos.fabric.crypto.glob')
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
+    def test_setup_id_cryptogen_fail(self, mock_credentials_secret, mock_glob, mock_id_to_secrets,
+                                     mock_enroll_node, mock_register_id):
+        opts = deepcopy(self.OPTS)
+        opts['cas'] = {}
+        mock_glob.side_effect = [
+            ['./a_dir/crypto-config/peerOrganizations/peer-ns.domain/peers/peer0.domain/msp',
+             './a_dir/crypto-config/peerOrganizations/peer-ns.domain/peers/peer0.another-domain/msp']
+        ]
+        with pytest.raises(ValueError):
+            setup_id(opts, 'peer_MSP', 'peer0', 'peer')
+        mock_credentials_secret.assert_not_called()
+        mock_register_id.assert_not_called()
+        mock_enroll_node.assert_not_called()
+        mock_glob.assert_called_once_with(
+            './a_dir/crypto-config/peerOrganizations/peer-ns*/peers/peer0*/msp'
+        )
+        mock_id_to_secrets.assert_not_called()
 
-# TODO: Correct these tests
+
 class TestSetupNodes:
     OPTS = {
         'cas': {
@@ -450,8 +504,8 @@ class TestSetupNodes:
             'ca-peer': {'namespace': 'ca-namespace'}
         },
         'msps': {
-            'ord_MSP': {'ca': 'ca-ord', 'namespace': 'ord-namespace'},
-            'peer_MSP': {'ca': 'ca-peer', 'namespace': 'peer-namespace'}
+            'ord_MSP': {'ca': 'ca-ord', 'namespace': 'ord-ns'},
+            'peer_MSP': {'ca': 'ca-peer', 'namespace': 'peer-ns'}
         },
         'peers': {'names': ['peer0', 'peer1'], 'msp': 'peer_MSP'},
         'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}
@@ -476,7 +530,7 @@ class TestSetupNodes:
 class TestGenesisBlock:
     OPTS = {
         'core': {'dir_config': './a_dir'},
-        'msps': {'ord_MSP': {'namespace': 'ord-namespace'}},
+        'msps': {'ord_MSP': {'namespace': 'ord-ns'}},
         'orderers': {'secret_genesis': 'a-genesis-secret', 'msp': 'ord_MSP'}
     }
 
@@ -497,7 +551,7 @@ class TestGenesisBlock:
             'configtxgen -profile OrdererGenesis -outputBlock genesis.block', verbose=False)
         mock_print.assert_not_called()
         mock_secret_from_file.assert_called_once_with(
-            secret='a-genesis-secret', namespace='ord-namespace',
+            secret='a-genesis-secret', namespace='ord-ns',
             key='genesis.block', filename='genesis.block', verbose=False)
 
     @mock.patch('nephos.fabric.crypto.secret_from_file')
@@ -516,14 +570,14 @@ class TestGenesisBlock:
         mock_execute.assert_not_called()
         mock_print.assert_called_once_with('genesis.block already exists')
         mock_secret_from_file.assert_called_once_with(
-            secret='a-genesis-secret', namespace='ord-namespace',
+            secret='a-genesis-secret', namespace='ord-ns',
             key='genesis.block', filename='genesis.block', verbose=True)
 
 
 class TestChannelTx:
     OPTS = {
         'core': {'dir_config': './a_dir'},
-        'msps': {'peer_MSP': {'namespace': 'peer-namespace'}},
+        'msps': {'peer_MSP': {'namespace': 'peer-ns'}},
         'peers': {
             'channel_name': 'a-channel', 'channel_profile': 'AProfile',
             'msp': 'peer_MSP', 'secret_channel': 'a-channel-secret'
@@ -547,7 +601,7 @@ class TestChannelTx:
             'configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx a-channel.tx', verbose=False)
         mock_print.assert_not_called()
         mock_secret_from_file.assert_called_once_with(
-            secret='a-channel-secret', namespace='peer-namespace',
+            secret='a-channel-secret', namespace='peer-ns',
             key='a-channel.tx', filename='a-channel.tx', verbose=False
         )
 
@@ -567,6 +621,6 @@ class TestChannelTx:
         mock_execute.assert_not_called()
         mock_print.assert_called_once_with('a-channel.tx already exists')
         mock_secret_from_file.assert_called_once_with(
-            secret='a-channel-secret', namespace='peer-namespace',
+            secret='a-channel-secret', namespace='peer-ns',
             key='a-channel.tx', filename='a-channel.tx', verbose=True
         )

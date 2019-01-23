@@ -199,19 +199,30 @@ def cacerts_to_secrets(namespace, msp_path, user, verbose=False):
 def setup_id(opts, msp, release, id_type, verbose=False):
     msp_values = opts['msps'][msp]
     node_namespace = get_namespace(opts, msp)
-    ca_namespace = get_namespace(opts, ca=opts['msps'][msp]['ca'])
-    # Create secret with Orderer credentials
-    secret_name = 'hlf--{}-cred'.format(release)
-    secret_data = credentials_secret(secret_name, node_namespace,
-                                     username=release,
-                                     verbose=verbose)
-    # Register node
-    register_id(ca_namespace, msp_values['ca'], secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'], id_type,
-                verbose=verbose)
-    # Enroll node
-    msp_path = enroll_node(opts, msp_values['ca'],
-                           secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
-                           verbose=verbose)
+    if opts['cas']:
+        ca_namespace = get_namespace(opts, ca=opts['msps'][msp]['ca'])
+        # Create secret with Orderer credentials
+        secret_name = 'hlf--{}-cred'.format(release)
+        secret_data = credentials_secret(secret_name, node_namespace,
+                                         username=release,
+                                         verbose=verbose)
+        # Register node
+        register_id(ca_namespace, msp_values['ca'], secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'], id_type,
+                    verbose=verbose)
+        # Enroll node
+        msp_path = enroll_node(opts, msp_values['ca'],
+                               secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
+                               verbose=verbose)
+    else:
+        # Otherwise we are using Cryptogen
+        msp_path_list = glob('{dir_config}/crypto-config/{node_type}Organizations/{ns}*/{node_type}s/{node_name}*/msp'.format(
+            dir_config=opts['core']['dir_config'], node_type=id_type, node_name=release, ns=node_namespace))
+        if len(msp_path_list) == 1:
+            msp_path = msp_path_list[0]
+        else:
+            raise ValueError('MSP path list length is {} - {}'.format(
+                len(msp_path_list), msp_path_list
+            ))
     # Secrets
     id_to_secrets(namespace=node_namespace, msp_path=msp_path, user=release, verbose=verbose)
 
