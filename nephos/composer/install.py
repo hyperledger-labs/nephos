@@ -21,9 +21,10 @@ def composer_connection(opts, verbose=False):
     peer_namespace = get_namespace(opts, opts['peers']['msp'])
     ord_namespace = get_namespace(opts, opts['orderers']['msp'])
     # TODO: This could be a single function
-    peer_ca = opts['peers']['ca']
-    peer_ca_msp = opts['cas'][peer_ca]['msp']
-    ingress_urls = ingress_read(peer_ca + '-hlf-ca', namespace=peer_namespace, verbose=verbose)
+    peer_msp = opts['peers']['msp']
+    peer_ca = opts['msps'][peer_msp]['ca']
+    ca_namespace = opts['cas'][peer_ca]['namespace']
+    ingress_urls = ingress_read(peer_ca + '-hlf-ca', namespace=ca_namespace, verbose=verbose)
     peer_ca_url = ingress_urls[0]
     try:
         cm_read(opts['composer']['secret_connection'], peer_namespace, verbose=verbose)
@@ -41,7 +42,7 @@ def composer_connection(opts, verbose=False):
             peer_ca_url,
             'AidTech',
             None,
-            peer_ca_msp,
+            peer_msp,
             opts['peers']['channel_name']
         )}
         cm_create(peer_namespace, opts['composer']['secret_connection'], cm_data)
@@ -95,10 +96,12 @@ def install_network(opts, verbose=False):
     bna = hlc_cli_ex.execute('ls /hl_config/blockchain_network')
     bna_name, bna_rem = bna.split('_')
     bna_version, _ = bna_rem.split('.bna')
-    peer_ca = opts['peers']['ca']
-    bna_admin = opts['cas'][peer_ca]['org_admin']
-    admin_creds(opts['cas'][peer_ca], peer_namespace, verbose=verbose)
-    bna_pw = opts['cas'][peer_ca]['org_adminpw']
+    # TODO: This could be a single function
+    peer_msp = opts['peers']['msp']
+    peer_ca = opts['msps'][peer_msp]['ca']
+    bna_admin = opts['msps'][peer_msp]['org_admin']
+    admin_creds(opts, peer_msp, verbose=verbose)
+    bna_pw = opts['msps'][peer_msp]['org_adminpw']
 
     ls_res = hlc_cli_ex.execute('composer card list --card {bna_admin}@{bna_name}'.format(
             bna_admin=bna_admin, bna_name=bna_name))

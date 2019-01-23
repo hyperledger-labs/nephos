@@ -6,7 +6,7 @@ from nephos.composer.upgrade import upgrade_network
 
 class TestUpgradeNetwork:
     OPTS = {
-        'cas': {'peer-ca': {'org-admin': 'an-admin'}},
+        'cas': {'peer-ca': {'org_admin': 'an-admin'}},
         'msps': {'peer_MSP': {'namespace': 'peer-namespace'}},
         'peers': {'ca': 'peer-ca', 'msp': 'peer_MSP'}
     }
