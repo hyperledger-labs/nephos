@@ -49,7 +49,7 @@ class TestGetNamespace:
     OPTS = {
         'core': {'namespace': 'core-namespace'},
         'msps': {
-            'namespaced_MSP': {'namespace': 'msp-namespace'},
+            'namespaced_MSP': {'namespace': 'msp-ns'},
             'core_MSP': {}
         },
         'cas': {
@@ -64,7 +64,7 @@ class TestGetNamespace:
 
     def test_get_namespace_msp(self):
         result = get_namespace(self.OPTS, 'namespaced_MSP')
-        assert result == 'msp-namespace'
+        assert result == 'msp-ns'
 
     def test_get_namespace_msp_core(self):
         result = get_namespace(self.OPTS, 'core_MSP')
