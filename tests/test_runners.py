@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import mock
 from unittest.mock import call
 
@@ -7,13 +8,27 @@ from nephos.runners import (runner_ca, runner_composer, runner_composer_up, runn
 
 
 class TestRunnerCa:
-    OPTS = 'some-self.OPTS'
+    OPTS = {
+        'cas': {'a-ca': {}}
+    }
 
     @mock.patch('nephos.runners.setup_ca')
-    def test_runner_ca(self, mock_setup_ca):
-        runner_ca(self.OPTS, upgrade=False)
+    @mock.patch('nephos.runners.print')
+    def test_runner_ca(self, mock_print, mock_setup_ca):
+        opts = deepcopy(self.OPTS)
+        runner_ca(opts, upgrade=False)
         mock_setup_ca.assert_called_once_with(
-            self.OPTS, upgrade=False, verbose=False)
+            opts, upgrade=False, verbose=False)
+        mock_print.assert_not_called()
+
+    @mock.patch('nephos.runners.setup_ca')
+    @mock.patch('nephos.runners.print')
+    def test_runner_ca_cryptogen(self, mock_print, mock_setup_ca):
+        opts = deepcopy(self.OPTS)
+        del opts['cas']['a-ca']
+        runner_ca(opts, upgrade=False)
+        mock_setup_ca.assert_not_called()
+        mock_print.assert_called_once_with('No CAs defined in Nephos settings, ignoring CA setup')
 
 
 class TestRunnerComposer:

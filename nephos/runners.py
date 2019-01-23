@@ -7,7 +7,10 @@ from nephos.composer.upgrade import upgrade_network
 
 
 def runner_ca(opts, upgrade=False, verbose=False):
-    setup_ca(opts, upgrade=upgrade, verbose=verbose)
+    if opts['cas']:
+        setup_ca(opts, upgrade=upgrade, verbose=verbose)
+    else:
+        print('No CAs defined in Nephos settings, ignoring CA setup')
 
 
 def runner_composer(opts, upgrade=False, verbose=False):
