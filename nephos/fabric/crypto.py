@@ -133,11 +133,13 @@ def admin_msp(opts, msp_name, verbose=False):
     admin_namespace = get_namespace(opts, msp_name)
     ns_create(admin_namespace, verbose=verbose)
 
-    # Get/set credentials
-    admin_creds(opts, msp_name, verbose=verbose)
-
-    # Crypto material for Admin
-    create_admin(opts, msp_name, verbose=verbose)
+    if opts['cas']:
+        # Get/set credentials (if we use a CA)
+        admin_creds(opts, msp_name, verbose=verbose)
+        # Crypto material for Admin
+        create_admin(opts, msp_name, verbose=verbose)
+    else:
+        print('No CAs defined in Nephos settings, ignoring Credentials')
 
     # Setup MSP secrets
     msp_secrets(opts, msp_name, verbose=verbose)

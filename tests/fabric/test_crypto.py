@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import mock
 from unittest.mock import call
 
@@ -205,6 +206,7 @@ class TestMspSecrets:
 class TestAdminMsp:
     OPTS = {
         'core': {'dir_config': './a-dir'},
+        'cas': {'a-ca': {}},
         'msps': {
             'an-msp': {
                 'namespace': 'msp-namespace', 'ca': 'a-ca', 'org_admin': 'an_admin'
@@ -217,12 +219,26 @@ class TestAdminMsp:
     @mock.patch('nephos.fabric.crypto.create_admin')
     @mock.patch('nephos.fabric.crypto.admin_creds')
     def test_admin_msp(self, mock_ca_creds,  mock_create_admin, mock_msp_secrets, mock_ns_create):
-        admin_msp(self.OPTS, 'an-msp')
+        opts = deepcopy(self.OPTS)
+        admin_msp(opts, 'an-msp')
         mock_ns_create.assert_called_once_with('msp-namespace', verbose=False)
         mock_ca_creds.assert_called_once_with(
-            self.OPTS, 'an-msp', verbose=False)
-        mock_create_admin.assert_called_once_with(self.OPTS, 'an-msp', verbose=False)
-        mock_msp_secrets.assert_called_once_with(self.OPTS, 'an-msp', verbose=False)
+            opts, 'an-msp', verbose=False)
+        mock_create_admin.assert_called_once_with(opts, 'an-msp', verbose=False)
+        mock_msp_secrets.assert_called_once_with(opts, 'an-msp', verbose=False)
+
+    @mock.patch('nephos.fabric.crypto.ns_create')
+    @mock.patch('nephos.fabric.crypto.msp_secrets')
+    @mock.patch('nephos.fabric.crypto.create_admin')
+    @mock.patch('nephos.fabric.crypto.admin_creds')
+    def test_admin_msp_cryptogen(self, mock_ca_creds,  mock_create_admin, mock_msp_secrets, mock_ns_create):
+        opts = deepcopy(self.OPTS)
+        opts['cas'] = {}
+        admin_msp(opts, 'an-msp')
+        mock_ns_create.assert_called_once_with('msp-namespace', verbose=False)
+        mock_ca_creds.assert_not_called()
+        mock_create_admin.assert_not_called()
+        mock_msp_secrets.assert_called_once_with(opts, 'an-msp', verbose=False)
 
 
 class TestItemToSecret:
