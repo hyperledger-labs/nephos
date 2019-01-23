@@ -10,22 +10,13 @@ core:
   dir_config: ./examples/dev/config
   # Directory where the Helm Chart values reside
   dir_values: ./examples/dev/helm_values
-cas: #{}
-  # TODO: Initially we create an example with an actual CA, later we substitute with cryptogen
-  ca:
-    namespace: cas
-    # TODO: We should be able to set up a relative path
-    tls_cert: /Users/sasha/Aid_Tech/nephos/nephos/extras/Lets_Encrypt_Authority_X3.pem
+cas: {}  # No CAs as we are using cryptogen
 msps:
   OrdererMSP:
-    # TODO: Remove dependency on CA
-    ca: ca
     namespace: orderers
     org_admin: ordadmin
     # org_passwd:  # Set implicitly
   PeerMSP:
-    # TODO: Remove dependency on CA
-    ca: ca
     namespace: peers
     org_admin: peeradmin
     # org_passwd:  # Set implicitly
@@ -43,8 +34,3 @@ peers:
   channel_name: mychannel
   channel_profile: MyChannel
   secret_channel: hlf--channel
-# This is only used when we implement a Composer network
-composer:
-  name: hlc
-  secret_bna: hlc--bna
-  secret_connection: hlc--connection

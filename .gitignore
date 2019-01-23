@@ -110,4 +110,4 @@ venv.bak/
 # Examples
 genesis.block
 *channel.tx
-*MSP
+*_MSP

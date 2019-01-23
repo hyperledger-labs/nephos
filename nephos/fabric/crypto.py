@@ -1,6 +1,8 @@
 import shutil
 from collections import namedtuple
-from os import path, chdir, getcwd, listdir, makedirs
+from glob import glob
+from os import chdir, getcwd, listdir, makedirs
+from os.path import abspath, exists, isfile, isdir, join, split
 from time import sleep
 
 from nephos.fabric.settings import get_namespace
@@ -51,8 +53,8 @@ def enroll_node(opts, ca, username, password, verbose=False):
     ca_namespace = get_namespace(opts, ca=ca)
     ingress_urls = ingress_read(ca + '-hlf-ca', namespace=ca_namespace, verbose=verbose)
     msp_dir = '{}_MSP'.format(username)
-    msp_path = path.join(dir_config, msp_dir)
-    if not path.isdir(msp_path):
+    msp_path = join(dir_config, msp_dir)
+    if not isdir(msp_path):
         # Enroll
         command = ('FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client enroll ' +
                    '-u https://{username}:{password}@{ingress} -M {msp_dir} ' +
@@ -62,7 +64,7 @@ def enroll_node(opts, ca, username, password, verbose=False):
             password=password,
             ingress=ingress_urls[0],
             msp_dir=msp_dir,
-            ca_server_tls=path.abspath(opts['cas'][ca]['tls_cert']))
+            ca_server_tls=abspath(opts['cas'][ca]['tls_cert']))
         execute_until_success(command)
     return msp_path
 
@@ -85,8 +87,8 @@ def create_admin(opts, msp_name, verbose=False):
                 verbose=verbose)
 
     # If our keystore does not exist or is empty, we need to enroll the identity...
-    keystore = path.join(dir_config, msp_name, 'keystore')
-    if not path.isdir(keystore) or not listdir(keystore):
+    keystore = join(dir_config, msp_name, 'keystore')
+    if not isdir(keystore) or not listdir(keystore):
         execute(
             ('FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client enroll ' +
              '-u https://{id}:{pw}@{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}').format(
@@ -107,20 +109,43 @@ def admin_creds(opts, msp_name, verbose=False):
     msp_values['org_adminpw'] = secret_data['CA_PASSWORD']
 
 
+def copy_secret(from_dir, to_dir):
+    from_list = glob(join(from_dir, '*'))
+    if len(from_list) == 1:
+        from_file = from_list[0]
+    else:
+        raise ValueError('from_dir contains {} files - {}'.format(
+            len(from_list), from_list
+        ))
+    _, from_filename = split(from_file)
+    to_file = join(to_dir, from_filename)
+    if not isfile(to_file):
+        if not isdir(to_dir):
+            makedirs(to_dir)
+        shutil.copy(from_file, to_file)
+
+
 def msp_secrets(opts, msp_name, verbose=False):
     # Relevant variables
     msp_namespace = get_namespace(opts, msp=msp_name)
     msp_values = opts['msps'][msp_name]
-    msp_path = path.join(opts['core']['dir_config'], msp_name)
+    if opts['cas']:
+        # If we have a CA, MSP was saved to dir_config
+        msp_path = join(opts['core']['dir_config'], msp_name)
+    else:
+        # Otherwise we are using Cryptogen
+        glob_target = '{dir_config}/crypto-config/*Organizations/{ns}*/users/Admin*/msp'.format(
+            dir_config=opts['core']['dir_config'], ns=msp_namespace)
+        msp_path_list = glob(glob_target)
+        if len(msp_path_list) == 1:
+            msp_path = msp_path_list[0]
+        else:
+            raise ValueError('MSP path list length is {} - {}'.format(
+                len(msp_path_list), msp_path_list
+            ))
 
     # Copy cert to admincerts
-    signcert = path.join(msp_path, 'signcerts', 'cert.pem')
-    admincert = path.join(msp_path, 'admincerts', 'cert.pem')
-    if not path.isfile(admincert):
-        admin_dir = path.split(admincert)[0]
-        if not path.isdir(admin_dir):
-            makedirs(admin_dir)
-        shutil.copy(signcert, admincert)
+    copy_secret(join(msp_path, 'signcerts'), join(msp_path, 'admincerts'))
 
     # Create ID secrets from Admin MSP
     id_to_secrets(msp_namespace, msp_path, msp_values['org_admin'], verbose=verbose)
@@ -133,11 +158,13 @@ def admin_msp(opts, msp_name, verbose=False):
     admin_namespace = get_namespace(opts, msp_name)
     ns_create(admin_namespace, verbose=verbose)
 
-    # Get/set credentials
-    admin_creds(opts, msp_name, verbose=verbose)
-
-    # Crypto material for Admin
-    create_admin(opts, msp_name, verbose=verbose)
+    if opts['cas']:
+        # Get/set credentials (if we use a CA)
+        admin_creds(opts, msp_name, verbose=verbose)
+        # Crypto material for Admin
+        create_admin(opts, msp_name, verbose=verbose)
+    else:
+        print('No CAs defined in Nephos settings, ignoring Credentials')
 
     # Setup MSP secrets
     msp_secrets(opts, msp_name, verbose=verbose)
@@ -147,7 +174,7 @@ def admin_msp(opts, msp_name, verbose=False):
 def item_to_secret(namespace, msp_path, user, item, verbose=False):
     # Item in form CryptoInfo(name, subfolder, key, required)
     secret_name = 'hlf--{user}-{type}'.format(user=user, type=item.secret_type)
-    file_path = path.join(msp_path, item.subfolder)
+    file_path = join(msp_path, item.subfolder)
     try:
         crypto_secret(secret_name,
                       namespace,
@@ -179,27 +206,42 @@ def cacerts_to_secrets(namespace, msp_path, user, verbose=False):
         item_to_secret(namespace, msp_path, user, item, verbose=verbose)
 
 
-# TODO: Create single function to enroll/register, separate from loop
-def setup_nodes(opts, node_type, verbose=False):
-    nodes = opts[node_type + 's']
-    msp_values = opts['msps'][nodes['msp']]
-    node_namespace = get_namespace(opts, nodes['msp'])
-    ca_namespace = get_namespace(opts, ca=opts['msps'][nodes['msp']]['ca'])
-    for release in nodes['names']:
+def setup_id(opts, msp, release, id_type, verbose=False):
+    msp_values = opts['msps'][msp]
+    node_namespace = get_namespace(opts, msp)
+    if opts['cas']:
+        ca_namespace = get_namespace(opts, ca=opts['msps'][msp]['ca'])
         # Create secret with Orderer credentials
         secret_name = 'hlf--{}-cred'.format(release)
         secret_data = credentials_secret(secret_name, node_namespace,
                                          username=release,
                                          verbose=verbose)
         # Register node
-        register_id(ca_namespace, msp_values['ca'], secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'], node_type,
+        register_id(ca_namespace, msp_values['ca'], secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'], id_type,
                     verbose=verbose)
         # Enroll node
         msp_path = enroll_node(opts, msp_values['ca'],
                                secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
                                verbose=verbose)
-        # Secrets
-        id_to_secrets(namespace=node_namespace, msp_path=msp_path, user=release, verbose=verbose)
+    else:
+        # Otherwise we are using Cryptogen
+        glob_target = '{dir_config}/crypto-config/{node_type}Organizations/{ns}*/{node_type}s/{node_name}*/msp'.format(
+            dir_config=opts['core']['dir_config'], node_type=id_type, node_name=release, ns=node_namespace)
+        msp_path_list = glob(glob_target)
+        if len(msp_path_list) == 1:
+            msp_path = msp_path_list[0]
+        else:
+            raise ValueError('MSP path list length is {} - {}'.format(
+                len(msp_path_list), msp_path_list
+            ))
+    # Secrets
+    id_to_secrets(namespace=node_namespace, msp_path=msp_path, user=release, verbose=verbose)
+
+
+def setup_nodes(opts, node_type, verbose=False):
+    nodes = opts[node_type + 's']
+    for release in nodes['names']:
+        setup_id(opts, nodes['msp'], release, node_type, verbose=verbose)
 
 
 # ConfigTxGen helpers
@@ -208,7 +250,7 @@ def genesis_block(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts['core']['dir_config'])
     # Create the genesis block
-    if not path.exists('genesis.block'):
+    if not exists('genesis.block'):
         # Genesis block creation and storage
         execute(
             'configtxgen -profile OrdererGenesis -outputBlock genesis.block',
@@ -228,7 +270,7 @@ def channel_tx(opts, verbose=False):
     chdir(opts['core']['dir_config'])
     # Create Channel Tx
     channel_file = '{channel}.tx'.format(channel=opts['peers']['channel_name'])
-    if not path.exists(channel_file):
+    if not exists(channel_file):
         # Channel transaction creation and storage
         execute(
             'configtxgen -profile {channel_profile} -channelID {channel} -outputCreateChannelTx {channel_file}'.format(
