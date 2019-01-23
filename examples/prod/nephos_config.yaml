@@ -45,5 +45,5 @@ peers:
 # This is only used when we implement a Composer network
 composer:
   name: hlc
-  secret_bna: bc--bna
+  secret_bna: hlc--bna
   secret_connection: hlc--connection
