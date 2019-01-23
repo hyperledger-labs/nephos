@@ -196,27 +196,30 @@ def cacerts_to_secrets(namespace, msp_path, user, verbose=False):
         item_to_secret(namespace, msp_path, user, item, verbose=verbose)
 
 
-# TODO: Create single function to enroll/register, separate from loop
+def setup_id(opts, msp, release, id_type, verbose=False):
+    msp_values = opts['msps'][msp]
+    node_namespace = get_namespace(opts, msp)
+    ca_namespace = get_namespace(opts, ca=opts['msps'][msp]['ca'])
+    # Create secret with Orderer credentials
+    secret_name = 'hlf--{}-cred'.format(release)
+    secret_data = credentials_secret(secret_name, node_namespace,
+                                     username=release,
+                                     verbose=verbose)
+    # Register node
+    register_id(ca_namespace, msp_values['ca'], secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'], id_type,
+                verbose=verbose)
+    # Enroll node
+    msp_path = enroll_node(opts, msp_values['ca'],
+                           secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
+                           verbose=verbose)
+    # Secrets
+    id_to_secrets(namespace=node_namespace, msp_path=msp_path, user=release, verbose=verbose)
+
+
 def setup_nodes(opts, node_type, verbose=False):
     nodes = opts[node_type + 's']
-    msp_values = opts['msps'][nodes['msp']]
-    node_namespace = get_namespace(opts, nodes['msp'])
-    ca_namespace = get_namespace(opts, ca=opts['msps'][nodes['msp']]['ca'])
     for release in nodes['names']:
-        # Create secret with Orderer credentials
-        secret_name = 'hlf--{}-cred'.format(release)
-        secret_data = credentials_secret(secret_name, node_namespace,
-                                         username=release,
-                                         verbose=verbose)
-        # Register node
-        register_id(ca_namespace, msp_values['ca'], secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'], node_type,
-                    verbose=verbose)
-        # Enroll node
-        msp_path = enroll_node(opts, msp_values['ca'],
-                               secret_data['CA_USERNAME'], secret_data['CA_PASSWORD'],
-                               verbose=verbose)
-        # Secrets
-        id_to_secrets(namespace=node_namespace, msp_path=msp_path, user=release, verbose=verbose)
+        setup_id(opts, nodes['msp'], release, node_type, verbose=verbose)
 
 
 # ConfigTxGen helpers

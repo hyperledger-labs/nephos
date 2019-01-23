@@ -8,7 +8,7 @@ from nephos.fabric.crypto import (
     CryptoInfo,
     register_id, enroll_node, create_admin, admin_creds, msp_secrets, admin_msp,
     item_to_secret, id_to_secrets, cacerts_to_secrets,
-    setup_nodes, genesis_block, channel_tx, PWD)
+    setup_id, setup_nodes, genesis_block, channel_tx, PWD)
 
 
 class TestRegisterId:
@@ -385,6 +385,64 @@ class TestCaCertsToSecrets:
             CryptoInfo('cacert', 'cacerts', 'cacert.pem', True), verbose=False)
 
 
+class TestSetupId:
+    OPTS = {
+        'cas': {
+            'ca-ord': {'namespace': 'ca-namespace'},
+            'ca-peer': {'namespace': 'ca-namespace'}
+        },
+        'msps': {
+            'ord_MSP': {'ca': 'ca-ord', 'namespace': 'ord-namespace'},
+            'peer_MSP': {'ca': 'ca-peer', 'namespace': 'peer-namespace'}
+        },
+        'peers': {'names': ['peer0'], 'msp': 'peer_MSP'},
+        'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}
+    }
+
+    @mock.patch('nephos.fabric.crypto.register_id')
+    @mock.patch('nephos.fabric.crypto.enroll_node')
+    @mock.patch('nephos.fabric.crypto.id_to_secrets')
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
+    def test_setup_id(self, mock_credentials_secret, mock_crypto_to_secrets,
+                      mock_enroll_node, mock_register_id):
+        mock_credentials_secret.side_effect = [{'CA_USERNAME': 'peer0', 'CA_PASSWORD': 'peer0-pw'}]
+        mock_enroll_node.side_effect = ['./peer0_MSP']
+        setup_id(self.OPTS, 'peer_MSP', 'peer0', 'peer')
+        mock_credentials_secret.assert_called_once_with(
+            'hlf--peer0-cred', 'peer-namespace', username='peer0', verbose=False
+        )
+        mock_register_id.assert_called_once_with(
+            'ca-namespace', 'ca-peer', 'peer0', 'peer0-pw', 'peer', verbose=False)
+        mock_enroll_node.assert_called_once_with(
+            self.OPTS, 'ca-peer', 'peer0', 'peer0-pw', verbose=False)
+        mock_crypto_to_secrets.assert_called_once_with(
+            namespace='peer-namespace', msp_path='./peer0_MSP', user='peer0', verbose=False
+        )
+
+    @mock.patch('nephos.fabric.crypto.register_id')
+    @mock.patch('nephos.fabric.crypto.enroll_node')
+    @mock.patch('nephos.fabric.crypto.id_to_secrets')
+    @mock.patch('nephos.fabric.crypto.credentials_secret')
+    def test_setup_id_ord(self, mock_credentials_secret, mock_crypto_to_secrets,
+                          mock_enroll_node, mock_register_id):
+        mock_credentials_secret.side_effect = [{'CA_USERNAME': 'ord0', 'CA_PASSWORD': 'ord0-pw'}]
+        mock_enroll_node.side_effect = ['./ord0_MSP']
+        setup_id(self.OPTS, 'ord_MSP', 'ord0', 'orderer')
+        mock_credentials_secret.assert_called_once_with(
+            'hlf--ord0-cred', 'ord-namespace', username='ord0', verbose=False
+        )
+        mock_register_id.assert_called_once_with(
+            'ca-namespace', 'ca-ord', 'ord0', 'ord0-pw', 'orderer', verbose=False
+        )
+        mock_enroll_node.assert_called_once_with(
+            self.OPTS, 'ca-ord', 'ord0', 'ord0-pw', verbose=False
+        )
+        mock_crypto_to_secrets.assert_called_once_with(
+            namespace='ord-namespace', msp_path='./ord0_MSP', user='ord0', verbose=False
+        )
+
+
+# TODO: Correct these tests
 class TestSetupNodes:
     OPTS = {
         'cas': {
@@ -399,53 +457,19 @@ class TestSetupNodes:
         'orderers': {'names': ['ord0'], 'msp': 'ord_MSP'}
     }
 
-    @mock.patch('nephos.fabric.crypto.register_id')
-    @mock.patch('nephos.fabric.crypto.enroll_node')
-    @mock.patch('nephos.fabric.crypto.id_to_secrets')
-    @mock.patch('nephos.fabric.crypto.credentials_secret')
-    def test_setup_nodes(self, mock_credentials_secret, mock_crypto_to_secrets,
-                         mock_enroll_node, mock_register_id):
-        mock_credentials_secret.side_effect = [{'CA_USERNAME': 'peer0', 'CA_PASSWORD': 'peer0-pw'},
-                                               {'CA_USERNAME': 'peer1', 'CA_PASSWORD': 'peer1-pw'}]
-        mock_enroll_node.side_effect = ['./peer0_MSP', './peer1_MSP']
+    @mock.patch('nephos.fabric.crypto.setup_id')
+    def test_setup_nodes(self, mock_setup_id):
         setup_nodes(self.OPTS, 'peer')
-        mock_credentials_secret.assert_has_calls([
-            call('hlf--peer0-cred', 'peer-namespace', username='peer0', verbose=False),
-            call('hlf--peer1-cred', 'peer-namespace', username='peer1', verbose=False)
-        ])
-        mock_register_id.assert_has_calls([
-            call('ca-namespace', 'ca-peer', 'peer0', 'peer0-pw', 'peer', verbose=False),
-            call('ca-namespace', 'ca-peer', 'peer1', 'peer1-pw', 'peer', verbose=False)
-        ])
-        mock_enroll_node.assert_has_calls([
-            call(self.OPTS, 'ca-peer', 'peer0', 'peer0-pw', verbose=False),
-            call(self.OPTS, 'ca-peer', 'peer1', 'peer1-pw', verbose=False)
-        ])
-        mock_crypto_to_secrets.assert_has_calls([
-            call(namespace='peer-namespace', msp_path='./peer0_MSP', user='peer0', verbose=False),
-            call(namespace='peer-namespace', msp_path='./peer1_MSP', user='peer1', verbose=False)
+        mock_setup_id.assert_has_calls([
+            call(self.OPTS, 'peer_MSP', 'peer0', 'peer', verbose=False),
+            call(self.OPTS, 'peer_MSP', 'peer1', 'peer', verbose=False),
         ])
 
-    @mock.patch('nephos.fabric.crypto.register_id')
-    @mock.patch('nephos.fabric.crypto.enroll_node')
-    @mock.patch('nephos.fabric.crypto.id_to_secrets')
-    @mock.patch('nephos.fabric.crypto.credentials_secret')
-    def test_setup_nodes_ord(self, mock_credentials_secret, mock_crypto_to_secrets,
-                         mock_enroll_node, mock_register_id):
-        mock_credentials_secret.side_effect = [{'CA_USERNAME': 'ord0', 'CA_PASSWORD': 'ord0-pw'}]
-        mock_enroll_node.side_effect = ['./ord0_MSP']
-        setup_nodes(self.OPTS, 'orderer')
-        mock_credentials_secret.assert_has_calls([
-            call('hlf--ord0-cred', 'ord-namespace', username='ord0', verbose=False)
-        ])
-        mock_register_id.assert_has_calls([
-            call('ca-namespace', 'ca-ord', 'ord0', 'ord0-pw', 'orderer', verbose=False)
-        ])
-        mock_enroll_node.assert_has_calls([
-            call(self.OPTS, 'ca-ord', 'ord0', 'ord0-pw', verbose=False)
-        ])
-        mock_crypto_to_secrets.assert_has_calls([
-            call(namespace='ord-namespace', msp_path='./ord0_MSP', user='ord0', verbose=False)
+    @mock.patch('nephos.fabric.crypto.setup_id')
+    def test_setup_nodes_ord(self, mock_setup_id):
+        setup_nodes(self.OPTS, 'orderer', verbose=True)
+        mock_setup_id.assert_has_calls([
+            call(self.OPTS, 'ord_MSP', 'ord0', 'orderer', verbose=True)
         ])
 
 
