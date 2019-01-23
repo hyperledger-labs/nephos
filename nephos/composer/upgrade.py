@@ -16,7 +16,7 @@ def upgrade_network(opts, verbose=False):
     bna_name, bna_rem = bna.split('_')
     bna_version, _ = bna_rem.split('.bna')
     peer_ca = opts['peers']['ca']
-    bna_admin = opts['cas'][peer_ca]['org-admin']
+    bna_admin = opts['cas'][peer_ca]['org_admin']
 
     res, _ = hlc_cli_ex.execute('composer network ping --card {bna_admin}@{bna_name}'.format(
         bna_admin=bna_admin, bna_name=bna_name))

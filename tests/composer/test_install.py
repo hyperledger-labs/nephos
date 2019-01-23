@@ -32,7 +32,7 @@ class TestGetComposerData:
 
 class TestComposerConnection:
     OPTS = {
-        'cas': {'peer-ca': {'msp': 'peer-msp'}},
+        'cas': {'peer-ca': {'msp': 'peer-msp', 'namespace': 'ca-namespace'}},
         'composer': {'name': 'hlc', 'secret_connection': 'connection-secret'},
         'msps': {
             'ord_MSP': {'namespace': 'ord-namespace'},
@@ -50,7 +50,7 @@ class TestComposerConnection:
         mock_cm_read.side_effect = [ApiException]
         mock_json_ct.side_effect = ['cm-data']
         composer_connection(self.OPTS)
-        mock_ingress_read.assert_called_once_with('peer-ca-hlf-ca', namespace='peer-namespace', verbose=False)
+        mock_ingress_read.assert_called_once_with('peer-ca-hlf-ca', namespace='ca-namespace', verbose=False)
         mock_cm_read.assert_called_once_with('connection-secret', 'peer-namespace', verbose=False)
         mock_json_ct.assert_called_once()
         mock_cm_create.assert_called_once_with('peer-namespace', 'connection-secret', {'connection.json': 'cm-data'})
@@ -62,7 +62,7 @@ class TestComposerConnection:
     def test_composer_connection_again(self, mock_cm_create, mock_cm_read, mock_ingress_read, mock_json_ct):
         mock_cm_read.side_effect = [{'connection.json': 'cm-data'}]
         composer_connection(self.OPTS, verbose=True)
-        mock_ingress_read.assert_called_once_with('peer-ca-hlf-ca', namespace='peer-namespace', verbose=True)
+        mock_ingress_read.assert_called_once_with('peer-ca-hlf-ca', namespace='ca-namespace', verbose=True)
         mock_cm_read.assert_called_once_with('connection-secret', 'peer-namespace', verbose=True)
         mock_json_ct.assert_not_called()
         mock_cm_create.assert_not_called()
@@ -152,15 +152,19 @@ class TestSetupAdmin:
 
 class TestInstallNetwork:
     OPTS = {
-        'cas': {'peer-ca': {'org_admin': 'an-admin', 'org_adminpw': 'a-password'}},
+        'cas': {'peer-ca': {}},
         'composer': {'name': 'hlc'},
-        'msps': {'peer_MSP': {'namespace': 'peer-namespace', 'ca': 'peer-ca'}},
+        'msps': {
+            'peer_MSP': {
+                'ca': 'peer-ca', 'namespace': 'peer-namespace', 'org_admin': 'an-admin', 'org_adminpw': 'a-password'
+            }
+        },
         'peers': {'msp': 'peer_MSP'}
     }
 
     @mock.patch('nephos.composer.install.get_pod')
     @mock.patch('nephos.composer.install.admin_creds')
-    def test_install_network(self, mock_ca_creds, mock_get_pod):
+    def test_install_network(self, mock_admin_creds, mock_get_pod):
         mock_pod = mock.Mock()
         mock_pod.execute.side_effect = [
             ('a-network_a-version.bna', None),  # ls BNA
@@ -185,7 +189,7 @@ class TestInstallNetwork:
             call('composer card import --file an-admin@a-network.card'),
             call('composer network ping --card an-admin@a-network')
         ])
-        mock_ca_creds.assert_called_once_with(self.OPTS['cas']['peer-ca'], 'peer-namespace', verbose=False)
+        mock_admin_creds.assert_called_once_with(self.OPTS, 'peer_MSP', verbose=False)
 
     @mock.patch('nephos.composer.install.get_pod')
     @mock.patch('nephos.composer.install.admin_creds')
@@ -205,4 +209,4 @@ class TestInstallNetwork:
             call('composer card list --card an-admin@a-network'),
             call('composer network ping --card an-admin@a-network')
         ])
-        mock_ca_creds.assert_called_once_with(self.OPTS['cas']['peer-ca'], 'peer-namespace', verbose=True)
+        mock_ca_creds.assert_called_once_with(self.OPTS, 'peer_MSP', verbose=True)
