@@ -30,8 +30,8 @@ after_success:
   - codecov --token=$CODECOV_TOKEN
   # Cosmic Ray (Mutation testing)
   - pip install cosmic_ray
-  - cosmic-ray init cosmic_ray_config.yaml my_session.sqlite
-  - cosmic-ray exec my_session.sqlite
+  - cosmic-ray -v INFO init cosmic_ray_config.yaml my_session.sqlite
+  - cosmic-ray -v INFO exec my_session.sqlite
   - cr-report my_session.sqlite | grep 'complete:'
   - cr-report my_session.sqlite | grep 'survival rate:'
 
