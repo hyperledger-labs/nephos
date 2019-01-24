@@ -111,3 +111,7 @@ venv.bak/
 genesis.block
 *channel.tx
 *_MSP
+
+# Cosmic ray
+*session.sqlite
+*session.html

@@ -1,0 +1,13 @@
+# config.toml
+[cosmic-ray]
+module-path = "./nephos"
+python-version = ""
+timeout = 15
+exclude-modules = []
+test-command = "pytest"
+execution-engine.name = "local"
+
+[cosmic-ray.cloning]
+method = 'copy'
+commands = []
+
