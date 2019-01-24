@@ -11,6 +11,10 @@ then
     echo "Package has already been uploaded to PyPI"
 else
     python setup.py upload
+fi
+
+if [ $TRAVIS_PULL_REQUEST ]
+then
     # Cosmic Ray (Mutation testing)
     pip install cosmic_ray
     cosmic-ray -v INFO init cosmic_ray_config.yaml my_session.sqlite
@@ -18,4 +22,3 @@ else
     cr-report my_session.sqlite | grep 'complete:'
     cr-report my_session.sqlite | grep 'survival rate:'
 fi
-
