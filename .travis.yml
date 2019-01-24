@@ -8,6 +8,7 @@ python:
   - "3.7-dev"
 # command to install dependencies
 install:
+  - sudo apt-get install jq
   - pip install -r requirements.txt
   - pip install codecov
 # Setup Minikube, needed for testing
@@ -27,11 +28,5 @@ before_script:
 script:
   - PYTHONPATH=. pytest --cov=. --cov-report term-missing
 after_success:
-  - codecov --token=$CODECOV_TOKEN
-  # Cosmic Ray (Mutation testing)
-  - pip install cosmic_ray
-  - cosmic-ray -v INFO init cosmic_ray_config.yaml my_session.sqlite
-  - cosmic-ray -v INFO exec my_session.sqlite
-  - cr-report my_session.sqlite | grep 'complete:'
-  - cr-report my_session.sqlite | grep 'survival rate:'
-
+  # Code coverage, deploy to PyPI and, when uploading new version, do mutation testing
+  - ./travis_success.sh
