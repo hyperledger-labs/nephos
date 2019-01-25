@@ -1,7 +1,9 @@
 adal==1.2.0
+appdirs==1.4.3
 asn1crypto==0.24.0
 atomicwrites==1.2.1
 attrs==18.2.0
+black==18.9b0
 bleach==3.0.2
 blessings==1.7
 cachetools==3.0.0
@@ -35,6 +37,7 @@ requests-oauthlib==1.0.0
 requests-toolbelt==0.8.0
 rsa==4.0
 six==1.12.0
+toml==0.10.0
 tqdm==4.28.1
 twine==1.12.1
 urllib3==1.24.1

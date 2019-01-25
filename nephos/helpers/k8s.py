@@ -20,29 +20,27 @@ api_ext = client.ExtensionsV1beta1Api()
 
 # Class to execute K8S commands
 class Executer:
-    def __init__(self, pod, namespace, container='', verbose=False):
-        extra = ''
+    def __init__(self, pod, namespace, container="", verbose=False):
+        extra = ""
         if container:
             extra += "--container {} ".format(container)
         self.pod = pod
         self.prefix_exec = "kubectl exec {pod} -n {namespace} {extra}-- ".format(
-            pod=pod, namespace=namespace, extra=extra)
+            pod=pod, namespace=namespace, extra=extra
+        )
         self.prefix_logs = "kubectl logs {pod} -n {namespace} {extra}".format(
-            pod=pod, namespace=namespace, extra=extra)
+            pod=pod, namespace=namespace, extra=extra
+        )
         self.verbose = verbose
 
     # TODO: api.connect_get_namespaced_pod_exec (to do exec using Python API programmatically)
     def execute(self, command):
-        result, error = execute(
-            self.prefix_exec + command,
-            verbose=self.verbose
-        )
+        result, error = execute(self.prefix_exec + command, verbose=self.verbose)
         return result, error
 
     def logs(self, tail=-1):
         result, _ = execute(
-            self.prefix_logs + '--tail={}'.format(tail),
-            verbose=self.verbose
+            self.prefix_logs + "--tail={}".format(tail), verbose=self.verbose
         )
         return result
 
@@ -76,7 +74,7 @@ def ns_read(namespace, verbose=False):
 
 
 # Ingress
-def ingress_read(name, namespace='default', verbose=False):
+def ingress_read(name, namespace="default", verbose=False):
     ingress = api_ext.read_namespaced_ingress(name=name, namespace=namespace)
     hosts = [item.host for item in ingress.spec.rules if item.host]
     if verbose:
@@ -107,22 +105,22 @@ def secret_create(secret_data, name, namespace, verbose=False):
     secret_data = secret_data.copy()
     for key, value in secret_data.items():
         if isinstance(value, str):
-            value = value.encode('ascii')
-        secret_data[key] = base64.b64encode(value).decode('utf-8')
+            value = value.encode("ascii")
+        secret_data[key] = base64.b64encode(value).decode("utf-8")
     secret = client.V1Secret()
     secret.metadata = client.V1ObjectMeta(name=name)
     secret.type = "Opaque"
     secret.data = secret_data
     api.create_namespaced_secret(namespace=namespace, body=secret)
     if verbose:
-        print('Created secret {} in namespace {}'.format(name, namespace))
+        print("Created secret {} in namespace {}".format(name, namespace))
 
 
-def secret_read(name, namespace='default', verbose=False):
+def secret_read(name, namespace="default", verbose=False):
     secret = api.read_namespaced_secret(name=name, namespace=namespace)
     for key, value in secret.data.items():
         if value:
-            secret.data[key] = base64.b64decode(value).decode('utf-8', 'ignore')
+            secret.data[key] = base64.b64decode(value).decode("utf-8", "ignore")
     if verbose:
         pretty_print(json.dumps(secret.data))
     return secret.data
@@ -136,13 +134,13 @@ def secret_from_file(secret, namespace, key=None, filename=None, verbose=False):
         if not filename:
             secret_data = input_files([key], secret, clean_key=True)
         else:
-            with open(filename, 'rb') as f:
+            with open(filename, "rb") as f:
                 data = f.read()
                 secret_data = {key: data}
         secret_create(secret_data, secret, namespace, verbose=verbose)
 
 
-def get_app_info(namespace, ingress, secret, secret_key='API_KEY', verbose=False):
+def get_app_info(namespace, ingress, secret, secret_key="API_KEY", verbose=False):
     # Get ingress URL
     ingress_data = ingress_read(ingress, namespace=namespace, verbose=verbose)
     url = ingress_data[0]
@@ -150,8 +148,5 @@ def get_app_info(namespace, ingress, secret, secret_key='API_KEY', verbose=False
     secret_data = secret_read(secret, namespace, verbose=verbose)
     apikey = secret_data[secret_key]
     # Return data
-    data = {
-        'api-key': apikey,
-        'url': url
-    }
+    data = {"api-key": apikey, "url": url}
     return data

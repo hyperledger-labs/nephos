@@ -20,9 +20,7 @@ def execute(command, verbose=False, show_command=True, show_errors=True):
     if show_command:
         print(t.magenta(command))
     try:
-        result = check_output(command,
-                              stderr=STDOUT,
-                              shell=True)
+        result = check_output(command, stderr=STDOUT, shell=True)
         decoded = result.decode("utf-8")
         if verbose:
             print(decoded)
@@ -39,10 +37,15 @@ def execute_until_success(command, verbose=False, delay=15):
     res = None
     first_pass = True
     while not res:
-        res, _ = execute(command, show_command=first_pass, verbose=verbose and first_pass, show_errors=first_pass)
+        res, _ = execute(
+            command,
+            show_command=first_pass,
+            verbose=verbose and first_pass,
+            show_errors=first_pass,
+        )
         first_pass = False
         if not res:
-            print(t.red('.'), end='', flush=True)
+            print(t.red("."), end="", flush=True)
             time.sleep(delay)
         else:
             if verbose:
@@ -80,10 +83,10 @@ def input_files(keys, text_append=None, clean_key=False):
             key = split(filename)[1]
             if clean_key:
                 dirty_key = key
-                key = re.sub('[^0-9a-zA-Z_.\-]+', '_', dirty_key)
+                key = re.sub("[^0-9a-zA-Z_.\-]+", "_", dirty_key)
                 if key != dirty_key:
-                    print(t.yellow('Replaced ') + dirty_key + t.yellow(' with ') + key)
-        with open(filename, 'rb') as f:
+                    print(t.yellow("Replaced ") + dirty_key + t.yellow(" with ") + key)
+        with open(filename, "rb") as f:
             data[key] = f.read()
     return data
 
@@ -95,7 +98,7 @@ def get_response(question, permitted_responses=(), sensitive=False):
     responded = 0
     while responded == 0:
         if sensitive:
-            response = getpass('Password:')
+            response = getpass("Password:")
         else:
             response = input()
         # Check type of response
