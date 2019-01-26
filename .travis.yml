@@ -1,5 +1,9 @@
 sudo: required
 
+addons:
+  sonarcloud:
+    organization: "aidtechnology"
+
 env:
   - CHANGE_MINIKUBE_NONE_USER=true
 
@@ -11,6 +15,7 @@ install:
   - sudo apt-get install jq
   - pip install -r requirements.txt
   - pip install codecov
+  - sonar-scanner
 # Setup Minikube, needed for testing
 before_script:
   - which chmod
