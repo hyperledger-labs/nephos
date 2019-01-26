@@ -3,19 +3,20 @@ sudo: required
 env:
   - CHANGE_MINIKUBE_NONE_USER=true
 
+language: python
+python:
+  - "3.7-dev"
+
 addons:
   sonarcloud:
     organization: "aidtechnology"
 
-language: python
-python:
-  - "3.7-dev"
-# command to install dependencies
 install:
   - sudo apt-get install jq
   - pip install -r requirements.txt
   - pip install codecov
   - sonar-scanner
+
 # Setup Minikube, needed for testing
 before_script:
   - which chmod
@@ -29,7 +30,7 @@ before_script:
   # Wait for Kubernetes to be up and ready.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
 
-# command to run tests
+# Run tests
 script:
   - PYTHONPATH=. pytest --cov=. --cov-report term-missing
 after_success:
