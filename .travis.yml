@@ -15,7 +15,6 @@ install:
   - sudo apt-get install jq
   - pip install -r requirements.txt
   - pip install codecov
-  - sonar-scanner
 
 # Setup Minikube, needed for testing
 before_script:
@@ -33,6 +32,7 @@ before_script:
 # Run tests
 script:
   - PYTHONPATH=. pytest --cov=. --cov-report term-missing
+  - sonar-scanner
 after_success:
   # Code coverage, deploy to PyPI and, when uploading new version, do mutation testing
   - ./travis_success.sh
