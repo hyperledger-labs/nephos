@@ -1,11 +1,11 @@
 sudo: required
 
+env:
+  - CHANGE_MINIKUBE_NONE_USER=true
+
 addons:
   sonarcloud:
     organization: "aidtechnology"
-
-env:
-  - CHANGE_MINIKUBE_NONE_USER=true
 
 language: python
 python:
