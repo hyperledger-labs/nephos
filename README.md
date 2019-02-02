@@ -1,3 +1,5 @@
+[![Known Vulnerabilities](https://snyk.io/test/github/aidtechnology/nephos/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/aidtechnology/nephos?targetFile=requirements.txt)
+
 # nephos
 
 Library to deploy Hyperledger Fabric projects to a Kubernetes cloud
