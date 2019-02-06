@@ -18,10 +18,13 @@
 
 # Acknowledgement: adapted from https://github.com/kennethreitz/setup.py
 
-# Note: To use the 'upload' functionality of this file, you must:
-#   $ pip install twine
-# To actually upload latest version of package:
-#   $ python setup.py upload
+"""Setup the Nephos application.
+
+To use the 'upload' functionality of this file, you must:
+  $ pip install twine
+To actually upload latest version of package:
+  $ python setup.py upload
+"""
 
 import io
 import os

@@ -14,14 +14,29 @@
 
 import json
 
+"""Connection template.
+
+This module sets up a connection_json for Hyperledger Composer.
+"""
+
 
 # TODO: We need to improve this to be better organised, and use information from Kubernetes:
-# i.e.
-# 1) Peer addresses should depend on whether we are using internal addresses only or using an ingress.
-# 2) Organisation name/subdomain should be a variable
-# 3) Ports should depend on whether internal/external addresses
-# 4) CA Host should be obtained via Kubernetes configuration
+# TODO: Peer addresses should depend on whether we are using internal addresses only or using an ingress.
+# TODO: Organisation name/subdomain should be a variable
+# TODO: Ports should depend on whether internal/external addresses
+# TODO: CA Host should be obtained via Kubernetes configuration
 def define_orderers(orderer_names, orderer_hosts, domain=None):
+    """Define orderers as connection objects.
+
+        Args:
+            orderer_names (list): List of orderer names.
+            orderer_hosts (list): List of orderer hosts.
+            domain (str): Domain used. Defaults to none.
+
+        Returns:
+            dict: A dictionary of Orderer Connections
+    """
+
     orderer_connections = {}
     for name, host in zip(orderer_names, orderer_hosts):
         if domain:
@@ -33,6 +48,18 @@ def define_orderers(orderer_names, orderer_hosts, domain=None):
 
 
 def define_peers(peer_names, peer_hosts, organisation, domain=None):
+    """Define peers as connection objects.
+
+        Args:
+            peer_names (list): List of peer names.
+            peer_hosts (list): List of peer hosts.
+            organisation (str): What organisation the peers belong to
+            domain (str): Domain used. Defaults to none.
+
+        Returns:
+            tuple: A tuple of dictionaries with Peer Options and Peer Connections.
+    """
+
     peer_options = {}
     peer_connections = {}
     for name, host in zip(peer_names, peer_hosts):
@@ -55,6 +82,7 @@ def define_peers(peer_names, peer_hosts, organisation, domain=None):
     return peer_options, peer_connections
 
 
+# TODO: Too many parameters.
 def json_ct(
     peer_names,
     orderer_names,
@@ -67,6 +95,24 @@ def json_ct(
     msp_id,
     channel,
 ):
+    """JSON connection template.
+
+    Args:
+        peer_names (list): List of peer names.
+        orderer_names (list): List of orderer names.
+        peer_hosts (list): List of peer hosts.
+        orderer_hosts (list): List of orderer hosts.
+        ca_name (str): Name of CA for Peers.
+        ca_host (str): CA host address.
+        organisation (str): What organisation the peers belong to.
+        domain (str): Domain used.
+        msp_id (str): ID of the MSP of the peers.
+        channel (str): Channel name.
+
+    Returns:
+        dict: A dictionary representing the JSON connection template.
+    """
+
     # Get peers
     peer_options, peer_connections = define_peers(
         peer_names, peer_hosts, organisation, domain
