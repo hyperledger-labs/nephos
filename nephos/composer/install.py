@@ -29,6 +29,15 @@ from nephos.helpers.k8s import (
 
 
 def get_composer_data(opts, verbose=False):
+    """Get Composer deployment data.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        dict: Data related to the Composer deployment (URI & API key)
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     composer_name = opts["composer"]["name"] + "-hl-composer-rest"
     data = get_app_info(
@@ -41,7 +50,16 @@ def get_composer_data(opts, verbose=False):
     return data
 
 
+# TODO: This is highly complex, we can probably simplify
 def composer_connection(opts, verbose=False):
+    """Composer connection setup.
+
+    This creates a ConfigMap on K8S with the Hyperledger Composer connection.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. Verbosity. False by default.
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     # TODO: This could be a single function
@@ -81,6 +99,17 @@ def composer_connection(opts, verbose=False):
 
 
 def deploy_composer(opts, upgrade=False, verbose=False):
+    """Deploy Hyperledger Composer on K8S.
+
+    We use the hl-composer Helm chart as a basis to deploying Composer
+    on K8S. Please note that Composer is unmaintained and may eventually
+    be deprecated from this repository as we migrate to raw Fabric.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     # Ensure BNA exists
     secret_from_file(
@@ -107,6 +136,12 @@ def deploy_composer(opts, upgrade=False, verbose=False):
 
 
 def setup_admin(opts, verbose=False):
+    """Setup the Peer Admin for Hyperledger Composer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     hlc_cli_ex = get_pod(
         peer_namespace, opts["composer"]["name"], "hl-composer", verbose=verbose
@@ -132,6 +167,12 @@ def setup_admin(opts, verbose=False):
 
 
 def install_network(opts, verbose=False):
+    """Install Hyperledger Composer network.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     hlc_cli_ex = get_pod(
         peer_namespace, opts["composer"]["name"], "hl-composer", verbose=verbose

@@ -36,7 +36,6 @@ def define_orderers(orderer_names, orderer_hosts, domain=None):
         Returns:
             dict: A dictionary of Orderer Connections
     """
-
     orderer_connections = {}
     for name, host in zip(orderer_names, orderer_hosts):
         if domain:
@@ -59,7 +58,6 @@ def define_peers(peer_names, peer_hosts, organisation, domain=None):
         Returns:
             tuple: A tuple of dictionaries with Peer Options and Peer Connections.
     """
-
     peer_options = {}
     peer_connections = {}
     for name, host in zip(peer_names, peer_hosts):
@@ -112,7 +110,6 @@ def json_ct(
     Returns:
         dict: A dictionary representing the JSON connection template.
     """
-
     # Get peers
     peer_options, peer_connections = define_peers(
         peer_names, peer_hosts, organisation, domain
