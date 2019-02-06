@@ -27,6 +27,14 @@ CURRENT_DIR = path.abspath(path.split(__file__)[0])
 
 # Core sub-functions
 def ca_chart(opts, release, upgrade=False, verbose=False):
+    """Deploy CA Helm chart to K8S.
+
+    Args:
+        opts (dict): Nephos options dict.
+        release (str): Name of the Helm Chart release.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     values_dir = opts["core"]["dir_values"]
     repository = opts["core"]["chart_repo"]
     ca_namespace = get_namespace(opts, ca=release)
@@ -105,6 +113,14 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
 
 
 def ca_enroll(pod_exec):
+    """Enroll CA.
+
+    Enroll the Certificate Authority (CA) identity within the running CA pod.
+    This is a necessary step for the CA to function.
+
+    Args:
+        pod_exec: A pod executor instance bound to the CA.
+    """
     alive = False
     while not alive:
         res = pod_exec.logs()
@@ -129,6 +145,12 @@ def ca_enroll(pod_exec):
 
 
 def check_ca(ingress_host, verbose=False):
+    """Check that the CA Ingress is responsive.
+
+    Args:
+        ingress_host (str): Ingress host for the CA.
+        verbose (bool): Verbosity. False by default.
+    """
     # Check that CA ingress is operational
     command = "curl https://{ingress}/cainfo".format(ingress=ingress_host)
     execute_until_success(command, verbose=verbose)
@@ -136,6 +158,16 @@ def check_ca(ingress_host, verbose=False):
 
 # Runner
 def setup_ca(opts, upgrade=False, verbose=False):
+    """Setup CA.
+
+    Setup involves enrolling the CA admin, checking the Ingress
+    is responsive.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     for ca_name, ca_values in opts["cas"].items():
         ca_namespace = get_namespace(opts, ca=ca_name)
         # Install Charts
