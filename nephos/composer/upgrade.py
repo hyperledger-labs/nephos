@@ -24,6 +24,12 @@ CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
 
 
 def upgrade_network(opts, verbose=False):
+    """Upgrade Hyperledger Composer network.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     secret_from_file(
         secret=opts["composer"]["secret_bna"], namespace=peer_namespace, verbose=verbose
