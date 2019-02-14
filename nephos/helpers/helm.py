@@ -18,8 +18,17 @@ HelmSet = namedtuple("HelmSet", ("key", "value", "set_string"), defaults=(False,
 CURRENT_DIR = path.abspath(path.split(__file__)[0])
 
 
-# TODO: Rename name to 'release'
-def helm_check(app, name, namespace, pod_num=None):
+# TODO: We should be able to get the namespace from the Helm release...
+# TODO: We should not need to specify pod number.
+def helm_check(app, release, namespace, pod_num=None):
+    """Check if a Helm release exists and is functional.
+
+    Args:
+        app (str): Helm application name.
+        release (str): Release name on K8S.
+        namespace (str): Namespace where Helm deployment is located.
+        pod_num (int): Number of pods expected to exist in the release.
+    """
     print(t.yellow("Ensuring that all pods are running "))
     running = False
     first_pass = True
@@ -27,7 +36,7 @@ def helm_check(app, name, namespace, pod_num=None):
         # TODO: Best to generate a function that checks app state
         states, _ = execute(
             'kubectl get pods -n {ns} -l "app={app},release={name}" -o jsonpath="{{.items[*].status.phase}}"'.format(
-                app=app, name=name, ns=namespace
+                app=app, name=release, ns=namespace
             ),
             show_command=first_pass,
         )
@@ -35,7 +44,7 @@ def helm_check(app, name, namespace, pod_num=None):
         # Let us also check the number of pods we have
         pods, _ = execute(
             'kubectl get pods -n {ns} -l "app={app},release={name}" -o jsonpath="{{.items[*].metadata.name}}"'.format(
-                app=app, name=name, ns=namespace
+                app=app, name=release, ns=namespace
             ),
             show_command=first_pass,
         )
@@ -48,16 +57,15 @@ def helm_check(app, name, namespace, pod_num=None):
             and "Running" in states
             and (pod_num is None or len(pod_list) == pod_num)
         ):
-            print(t.green("All pods in {} are running".format(name)))
+            print(t.green("All pods in {} are running".format(release)))
             running = True
         else:
             print(t.red("."), end="", flush=True)
             sleep(15)
 
 
-# TODO: Separate the Helm helpers into a separate script
-# Initialise helm
 def helm_init():
+    """Initialise Helm on cluster, using RBAC."""
     res, _ = execute("helm list")
     if res is not None:
         print(t.green("Helm is already installed!"))
@@ -85,7 +93,19 @@ def helm_init():
                 sleep(15)
 
 
+# TODO: Probably split into separate sub-functions
 def helm_env_vars(namespace, env_vars, preserve=None, verbose=False):
+    """Convert environmental variables and secrets to a "--set" string for Helm deployments.
+
+    Args:
+        namespace (str): Namespace where preserved secrets are located.
+        env_vars (list): Environmental variables we wish to store in Helm.
+        preserve (list): Set of secrets we wish to get data from to assign to the Helm Chart.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        str: String containing variables to be set with Helm release.
+    """
     if not env_vars:
         env_vars = []
     else:
@@ -120,7 +140,6 @@ def helm_env_vars(namespace, env_vars, preserve=None, verbose=False):
     return env_vars_string
 
 
-# General function to check if a release exists and install it
 def helm_install(
     repo,
     app,
@@ -131,6 +150,18 @@ def helm_install(
     verbose=False,
     pod_num=1,
 ):
+    """Install Helm chart.
+
+    Args:
+        repo (str): Repository or folder from which to install Helm chart.
+        app (str): Helm application name.
+        release (str): Release name on K8S.
+        namespace (str): Namespace where to deploy Helm Chart.
+        config_yaml (str): Values file to ovverride defaults.
+        env_vars (list): List of env vars we want to set.
+        verbose (bool): Verbosity. False by default.
+        pod_num (int): Number of pods we wish to have.
+    """
     ls_res, _ = execute("helm status {release}".format(release=release))
 
     # Get Helm Env-Vars
@@ -159,6 +190,19 @@ def helm_upgrade(
     verbose=False,
     pod_num=1,
 ):
+    """Upgrade Helm chart.
+
+    Args:
+        repo (str): Repository or folder from which to install Helm chart.
+        app (str): Helm application name.
+        release (str): Release name on K8S.
+        namespace (str): Namespace where to deploy Helm Chart.
+        config_yaml (str): Values file to ovverride defaults.
+        env_vars (list): Environmental variables we wish to store in Helm.
+        preserve (list): Set of secrets we wish to get data from to assign to the Helm Chart.
+        verbose (bool): Verbosity. False by default.
+        pod_num (int): Number of pods we wish to have.
+    """
     ls_res, _ = execute("helm status {release}".format(release=release))
 
     # Get Helm Env-Vars

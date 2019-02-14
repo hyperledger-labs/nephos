@@ -1,3 +1,17 @@
+#   Copyright [2018] [Alejandro Vicente Grabovetsky via AID:Tech]
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at#
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
 import random
 from time import sleep
 
@@ -10,6 +24,15 @@ from nephos.helpers.misc import execute
 # TODO: Move to Ord module
 # TODO: We need a similar check to see if Peer uses client TLS as well
 def check_ord_tls(opts, verbose=False):
+    """Check TLS status of Orderer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        bool: True if TLS is enabled, False if TLS is disabled.
+    """
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     ord_tls, _ = execute(
         (
@@ -22,6 +45,16 @@ def check_ord_tls(opts, verbose=False):
 
 
 def check_peer(namespace, release, verbose=False):
+    """Check if Peer is running.
+
+    Args:
+        namespace: Namespace where Peer is located.
+        release: Name of Peer Helm release.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        bool: True once Peer is correctly running.
+    """
     pod_exec = get_pod(
         namespace=namespace, release=release, app="hlf-peer", verbose=verbose
     )
@@ -38,6 +71,13 @@ def check_peer(namespace, release, verbose=False):
 
 # TODO: Split CouchDB creation from Peer creation
 def setup_peer(opts, upgrade=False, verbose=False):
+    """Setup Peer on K8S.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     for release in opts["peers"]["names"]:
         # Deploy the CouchDB instances
@@ -92,6 +132,12 @@ def setup_peer(opts, upgrade=False, verbose=False):
 
 # TODO: Split channel creation from channel joining
 def setup_channel(opts, verbose=False):
+    """Setup Channel for Peer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     # Get orderer TLS status

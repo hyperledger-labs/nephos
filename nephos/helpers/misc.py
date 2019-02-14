@@ -15,8 +15,20 @@ from pygments.formatters import TerminalFormatter
 t = Terminal()
 
 
-# Execute commands
 def execute(command, verbose=False, show_command=True, show_errors=True):
+    """Execute an arbitrary command line command.
+
+    Args:
+        command (str): Command to execute.
+        verbose (bool): Verbosity. False by default.
+        show_command (bool): Do we display the command? True by default.
+        show_errors (bool): Do we display errors? True by default.
+
+    Returns:
+        tuple: 2-tuple of execution info:
+        1) result of the command, if successful, None if not;
+        2) and error, if command failed, None if not.
+    """
     if show_command:
         print(t.magenta(command))
     try:
@@ -34,6 +46,16 @@ def execute(command, verbose=False, show_command=True, show_errors=True):
 
 
 def execute_until_success(command, verbose=False, delay=15):
+    """Execute a command until it is successful.
+
+    Args:
+        command (str): Command to execute.
+        verbose (bool): Verbosity. False by default.
+        delay (int): Delay in seconds between each unsuccessful attempt.
+
+    Returns:
+        str: result of the command
+    """
     res = None
     first_pass = True
     while not res:
@@ -53,26 +75,24 @@ def execute_until_success(command, verbose=False, delay=15):
             return res
 
 
-# Input
-def input_data(keys, text_append=None):
-    data = {}
-    input_text = "Input {key}"
-    if text_append:
-        input_text = input_text + " " + text_append
-    for key in keys:
-        if isinstance(key, str):
-            data[key] = get_response(input_text.format(key=key))
-        elif isinstance(key, tuple):
-            data[key[0]] = get_response(input_text.format(key=key[0]), **key[1])
-    return data
-
-
+# TODO: Do we really need the text append feature?
 def input_files(keys, text_append=None, clean_key=False):
+    """Read a set of filenames and return data from them.
+
+    Args:
+        keys (tuple): Tuple of keys
+        text_append (str): Text to append to the key request.
+        clean_key (bool): Do we clean the key to replace non-alphanumeric symbols with an underscore? False by default.
+
+    Returns:
+        dict: Data from each file assigned to its relevant key.
+    """
     data = {}
     input_text = "Input {key}"
     if text_append:
         input_text = input_text + " " + text_append
     for key in keys:
+        # TODO: This could be its own function.
         is_file = False
         while not is_file:
             filename = get_response(input_text.format(key=key))
@@ -92,6 +112,16 @@ def input_files(keys, text_append=None, clean_key=False):
 
 
 def get_response(question, permitted_responses=(), sensitive=False):
+    """Get response from user.
+
+    Args:
+        question: What do we want to obtain from the user?
+        permitted_responses: What responses do we allow?
+        sensitive: Is the information sensitive (e.g. a password)?
+
+    Returns:
+        str: Response from user.
+    """
     print(t.yellow(question))
     if permitted_responses:
         print(t.cyan("Permitted responses: " + str(permitted_responses)))
@@ -114,6 +144,10 @@ def get_response(question, permitted_responses=(), sensitive=False):
     return response
 
 
-# Display
 def pretty_print(string):
+    """Pretty print a JSON string.
+
+    Args:
+        string (str): String we want to pretty print.
+    """
     print(highlight(string, JsonLexer(), TerminalFormatter()))

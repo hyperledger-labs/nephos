@@ -5,7 +5,6 @@ from unittest.mock import call
 from nephos.helpers.misc import (
     execute,
     execute_until_success,
-    input_data,
     input_files,
     get_response,
     pretty_print,
@@ -142,25 +141,6 @@ class TestExecuteUntilSuccess:
                 )
             ]
             * 2
-        )
-
-
-class TestInputData:
-    @mock.patch("nephos.helpers.misc.get_response")
-    def test_input_data(self, mock_get_response):
-        input_data(("hello",))
-        mock_get_response.assert_called_with("Input hello")
-
-    @mock.patch("nephos.helpers.misc.get_response")
-    def test_input_data_suffix(self, mock_get_response):
-        input_data(("hello",), text_append="big")
-        mock_get_response.assert_called_with("Input hello big")
-
-    @mock.patch("nephos.helpers.misc.get_response")
-    def test_input_data_multiple(self, mock_get_response):
-        input_data(("hello", ("goodbye", {"sensitive": True})))
-        mock_get_response.assert_has_calls(
-            [call("Input hello"), call("Input goodbye", sensitive=True)]
         )
 
 

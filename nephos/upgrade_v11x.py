@@ -1,5 +1,19 @@
 #! /usr/bin/env python
 
+#   Copyright [2018] [Alejandro Vicente Grabovetsky via AID:Tech]
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at#
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
 from collections import namedtuple
 import os
 
@@ -19,6 +33,7 @@ CryptoInfo = namedtuple("CryptoInfo", ("secret_type", "subfolder", "key", "requi
 NODE_MAPPER = {"orderer": "hlf-ord", "peer": "hlf-peer"}
 
 
+# TODO: this module can be deleted once all our deployments are certain to have been migrated.
 def extract_credentials(opts, node_type, verbose=False):
     chart = NODE_MAPPER[node_type]
     node_namespace = get_namespace(opts, opts[node_type + "s"]["msp"])

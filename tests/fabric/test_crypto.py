@@ -7,7 +7,7 @@ import pytest
 from nephos.fabric.crypto import (
     CryptoInfo,
     register_id,
-    enroll_node,
+    enroll_id,
     create_admin,
     admin_creds,
     copy_secret,
@@ -119,7 +119,7 @@ class TestRegisterId:
         mock_sleep.assert_not_called()
 
 
-class TestEnrollNode:
+class TestEnrollId:
     OPTS = {
         "core": {"dir_config": "./a_dir"},
         "cas": {
@@ -129,9 +129,9 @@ class TestEnrollNode:
 
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute_until_success")
-    def test_enroll_node(self, mock_execute_until_success, mock_ingress_read):
+    def test_enroll_id(self, mock_execute_until_success, mock_ingress_read):
         mock_ingress_read.side_effect = [["an-ingress"]]
-        enroll_node(self.OPTS, "a-ca", "an-ord", "a-password")
+        enroll_id(self.OPTS, "a-ca", "an-ord", "a-password")
         mock_ingress_read.assert_called_once_with(
             "a-ca-hlf-ca", namespace="ca-namespace", verbose=False
         )
@@ -144,12 +144,12 @@ class TestEnrollNode:
     @mock.patch("nephos.fabric.crypto.isdir")
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute_until_success")
-    def test_enroll_node_again(
+    def test_enroll_id_again(
         self, mock_execute_until_success, mock_ingress_read, mock_isdir
     ):
         mock_ingress_read.side_effect = [["an-ingress"]]
         mock_isdir.side_effect = [True]
-        enroll_node(self.OPTS, "a-ca", "a-peer", "a-password")
+        enroll_id(self.OPTS, "a-ca", "a-peer", "a-password")
         mock_ingress_read.assert_called_once_with(
             "a-ca-hlf-ca", namespace="ca-namespace", verbose=False
         )
@@ -159,7 +159,7 @@ class TestEnrollNode:
     @mock.patch("nephos.fabric.crypto.execute_until_success")
     def test_enroll_verbose(self, mock_execute_until_success, mock_ingress_read):
         mock_ingress_read.side_effect = [["an-ingress"]]
-        enroll_node(self.OPTS, "a-ca", "a-peer", "a-password", verbose=True)
+        enroll_id(self.OPTS, "a-ca", "a-peer", "a-password", verbose=True)
         mock_ingress_read.assert_called_once_with(
             "a-ca-hlf-ca", namespace="ca-namespace", verbose=True
         )
@@ -577,7 +577,7 @@ class TestSetupId:
     }
 
     @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.enroll_node")
+    @mock.patch("nephos.fabric.crypto.enroll_id")
     @mock.patch("nephos.fabric.crypto.id_to_secrets")
     @mock.patch("nephos.fabric.crypto.glob")
     @mock.patch("nephos.fabric.crypto.credentials_secret")
@@ -586,14 +586,14 @@ class TestSetupId:
         mock_credentials_secret,
         mock_glob,
         mock_id_to_secrets,
-        mock_enroll_node,
+        mock_enroll_id,
         mock_register_id,
     ):
         opts = deepcopy(self.OPTS)
         mock_credentials_secret.side_effect = [
             {"CA_USERNAME": "peer0", "CA_PASSWORD": "peer0-pw"}
         ]
-        mock_enroll_node.side_effect = ["./peer0_MSP"]
+        mock_enroll_id.side_effect = ["./peer0_MSP"]
         setup_id(opts, "peer_MSP", "peer0", "peer")
         mock_credentials_secret.assert_called_once_with(
             "hlf--peer0-cred", "peer-ns", username="peer0", verbose=False
@@ -601,16 +601,16 @@ class TestSetupId:
         mock_register_id.assert_called_once_with(
             "ca-namespace", "ca-peer", "peer0", "peer0-pw", "peer", verbose=False
         )
-        mock_enroll_node.assert_called_once_with(
+        mock_enroll_id.assert_called_once_with(
             opts, "ca-peer", "peer0", "peer0-pw", verbose=False
         )
         mock_glob.assert_not_called()
         mock_id_to_secrets.assert_called_once_with(
-            namespace="peer-ns", msp_path="./peer0_MSP", user="peer0", verbose=False
+            namespace="peer-ns", msp_path="./peer0_MSP", username="peer0", verbose=False
         )
 
     @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.enroll_node")
+    @mock.patch("nephos.fabric.crypto.enroll_id")
     @mock.patch("nephos.fabric.crypto.id_to_secrets")
     @mock.patch("nephos.fabric.crypto.glob")
     @mock.patch("nephos.fabric.crypto.credentials_secret")
@@ -619,14 +619,14 @@ class TestSetupId:
         mock_credentials_secret,
         mock_glob,
         mock_id_to_secrets,
-        mock_enroll_node,
+        mock_enroll_id,
         mock_register_id,
     ):
         opts = deepcopy(self.OPTS)
         mock_credentials_secret.side_effect = [
             {"CA_USERNAME": "ord0", "CA_PASSWORD": "ord0-pw"}
         ]
-        mock_enroll_node.side_effect = ["./ord0_MSP"]
+        mock_enroll_id.side_effect = ["./ord0_MSP"]
         setup_id(opts, "ord_MSP", "ord0", "orderer")
         mock_credentials_secret.assert_called_once_with(
             "hlf--ord0-cred", "ord-ns", username="ord0", verbose=False
@@ -634,16 +634,16 @@ class TestSetupId:
         mock_register_id.assert_called_once_with(
             "ca-namespace", "ca-ord", "ord0", "ord0-pw", "orderer", verbose=False
         )
-        mock_enroll_node.assert_called_once_with(
+        mock_enroll_id.assert_called_once_with(
             opts, "ca-ord", "ord0", "ord0-pw", verbose=False
         )
         mock_glob.assert_not_called()
         mock_id_to_secrets.assert_called_once_with(
-            namespace="ord-ns", msp_path="./ord0_MSP", user="ord0", verbose=False
+            namespace="ord-ns", msp_path="./ord0_MSP", username="ord0", verbose=False
         )
 
     @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.enroll_node")
+    @mock.patch("nephos.fabric.crypto.enroll_id")
     @mock.patch("nephos.fabric.crypto.id_to_secrets")
     @mock.patch("nephos.fabric.crypto.glob")
     @mock.patch("nephos.fabric.crypto.credentials_secret")
@@ -652,7 +652,7 @@ class TestSetupId:
         mock_credentials_secret,
         mock_glob,
         mock_id_to_secrets,
-        mock_enroll_node,
+        mock_enroll_id,
         mock_register_id,
     ):
         opts = deepcopy(self.OPTS)
@@ -665,19 +665,19 @@ class TestSetupId:
         setup_id(opts, "peer_MSP", "peer0", "peer")
         mock_credentials_secret.assert_not_called()
         mock_register_id.assert_not_called()
-        mock_enroll_node.assert_not_called()
+        mock_enroll_id.assert_not_called()
         mock_glob.assert_called_once_with(
             "./a_dir/crypto-config/peerOrganizations/peer-ns*/peers/peer0*/msp"
         )
         mock_id_to_secrets.assert_called_once_with(
             namespace="peer-ns",
             msp_path="./a_dir/crypto-config/peerOrganizations/peer-ns.domain/peers/peer0.domain/msp",
-            user="peer0",
+            username="peer0",
             verbose=False,
         )
 
     @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.enroll_node")
+    @mock.patch("nephos.fabric.crypto.enroll_id")
     @mock.patch("nephos.fabric.crypto.id_to_secrets")
     @mock.patch("nephos.fabric.crypto.glob")
     @mock.patch("nephos.fabric.crypto.credentials_secret")
@@ -686,7 +686,7 @@ class TestSetupId:
         mock_credentials_secret,
         mock_glob,
         mock_id_to_secrets,
-        mock_enroll_node,
+        mock_enroll_id,
         mock_register_id,
     ):
         opts = deepcopy(self.OPTS)
@@ -701,7 +701,7 @@ class TestSetupId:
             setup_id(opts, "peer_MSP", "peer0", "peer")
         mock_credentials_secret.assert_not_called()
         mock_register_id.assert_not_called()
-        mock_enroll_node.assert_not_called()
+        mock_enroll_id.assert_not_called()
         mock_glob.assert_called_once_with(
             "./a_dir/crypto-config/peerOrganizations/peer-ns*/peers/peer0*/msp"
         )
