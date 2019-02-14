@@ -26,7 +26,7 @@ def dict_constructor(loader, node):
 
 
 def dict_representer(dumper, data):
-    return dumper.represent_dict(data.iteritems())
+    return dumper.represent_dict(data.items())
 
 
 yaml.add_representer(OrderedDict, dict_representer)
@@ -34,6 +34,11 @@ yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constr
 
 
 def check_cluster(cluster_name):
+    """Check that we are using the correct K8S cluster.
+
+    Args:
+        cluster_name (str): Name of K8S cluster.
+    """
     context = context_get()
     if context["context"]["cluster"] != cluster_name:
         message = "We expect to use cluster {}, but are instead using cluster {}".format(
@@ -43,6 +48,16 @@ def check_cluster(cluster_name):
 
 
 def get_namespace(opts, msp=None, ca=None):
+    """Get relevant namespace where MSP or CA should be located.
+
+    Args:
+        opts (dict): Nephos options dict.
+        msp (str): Name of Membership Service Provider (MSP).
+        ca (str): Name of Certificate Authority (CA).
+
+    Returns:
+        str: Namespace relating to either an MSP or a CA.
+    """
     if msp is not None:
         if "msps" in opts and msp in opts["msps"]:
             msp_values = opts["msps"][msp]
@@ -64,6 +79,14 @@ def get_namespace(opts, msp=None, ca=None):
 
 
 def load_config(settings_file):
+    """Load configuration from Nephos options/settings YAML file.
+
+    Args:
+        settings_file (str): Name of YAML file containing Nephos options/settings.
+
+    Returns:
+        dict: Nephos options/settings.
+    """
     with open(settings_file) as f:
         data = yaml.load(f)
     if "cluster" in data["core"]:

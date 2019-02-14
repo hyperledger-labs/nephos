@@ -26,7 +26,7 @@ class TestDictRepresenter:
     def test_dict_representer(self):
         mock_dumper = mock.Mock()
         mock_data = mock.Mock()
-        mock_data.iteritems.side_effect = [["some-items"]]
+        mock_data.items.side_effect = [["some-items"]]
         dict_representer(mock_dumper, mock_data)
         mock_dumper.represent_dict.assert_called_once_with(["some-items"])
 
