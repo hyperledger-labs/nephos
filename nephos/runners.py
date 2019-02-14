@@ -21,6 +21,13 @@ from nephos.composer.upgrade import upgrade_network
 
 
 def runner_ca(opts, upgrade=False, verbose=False):
+    """Deploy CAs.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     if opts["cas"]:
         setup_ca(opts, upgrade=upgrade, verbose=verbose)
     else:
@@ -28,16 +35,35 @@ def runner_ca(opts, upgrade=False, verbose=False):
 
 
 def runner_composer(opts, upgrade=False, verbose=False):
+    """Deploy Hyperledger Composer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     deploy_composer(opts, upgrade=upgrade, verbose=verbose)
     setup_admin(opts, verbose=verbose)
     install_network(opts, verbose=verbose)
 
 
 def runner_composer_up(opts, verbose=False):
+    """Upgrade Hyperledger Composer network (experimental).
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
     upgrade_network(opts, verbose=verbose)
 
 
 def runner_crypto(opts, verbose=False):
+    """Create Crypto-material by either using CAs or save Cryptogen material.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
     # TODO: Limited by the fact that we manually specify MSPs
     # Set up Admin MSPs
     admin_msp(opts, opts["orderers"]["msp"], verbose=verbose)
@@ -52,6 +78,13 @@ def runner_crypto(opts, verbose=False):
 
 
 def runner_deploy(opts, upgrade=False, verbose=False):
+    """Deploy end-to-end deployment of Hyperledger Fabric and Composer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     # Fabric
     runner_fabric(opts, upgrade=upgrade, verbose=verbose)
     # Composer
@@ -59,6 +92,13 @@ def runner_deploy(opts, upgrade=False, verbose=False):
 
 
 def runner_fabric(opts, upgrade=False, verbose=False):
+    """Deploy Hyperledger Fabric, including CAs/Cryptogen, Orderers and Peers.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     # Setup CA
     runner_ca(opts, upgrade=upgrade, verbose=verbose)
     # Crypto material
@@ -70,9 +110,23 @@ def runner_fabric(opts, upgrade=False, verbose=False):
 
 
 def runner_orderer(opts, upgrade=False, verbose=False):
+    """Deploy Hyperledger Fabric Orderers.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     setup_ord(opts, upgrade=upgrade, verbose=verbose)
 
 
 def runner_peer(opts, upgrade=False, verbose=False):
+    """Deploy Hyperledger Fabric Peers.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     setup_peer(opts, upgrade=upgrade, verbose=verbose)
     setup_channel(opts, verbose=verbose)
