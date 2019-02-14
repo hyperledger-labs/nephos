@@ -41,7 +41,6 @@ def upgrade_network(opts, verbose=False):
     bna_name, bna_rem = bna.split("_")
     bna_version, _ = bna_rem.split(".bna")
     peer_msp = opts["peers"]["msp"]
-    peer_ca = opts["msps"][peer_msp]["ca"]
     bna_admin = opts["msps"][peer_msp]["org_admin"]
 
     res, _ = hlc_cli_ex.execute(

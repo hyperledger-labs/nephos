@@ -185,7 +185,6 @@ def install_network(opts, verbose=False):
     bna_version, _ = bna_rem.split(".bna")
     # TODO: This could be a single function
     peer_msp = opts["peers"]["msp"]
-    peer_ca = opts["msps"][peer_msp]["ca"]
     bna_admin = opts["msps"][peer_msp]["org_admin"]
     admin_creds(opts, peer_msp, verbose=verbose)
     bna_pw = opts["msps"][peer_msp]["org_adminpw"]
