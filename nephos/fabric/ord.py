@@ -20,6 +20,16 @@ from nephos.helpers.helm import helm_install, helm_upgrade
 
 
 def check_ord(namespace, release, verbose=False):
+    """Check if Orderer is running.
+
+    Args:
+        namespace (str): Namespace where Orderer is located.
+        release (str): Name of Orderer Helm release.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        bool: True once Orderer is correctly running.
+    """
     pod_exec = get_pod(
         namespace=namespace, release=release, app="hlf-ord", verbose=verbose
     )
@@ -35,6 +45,13 @@ def check_ord(namespace, release, verbose=False):
 
 
 def setup_ord(opts, upgrade=False, verbose=False):
+    """Setup Orderer on K8S.
+
+    Args:
+        opts (dict): Nephos options dict.
+        upgrade (bool): Do we upgrade the deployment? False by default.
+        verbose (bool): Verbosity. False by default.
+    """
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     # Kafka
     if "kafka" in opts["orderers"]:
