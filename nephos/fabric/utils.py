@@ -25,10 +25,30 @@ from nephos.helpers.misc import execute
 
 # TODO: Possibly hide this function?
 def rand_string(length):
+    """Create random alphanumeric string (useful for passwords).
+
+    Args:
+        length (int): Length of random string.
+
+    Returns:
+        str: Alphanumeric string.
+    """
     return "".join(random.choice(ascii_letters + digits) for _ in range(length))
 
 
 def credentials_secret(secret_name, namespace, username, password=None, verbose=False):
+    """Create a CA credentials secret.
+
+    Args:
+        secret_name (str): Name of secret.
+        namespace (str): Namespace for secret to be located.
+        username (str): Username for credentials secret.
+        password (str): Password for credentials secret.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        dict: Secret data including "CA_USERNAME" and "CA_PASSWORD"
+    """
     try:
         secret_data = secret_read(secret_name, namespace, verbose=verbose)
         # Check that the ID stored is the same as Orderer name
@@ -45,6 +65,15 @@ def credentials_secret(secret_name, namespace, username, password=None, verbose=
 
 
 def crypto_secret(secret_name, namespace, file_path, key, verbose=False):
+    """Create a crypto-material secret.
+
+    Args:
+        secret_name (str): Name of secret.
+        namespace (str): Namespace for secret to be located.
+        file_path (str): Path to file we want to store as a secret.
+        key (str): Key (file) name of secret we want to store as a secret.
+        verbose (bool): Verbosity. False by default.
+    """
     secret_files = glob(path.join(file_path, "*"))
     if len(secret_files) != 1:
         raise Exception("We should only find one file in this directory")
@@ -58,6 +87,17 @@ def crypto_secret(secret_name, namespace, file_path, key, verbose=False):
 
 
 def get_pod(namespace, release, app, verbose=False):
+    """Get a pod object from K8S.
+
+    Args:
+        namespace (str): Namespace where pod is located.
+        release (str): Release name of pod.
+        app (str): App type of pod.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        Executer: A pod object able to execute commands and return logs.
+    """
     node_pod, _ = execute(
         (
             'kubectl get pods -n {ns} -l "app={app},release={release}" '
