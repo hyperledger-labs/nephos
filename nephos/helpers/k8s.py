@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import base64
 import json
+from shutil import which
 
 from blessings import Terminal
 from kubernetes import client, config
@@ -13,9 +14,12 @@ TERM = Terminal()
 
 
 # Configs can be set in Configuration class directly or using helper utility
-config.load_kube_config()
-api = client.CoreV1Api()
-api_ext = client.ExtensionsV1beta1Api()
+if which('kubectl'):
+    config.load_kube_config()
+    api = client.CoreV1Api()
+    api_ext = client.ExtensionsV1beta1Api()
+else:  # pragma: no cover
+    print(TERM.red('We do not have "kubectl" installed'))
 
 
 # Class to execute K8S commands
