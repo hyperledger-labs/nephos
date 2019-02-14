@@ -25,7 +25,7 @@ def execute(command, verbose=False, show_command=True, show_errors=True):
         show_errors (bool): Do we display errors? True by default.
 
     Returns:
-        tuple: Tuple of 2 elements:
+        tuple: 2-tuple of execution info:
         1) result of the command, if successful, None if not;
         2) and error, if command failed, None if not.
     """
