@@ -33,6 +33,7 @@ CryptoInfo = namedtuple("CryptoInfo", ("secret_type", "subfolder", "key", "requi
 NODE_MAPPER = {"orderer": "hlf-ord", "peer": "hlf-peer"}
 
 
+# TODO: this module can be deleted once all our deployments are certain to have been migrated.
 def extract_credentials(opts, node_type, verbose=False):
     chart = NODE_MAPPER[node_type]
     node_namespace = get_namespace(opts, opts[node_type + "s"]["msp"])
