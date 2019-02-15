@@ -23,7 +23,6 @@ Jinja2==2.10
 kubernetes==8.0.0
 MarkupSafe==1.1.0
 more-itertools==4.3.0
-nephos==0.1.7
 oauthlib==2.1.0
 packaging==19.0
 pkginfo==1.4.2
