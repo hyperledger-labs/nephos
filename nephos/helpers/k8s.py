@@ -64,7 +64,7 @@ class Executer:
         result, error = execute(self.prefix_exec + command, verbose=self.verbose)
         return result, error
 
-    def logs(self, tail=-1):
+    def logs(self, tail=-1, since_time=None):
         """Get logs from pod.
 
         Args:
@@ -73,8 +73,11 @@ class Executer:
         Returns:
             str: Logs contained in pod.
         """
+        command = "--tail={}".format(tail)
+        if since_time:
+            command += " --since-time='{}'".format(since_time)
         result, _ = execute(
-            self.prefix_logs + "--tail={}".format(tail), verbose=self.verbose
+            self.prefix_logs + command, verbose=self.verbose
         )
         return result
 
