@@ -23,7 +23,7 @@ Organizations:
         ID: OrdererMSP
 
         # MSPDir is the filesystem path which contains the MSP configuration
-        MSPDir: ./crypto-config/ordererOrganizations/orderers.svc.cluster.local/msp
+        MSPDir: ../crypto/crypto-config/ordererOrganizations/orderers.svc.cluster.local/msp
 
         # turn off security for the channel
         AdminPrincipal: Role.MEMBER
@@ -35,7 +35,7 @@ Organizations:
         # ID to load the MSP definition as
         ID: PeerMSP
 
-        MSPDir: ./crypto-config/peerOrganizations/peers.svc.cluster.local/msp
+        MSPDir: ../crypto/crypto-config/peerOrganizations/peers.svc.cluster.local/msp
 
         # turn off security for the peer
         AdminPrincipal: Role.MEMBER

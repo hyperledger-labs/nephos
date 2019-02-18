@@ -8,6 +8,8 @@ core:
   # 2) genesis block and
   # 3) channel transaction
   dir_config: ./examples/dev/config
+  # Directory where we hold crypto-material
+  dir_crypto: ./examples/dev/crypto
   # Directory where the Helm Chart values reside
   dir_values: ./examples/dev/helm_values
 cas: {}  # No CAs as we are using cryptogen

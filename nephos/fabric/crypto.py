@@ -94,11 +94,11 @@ def enroll_id(opts, ca, username, password, verbose=False):
         str: Path of the MSP directory where cryptographic data is saved.
 
     """
-    dir_config = opts["core"]["dir_config"]
+    dir_crypto = opts["core"]["dir_crypto"]
     ca_namespace = get_namespace(opts, ca=ca)
     ingress_urls = ingress_read(ca + "-hlf-ca", namespace=ca_namespace, verbose=verbose)
     msp_dir = "{}_MSP".format(username)
-    msp_path = join(dir_config, msp_dir)
+    msp_path = join(dir_crypto, msp_dir)
     if not isdir(msp_path):
         # Enroll
         command = (
@@ -106,7 +106,7 @@ def enroll_id(opts, ca, username, password, verbose=False):
             + "-u https://{username}:{password}@{ingress} -M {msp_dir} "
             + "--tls.certfiles {ca_server_tls}"
         ).format(
-            dir=dir_config,
+            dir=dir_crypto,
             username=username,
             password=password,
             ingress=ingress_urls[0],
@@ -126,6 +126,7 @@ def create_admin(opts, msp_name, verbose=False):
         verbose (bool) Verbosity. False by default.
     """
     dir_config = opts["core"]["dir_config"]
+    dir_crypto = opts["core"]["dir_crypto"]
     msp_values = opts["msps"][msp_name]
     ca_values = opts["cas"][msp_values["ca"]]
 
@@ -151,7 +152,7 @@ def create_admin(opts, msp_name, verbose=False):
 
     # TODO: Can we reuse the Enroll function above?
     # If our keystore does not exist or is empty, we need to enroll the identity...
-    keystore = join(dir_config, msp_name, "keystore")
+    keystore = join(dir_crypto, msp_name, "keystore")
     if not isdir(keystore) or not listdir(keystore):
         execute(
             (
@@ -226,12 +227,12 @@ def msp_secrets(opts, msp_name, verbose=False):
     msp_namespace = get_namespace(opts, msp=msp_name)
     msp_values = opts["msps"][msp_name]
     if opts["cas"]:
-        # If we have a CA, MSP was saved to dir_config
-        msp_path = join(opts["core"]["dir_config"], msp_name)
+        # If we have a CA, MSP was saved to dir_crypto
+        msp_path = join(opts["core"]["dir_crypto"], msp_name)
     else:
         # Otherwise we are using Cryptogen
-        glob_target = "{dir_config}/crypto-config/*Organizations/{ns}*/users/Admin*/msp".format(
-            dir_config=opts["core"]["dir_config"], ns=msp_namespace
+        glob_target = "{dir_crypto}/crypto-config/*Organizations/{ns}*/users/Admin*/msp".format(
+            dir_crypto=opts["core"]["dir_crypto"], ns=msp_namespace
         )
         msp_path_list = glob(glob_target)
         if len(msp_path_list) == 1:
@@ -379,8 +380,8 @@ def setup_id(opts, msp_name, release, id_type, verbose=False):
         )
     else:
         # Otherwise we are using Cryptogen
-        glob_target = "{dir_config}/crypto-config/{node_type}Organizations/{ns}*/{node_type}s/{node_name}*/msp".format(
-            dir_config=opts["core"]["dir_config"],
+        glob_target = "{dir_crypto}/crypto-config/{node_type}Organizations/{ns}*/{node_type}s/{node_name}*/msp".format(
+            dir_crypto=opts["core"]["dir_crypto"],
             node_type=id_type,
             node_name=release,
             ns=node_namespace,
@@ -426,10 +427,13 @@ def genesis_block(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts["core"]["dir_config"])
     # Create the genesis block
+    genesis_file = join(opts["core"]["dir_crypto"], "genesis.block")
     if not exists("genesis.block"):
         # Genesis block creation and storage
         execute(
-            "configtxgen -profile OrdererGenesis -outputBlock genesis.block",
+            "configtxgen -profile OrdererGenesis -outputBlock {genesis_file}".format(
+                genesis_file=genesis_file
+            ),
             verbose=verbose,
         )
     else:
@@ -457,7 +461,10 @@ def channel_tx(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts["core"]["dir_config"])
     # Create Channel Tx
-    channel_file = "{channel}.tx".format(channel=opts["peers"]["channel_name"])
+    channel_file = join(
+        opts["core"]["dir_crypto"],
+        "{channel}.tx".format(channel=opts["peers"]["channel_name"])
+    )
     if not exists(channel_file):
         # Channel transaction creation and storage
         execute(

@@ -24,7 +24,7 @@ Organizations:
         ID: OrdererMSP
 
         # MSPDir is the filesystem path which contains the MSP configuration
-        MSPDir: ./OrdererMSP
+        MSPDir: ../crypto/OrdererMSP
 
         # turn off security for the channel
         AdminPrincipal: Role.MEMBER
@@ -36,7 +36,7 @@ Organizations:
         # ID to load the MSP definition as
         ID: PeerMSP
 
-        MSPDir: ./PeerMSP
+        MSPDir: ../crypto/PeerMSP
 
         # turn off security for the peer
         AdminPrincipal: Role.MEMBER
