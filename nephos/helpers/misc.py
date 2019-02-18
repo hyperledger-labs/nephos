@@ -1,9 +1,11 @@
 from __future__ import print_function
 
+import random
 from builtins import input
 from getpass import getpass
 from os.path import isfile, split
 import re
+from string import ascii_letters, digits
 from subprocess import check_output, STDOUT, CalledProcessError
 import time
 
@@ -151,3 +153,15 @@ def pretty_print(string):
         string (str): String we want to pretty print.
     """
     print(highlight(string, JsonLexer(), TerminalFormatter()))
+
+
+def rand_string(length):
+    """Create random alphanumeric string (useful for passwords).
+
+    Args:
+        length (int): Length of random string.
+
+    Returns:
+        str: Alphanumeric string.
+    """
+    return "".join(random.choice(ascii_letters + digits) for _ in range(length))

@@ -1,22 +1,9 @@
-from string import ascii_letters, digits, punctuation
 from unittest import mock
 
 from kubernetes.client.rest import ApiException
 import pytest
 
-from nephos.fabric.utils import rand_string, credentials_secret, crypto_secret, get_pod
-
-
-class TestRandString:
-    def test_rand_string(self):
-        a_string = rand_string(16)
-        assert len(a_string) == 16
-        assert set(ascii_letters + digits).intersection(set(a_string))
-        assert not set(punctuation).intersection(set(a_string))
-
-    def test_rand_string_(self):
-        a_string = rand_string(24)
-        assert len(a_string) == 24
+from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
 
 
 class TestCredentialsSecret:

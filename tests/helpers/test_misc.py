@@ -1,3 +1,4 @@
+from string import ascii_letters, digits, punctuation
 from subprocess import CalledProcessError
 from unittest import mock
 from unittest.mock import call
@@ -8,6 +9,7 @@ from nephos.helpers.misc import (
     input_files,
     get_response,
     pretty_print,
+    rand_string
 )
 
 
@@ -276,3 +278,15 @@ class TestPrettyPrint:
         mock_print.assert_called_with(
             '{\x1b[34;01m"some"\x1b[39;49;00m: \x1b[33m"json"\x1b[39;49;00m}\n'
         )
+
+
+class TestRandString:
+    def test_rand_string(self):
+        a_string = rand_string(16)
+        assert len(a_string) == 16
+        assert set(ascii_letters + digits).intersection(set(a_string))
+        assert not set(punctuation).intersection(set(a_string))
+
+    def test_rand_string_(self):
+        a_string = rand_string(24)
+        assert len(a_string) == 24
