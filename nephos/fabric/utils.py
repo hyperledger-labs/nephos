@@ -14,26 +14,11 @@
 
 from glob import glob
 from os import path
-import random
-from string import ascii_letters, digits
 
 from kubernetes.client.rest import ApiException
 
 from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret_read
-from nephos.helpers.misc import execute
-
-
-# TODO: Possibly hide this function?
-def rand_string(length):
-    """Create random alphanumeric string (useful for passwords).
-
-    Args:
-        length (int): Length of random string.
-
-    Returns:
-        str: Alphanumeric string.
-    """
-    return "".join(random.choice(ascii_letters + digits) for _ in range(length))
+from nephos.helpers.misc import execute, rand_string
 
 
 def credentials_secret(secret_name, namespace, username, password=None, verbose=False):
