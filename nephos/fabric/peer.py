@@ -17,7 +17,7 @@ from time import sleep
 
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_pod
-from nephos.helpers.helm import helm_install, helm_upgrade
+from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
 
 
@@ -93,15 +93,13 @@ def setup_peer(opts, upgrade=False, verbose=False):
                 verbose=verbose,
             )
         else:
-            # We will not upgrade the CouchDB here, only explicitly in a separate script.
-            pass
-            # preserve = (HelmPreserve('cdb-{}-hlf-couchdb'.format(release), 'COUCHDB_USERNAME', 'couchdbUsername'),
-            #             HelmPreserve('cdb-{}-hlf-couchdb'.format(release), 'COUCHDB_PASSWORD', 'couchdbPassword'))
-            # helm_upgrade(opts['core']['chart_repo'], 'hlf-couchdb', 'cdb-{}'.format(release), peer_namespace,
-            #              config_yaml='{dir}/hlf-couchdb/cdb-{name}.yaml'.format(dir=opts['core']['dir_values'],
-            #                                                                     name=release),
-            #              preserve=preserve,
-            #              verbose=verbose)
+            preserve = (HelmPreserve('cdb-{}-hlf-couchdb'.format(release), 'COUCHDB_USERNAME', 'couchdbUsername'),
+                        HelmPreserve('cdb-{}-hlf-couchdb'.format(release), 'COUCHDB_PASSWORD', 'couchdbPassword'))
+            helm_upgrade(opts['core']['chart_repo'], 'hlf-couchdb', 'cdb-{}'.format(release), peer_namespace,
+                         config_yaml='{dir}/hlf-couchdb/cdb-{name}.yaml'.format(dir=opts['core']['dir_values'],
+                                                                                name=release),
+                         preserve=preserve,
+                         verbose=verbose)
 
         # Deploy the HL-Peer charts
         if not upgrade:
