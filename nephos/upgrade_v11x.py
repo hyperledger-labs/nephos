@@ -20,15 +20,15 @@ import os
 import click
 from kubernetes.client.rest import ApiException
 
-from nephos.fabric.settings import get_namespace, load_config
-from nephos.fabric.utils import get_pod
+from nephos.fabric.crypto import CryptoInfo
 from nephos.fabric.ord import check_ord
 from nephos.fabric.peer import check_peer
+from nephos.fabric.settings import get_namespace, load_config
+from nephos.fabric.utils import get_pod
 from nephos.helpers.helm import helm_upgrade
-from nephos.helpers.k8s import ns_create, secret_read, secret_create
+from nephos.helpers.k8s import secret_read, secret_create
 
 PWD = os.getcwd()
-CryptoInfo = namedtuple("CryptoInfo", ("secret_type", "subfolder", "key", "required"))
 
 NODE_MAPPER = {"orderer": "hlf-ord", "peer": "hlf-peer"}
 
