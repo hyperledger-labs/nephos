@@ -188,7 +188,14 @@ class TestCreateAdmin:
     @mock.patch("nephos.fabric.crypto.isdir")
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute")
-    def test_ca_create_admin(self, mock_execute, mock_ingress_read, mock_isdir, mock_listdir, mock_register_id):
+    def test_ca_create_admin(
+        self,
+        mock_execute,
+        mock_ingress_read,
+        mock_isdir,
+        mock_listdir,
+        mock_register_id,
+    ):
         mock_isdir.side_effect = [False]
         mock_listdir.side_effect = [False]
         mock_ingress_read.side_effect = [["an-ingress"]]
@@ -212,7 +219,14 @@ class TestCreateAdmin:
     @mock.patch("nephos.fabric.crypto.isdir")
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute")
-    def test_ca_create_admin_again(self, mock_execute, mock_ingress_read, mock_isdir, mock_listdir, mock_register_id):
+    def test_ca_create_admin_again(
+        self,
+        mock_execute,
+        mock_ingress_read,
+        mock_isdir,
+        mock_listdir,
+        mock_register_id,
+    ):
         mock_isdir.side_effect = [True]
         mock_listdir.side_effect = [True]
         mock_ingress_read.side_effect = [["an-ingress"]]

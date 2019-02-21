@@ -103,7 +103,7 @@ class TestLoadHlfConfig:
         mock_path.abspath.side_effect = [
             "/home/user/config",
             "/home/user/crypto",
-            "/home/user/helm_values"
+            "/home/user/helm_values",
         ]
         load_config("./some_settings.yaml")
         mock_open.assert_called_once_with("./some_settings.yaml")

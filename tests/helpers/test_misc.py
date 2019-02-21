@@ -9,7 +9,7 @@ from nephos.helpers.misc import (
     input_files,
     get_response,
     pretty_print,
-    rand_string
+    rand_string,
 )
 
 
