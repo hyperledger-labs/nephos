@@ -15,8 +15,7 @@ else
     python setup.py upload
 fi
 
-echo "TRAVIS_PULL_REQUEST is $TRAVIS_PULL_REQUEST"
-if [[ ${TRAVIS_PULL_REQUEST} ]]
+if [[ ${TRAVIS_PULL_REQUEST} == "true" ]]
 then
     # Cosmic Ray (Mutation testing)
     pip install cosmic_ray
