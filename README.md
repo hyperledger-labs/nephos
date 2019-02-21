@@ -1,8 +1,12 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/aidtechnology/nephos/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/aidtechnology/nephos?targetFile=requirements.txt)
+[![<Sonarcloud quality gate>](https://sonarcloud.io/api/project_badges/measure?project=aidtechnology_nephos&metric=alert_status)](https://sonarcloud.io/dashboard?id=aidtechnology_nephos)
 
 # nephos
 
-Library to deploy Hyperledger Fabric projects to a Kubernetes cloud
+Library to deploy Hyperledger Fabric projects to Kubernetes.
+
+Source resides here: https://github.com/aidtechnology/nephos
+Documentation resides here: https://nephos.readthedocs.io
 
    * [Prerequisites](#prerequisites)
    * [Installation](#installation)
@@ -87,8 +91,18 @@ Example of development/QA/production(-ish) networks are provided in the examples
 
 To run the dev example from the git repository, use this command:
 
-    ./nephos/deploy.py --upgrade -f ./examples/dev/nephos_settings.yaml fabric
+    ./nephos/deploy.py --verbose -f ./examples/dev/nephos_settings.yaml fabric
 
 For the QA and production examples, you will need to replace the CA hostname to one pointing to your K8S cluster Ingress Controller  (e.g. NGINX or Traefik) IP address.
+
+For instance, you may wish to install an ingress controller and a certificate manager. We include in the repository two example Cluster Issuers (you will need to modify the email field in them) for the `cert-manager` deployment:
+
+    helm install stable/nginx-ingress -n nginx-ingress --namespace ingress-controller
+
+    helm install stable/cert-manager -n cert-manager --namespace cert-manager
+
+    kubectl create -f ./examples/certManagerCI_staging.yaml
+
+    kubectl create -f ./examples/certManagerCI_production.yaml
 
 To use the Composer examples, you will need a Cloud system capable of a "ReadWriteMany" policy (e.g. "azurefile" on Azure).
