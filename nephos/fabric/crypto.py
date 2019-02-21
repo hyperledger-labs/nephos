@@ -427,8 +427,9 @@ def genesis_block(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts["core"]["dir_config"])
     # Create the genesis block
-    genesis_file = join(opts["core"]["dir_crypto"], "genesis.block")
-    if not exists("genesis.block"):
+    genesis_key = "genesis.block"
+    genesis_file = join(opts["core"]["dir_crypto"], genesis_key)
+    if not exists(genesis_file):
         # Genesis block creation and storage
         execute(
             "configtxgen -profile OrdererGenesis -outputBlock {genesis_file}".format(
@@ -437,13 +438,13 @@ def genesis_block(opts, verbose=False):
             verbose=verbose,
         )
     else:
-        print("genesis.block already exists")
+        print("{} already exists".format(genesis_file))
     # Create the genesis block secret
     secret_from_file(
         secret=opts["orderers"]["secret_genesis"],
         namespace=ord_namespace,
-        key="genesis.block",
-        filename="genesis.block",
+        key=genesis_key,
+        filename=genesis_file,
         verbose=verbose,
     )
     # Return to original directory
@@ -461,10 +462,8 @@ def channel_tx(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts["core"]["dir_config"])
     # Create Channel Tx
-    channel_file = join(
-        opts["core"]["dir_crypto"],
-        "{channel}.tx".format(channel=opts["peers"]["channel_name"])
-    )
+    channel_key = "{channel}.tx".format(channel=opts["peers"]["channel_name"])
+    channel_file = join(opts["core"]["dir_crypto"], channel_key)
     if not exists(channel_file):
         # Channel transaction creation and storage
         execute(
@@ -476,14 +475,12 @@ def channel_tx(opts, verbose=False):
             verbose=verbose,
         )
     else:
-        print(
-            "{channel}.tx already exists".format(channel=opts["peers"]["channel_name"])
-        )
+        print("{} already exists".format(channel_file))
     # Create the channel transaction secret
     secret_from_file(
         secret=opts["peers"]["secret_channel"],
         namespace=peer_namespace,
-        key=channel_file,
+        key=channel_key,
         filename=channel_file,
         verbose=verbose,
     )

@@ -93,20 +93,25 @@ class TestLoadHlfConfig:
                 "core": {
                     "chart_repo": "a-repo",
                     "cluster": "a-cluster",
-                    "dir_config": "./a_dir",
-                    "dir_values": "./another_dir",
+                    "dir_config": "./config",
+                    "dir_crypto": "./crypto",
+                    "dir_values": "./helm_values",
                 }
             }
         ]
         mock_path.isdir.side_effect = [False]
-        mock_path.abspath.side_effect = ["/home/user/a_dir", "/home/user/another_dir"]
+        mock_path.abspath.side_effect = [
+            "/home/user/config",
+            "/home/user/crypto",
+            "/home/user/helm_values"
+        ]
         load_config("./some_settings.yaml")
         mock_open.assert_called_once_with("./some_settings.yaml")
         mock_yaml.load.assert_called_once()
         mock_check_cluster.assert_called_once_with("a-cluster")
         mock_path.isdir.assert_called_once_with("a-repo")
-        assert mock_path.expanduser.call_count == 2
-        assert mock_path.abspath.call_count == 2
+        assert mock_path.expanduser.call_count == 3
+        assert mock_path.abspath.call_count == 3
 
     @mock.patch("nephos.fabric.settings.yaml")
     @mock.patch("nephos.fabric.settings.path")
@@ -119,21 +124,23 @@ class TestLoadHlfConfig:
             {
                 "core": {
                     "chart_repo": "./a_repo_dir",
-                    "dir_config": "./a_dir",
-                    "dir_values": "./another_dir",
+                    "dir_config": "./config",
+                    "dir_crypto": "./crypto",
+                    "dir_values": "./helm_values",
                 }
             }
         ]
         mock_path.isdir.side_effect = [True]
         mock_path.abspath.side_effect = [
             "/home/user/a_repo_dir",
-            "/home/user/a_dir",
-            "/home/user/another_dir",
+            "/home/user/config",
+            "/home/user/crypto",
+            "/home/user/helm_values",
         ]
         load_config("./some_settings.yaml")
         mock_open.assert_called_once_with("./some_settings.yaml")
         mock_yaml.load.assert_called_once()
         mock_check_cluster.assert_not_called()
         mock_path.isdir.assert_called_once_with("./a_repo_dir")
-        assert mock_path.expanduser.call_count == 3
-        assert mock_path.abspath.call_count == 3
+        assert mock_path.expanduser.call_count == 4
+        assert mock_path.abspath.call_count == 4
