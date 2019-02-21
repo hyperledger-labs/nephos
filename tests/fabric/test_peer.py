@@ -3,6 +3,7 @@ from unittest import mock
 from unittest.mock import call
 
 from nephos.fabric.peer import check_ord_tls, check_peer, setup_peer, setup_channel
+from nephos.helpers.helm import HelmPreserve
 
 
 class TestCheckOrdTls:
@@ -134,14 +135,26 @@ class TestSetupPeer:
         OPTS["peers"]["names"] = ["peer0"]
         setup_peer(OPTS, upgrade=True)
         mock_helm_install.assert_not_called()
-        mock_helm_upgrade.assert_called_once_with(
-            "a-repo",
-            "hlf-peer",
-            "peer0",
-            "peer-namespace",
-            config_yaml="./a_dir/hlf-peer/peer0.yaml",
-            verbose=False,
-        )
+        mock_helm_upgrade.assert_has_calls([
+            call(
+                "a-repo",
+                "hlf-couchdb",
+                "cdb-peer0",
+                "peer-namespace",
+                config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
+                preserve=(HelmPreserve('cdb-peer0-hlf-couchdb', 'COUCHDB_USERNAME', 'couchdbUsername'),
+                          HelmPreserve('cdb-peer0-hlf-couchdb', 'COUCHDB_PASSWORD', 'couchdbPassword')),
+                verbose=False
+            ),
+            call(
+                "a-repo",
+                "hlf-peer",
+                "peer0",
+                "peer-namespace",
+                config_yaml="./a_dir/hlf-peer/peer0.yaml",
+                verbose=False
+            )
+        ])
         mock_check_peer.assert_called_once_with(
             "peer-namespace", "peer0", verbose=False
         )

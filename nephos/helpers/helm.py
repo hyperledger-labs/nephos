@@ -198,8 +198,8 @@ def helm_upgrade(
         release (str): Release name on K8S.
         namespace (str): Namespace where to deploy Helm Chart.
         config_yaml (str): Values file to ovverride defaults.
-        env_vars (list): Environmental variables we wish to store in Helm.
-        preserve (list): Set of secrets we wish to get data from to assign to the Helm Chart.
+        env_vars (tuple): Environmental variables we wish to store in Helm.
+        preserve (tuple): Set of secrets we wish to get data from to assign to the Helm Chart.
         verbose (bool): Verbosity. False by default.
         pod_num (int): Number of pods we wish to have.
     """
