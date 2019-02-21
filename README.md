@@ -80,4 +80,15 @@ You can also upgrade a network:
 
     ./nephos/deploy.py --upgrade -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
 
-> Example of development/production networks will be provided in future
+
+## Examples
+
+Example of development/QA/production(-ish) networks are provided in the examples folder.
+
+To run the dev example from the git repository, use this command:
+
+    ./nephos/deploy.py --upgrade -f ./examples/dev/nephos_settings.yaml fabric
+
+For the QA and production examples, you will need to replace the CA hostname to one pointing to your K8S cluster Ingress Controller  (e.g. NGINX or Traefik) IP address.
+
+To use the Composer examples, you will need a Cloud system capable of a "ReadWriteMany" policy (e.g. "azurefile" on Azure).

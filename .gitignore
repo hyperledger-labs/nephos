@@ -113,7 +113,8 @@ venv.bak/
 # Examples
 genesis.block
 *channel.tx
-*_MSP
+*MSP
+fabric-ca-client-config.yaml
 
 # Cosmic ray
 *session.sqlite

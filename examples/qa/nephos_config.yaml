@@ -4,14 +4,14 @@ core:
   # ChartMuseum repository or directory holding charts
   chart_repo: stable
   # Directory where we hold configtx.yaml
-  dir_config: ./examples/prod/config
+  dir_config: ./examples/qa/config
   # Directory where we hold:
   # 1) cryptographic material
   # 2) genesis block and
   # 3) channel transaction
-  dir_crypto: ./examples/prod/crypto
+  dir_crypto: ./examples/qa/crypto
   # Directory where the Helm Chart values reside
-  dir_values: ./examples/prod/helm_values
+  dir_values: ./examples/qa/helm_values
 cas:
   ca:
     namespace: cas
@@ -30,16 +30,12 @@ orderers:
   msp: OrdererMSP
   names:
   - ord1
-  - ord2
   secret_genesis: hlf--genesis
-  kafka:
-    pod_num: 4
 peers:
   domain: peers.svc.cluster.local
   msp: PeerMSP
   names:
   - peer1
-  - peer2
   channel_name: mychannel
   channel_profile: MyChannel
   secret_channel: hlf--channel

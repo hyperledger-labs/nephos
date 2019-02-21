@@ -88,10 +88,8 @@ class TestExecuter:
     @mock.patch("nephos.helpers.k8s.execute")
     def test_executer_logs_sincetime(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
-        executer = Executer(
-            "a_pod", "a-namespace", verbose=True
-        )
-        executer.logs(since_time='1970-01-01T00:00:00Z')
+        executer = Executer("a_pod", "a-namespace", verbose=True)
+        executer.logs(since_time="1970-01-01T00:00:00Z")
         mock_execute.assert_called_once_with(
             "kubectl logs a_pod -n a-namespace --tail=-1 --since-time='1970-01-01T00:00:00Z'",
             verbose=True,

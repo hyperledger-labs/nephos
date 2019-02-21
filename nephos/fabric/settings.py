@@ -99,6 +99,9 @@ def load_config(settings_file):
     data["core"]["dir_config"] = path.abspath(
         path.expanduser(data["core"]["dir_config"])
     )
+    data["core"]["dir_crypto"] = path.abspath(
+        path.expanduser(data["core"]["dir_crypto"])
+    )
     data["core"]["dir_values"] = path.abspath(
         path.expanduser(data["core"]["dir_values"])
     )

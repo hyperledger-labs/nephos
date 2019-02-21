@@ -3,11 +3,14 @@ core:
   cluster: hlf-dev-bis-aks
   # ChartMuseum repository or directory holding charts
   chart_repo: stable
-  # Directory where we hold configtx.yaml, and where we will save:
+  # Directory where we hold configtx.yaml
+  dir_config: ./examples/dev/config
+  # Directory where we hold:
   # 1) cryptographic material
   # 2) genesis block and
   # 3) channel transaction
-  dir_config: ./examples/dev/config
+  # Directory where we hold crypto-material
+  dir_crypto: ./examples/dev/crypto
   # Directory where the Helm Chart values reside
   dir_values: ./examples/dev/helm_values
 cas: {}  # No CAs as we are using cryptogen

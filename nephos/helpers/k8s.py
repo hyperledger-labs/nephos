@@ -14,7 +14,7 @@ TERM = Terminal()
 
 
 # Configs can be set in Configuration class directly or using helper utility
-if which('kubectl'):
+if which("kubectl"):
     config.load_kube_config()
     api = client.CoreV1Api()
     api_ext = client.ExtensionsV1beta1Api()
@@ -76,9 +76,7 @@ class Executer:
         command = "--tail={}".format(tail)
         if since_time:
             command += " --since-time='{}'".format(since_time)
-        result, _ = execute(
-            self.prefix_logs + command, verbose=self.verbose
-        )
+        result, _ = execute(self.prefix_logs + command, verbose=self.verbose)
         return result
 
 
