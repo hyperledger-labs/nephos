@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/aidtechnology/nephos.svg?branch=master)](https://travis-ci.com/aidtechnology/nephos)
 [![Known Vulnerabilities](https://snyk.io/test/github/aidtechnology/nephos/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/aidtechnology/nephos?targetFile=requirements.txt)
 [![<Sonarcloud quality gate>](https://sonarcloud.io/api/project_badges/measure?project=aidtechnology_nephos&metric=alert_status)](https://sonarcloud.io/dashboard?id=aidtechnology_nephos)
 
