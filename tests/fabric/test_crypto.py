@@ -122,51 +122,67 @@ class TestRegisterId:
 class TestEnrollId:
     OPTS = {
         "core": {"dir_crypto": "./crypto"},
-        "cas": {
-            "a-ca": {"namespace": "ca-namespace", "tls_cert": "/some_msp/tls_cert.pem"}
-        },
+        "cas": {"a-ca": {"namespace": "ca-namespace", "tls_cert": "./tls_cert.pem"}},
     }
 
+    @mock.patch("nephos.fabric.crypto.isdir")
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute_until_success")
-    def test_enroll_id(self, mock_execute_until_success, mock_ingress_read):
+    @mock.patch("nephos.fabric.crypto.abspath")
+    def test_enroll_id(
+        self, mock_abspath, mock_execute_until_success, mock_ingress_read, mock_isdir
+    ):
         mock_ingress_read.side_effect = [["an-ingress"]]
+        mock_isdir.side_effect = [False]
+        mock_abspath.side_effect = ["/home/nephos/tls_cert.pem"]
         enroll_id(self.OPTS, "a-ca", "an-ord", "a-password")
         mock_ingress_read.assert_called_once_with(
             "a-ca-hlf-ca", namespace="ca-namespace", verbose=False
         )
+        mock_abspath.assert_called_once_with("./tls_cert.pem")
+        mock_isdir.assert_called_once_with("./crypto/an-ord_MSP")
         mock_execute_until_success.assert_called_once_with(
             "FABRIC_CA_CLIENT_HOME=./crypto fabric-ca-client enroll "
-            + "-u https://an-ord:a-password@an-ingress -M an-ord_MSP "
-            + "--tls.certfiles /some_msp/tls_cert.pem"
+            + "-u https://an-ord:a-password@an-ingress -M ./crypto/an-ord_MSP "
+            + "--tls.certfiles /home/nephos/tls_cert.pem"
         )
 
     @mock.patch("nephos.fabric.crypto.isdir")
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute_until_success")
+    @mock.patch("nephos.fabric.crypto.abspath")
     def test_enroll_id_again(
-        self, mock_execute_until_success, mock_ingress_read, mock_isdir
+        self, mock_abspath, mock_execute_until_success, mock_ingress_read, mock_isdir
     ):
         mock_ingress_read.side_effect = [["an-ingress"]]
         mock_isdir.side_effect = [True]
+        mock_abspath.side_effect = ["/home/nephos/tls_cert.pem"]
         enroll_id(self.OPTS, "a-ca", "a-peer", "a-password")
         mock_ingress_read.assert_called_once_with(
             "a-ca-hlf-ca", namespace="ca-namespace", verbose=False
         )
+        mock_isdir.assert_called_once_with("./crypto/a-peer_MSP")
         mock_execute_until_success.assert_not_called()
 
+    @mock.patch("nephos.fabric.crypto.isdir")
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute_until_success")
-    def test_enroll_verbose(self, mock_execute_until_success, mock_ingress_read):
+    @mock.patch("nephos.fabric.crypto.abspath")
+    def test_enroll_verbose(
+        self, mock_abspath, mock_execute_until_success, mock_ingress_read, mock_isdir
+    ):
         mock_ingress_read.side_effect = [["an-ingress"]]
+        mock_isdir.side_effect = [False]
+        mock_abspath.side_effect = ["/home/nephos/tls_cert.pem"]
         enroll_id(self.OPTS, "a-ca", "a-peer", "a-password", verbose=True)
         mock_ingress_read.assert_called_once_with(
             "a-ca-hlf-ca", namespace="ca-namespace", verbose=True
         )
+        mock_isdir.assert_called_once_with("./crypto/a-peer_MSP")
         mock_execute_until_success.assert_called_once_with(
             "FABRIC_CA_CLIENT_HOME=./crypto fabric-ca-client enroll "
-            + "-u https://a-peer:a-password@an-ingress -M a-peer_MSP "
-            + "--tls.certfiles /some_msp/tls_cert.pem"
+            + "-u https://a-peer:a-password@an-ingress -M ./crypto/a-peer_MSP "
+            + "--tls.certfiles /home/nephos/tls_cert.pem"
         )
 
 
@@ -180,7 +196,7 @@ class TestCreateAdmin:
                 "org_adminpw": "a_password",
             }
         },
-        "cas": {"a-ca": {"namespace": "ca-namespace", "tls_cert": "./a_cert.pem"}},
+        "cas": {"a-ca": {"namespace": "ca-namespace", "tls_cert": "./tls_cert.pem"}},
     }
 
     @mock.patch("nephos.fabric.crypto.register_id")
@@ -188,8 +204,10 @@ class TestCreateAdmin:
     @mock.patch("nephos.fabric.crypto.isdir")
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute")
+    @mock.patch("nephos.fabric.crypto.abspath")
     def test_ca_create_admin(
         self,
+        mock_abspath,
         mock_execute,
         mock_ingress_read,
         mock_isdir,
@@ -199,6 +217,7 @@ class TestCreateAdmin:
         mock_isdir.side_effect = [False]
         mock_listdir.side_effect = [False]
         mock_ingress_read.side_effect = [["an-ingress"]]
+        mock_abspath.side_effect = ["/home/nephos/tls_cert.pem"]
         create_admin(self.OPTS, "a_MSP")
         mock_ingress_read.assert_called_once_with(
             "a-ca-hlf-ca", namespace="ca-namespace", verbose=False
@@ -208,9 +227,10 @@ class TestCreateAdmin:
         )
         mock_isdir.assert_called_once_with("./crypto/a_MSP/keystore")
         mock_listdir.assert_not_called()
+        mock_abspath.assert_called_once_with("./tls_cert.pem")
         mock_execute.assert_called_once_with(
             "FABRIC_CA_CLIENT_HOME=./config fabric-ca-client enroll "
-            + "-u https://an_admin:a_password@an-ingress -M a_MSP --tls.certfiles ./a_cert.pem",
+            + "-u https://an_admin:a_password@an-ingress -M ./crypto/a_MSP --tls.certfiles /home/nephos/tls_cert.pem",
             verbose=False,
         )
 
@@ -219,8 +239,10 @@ class TestCreateAdmin:
     @mock.patch("nephos.fabric.crypto.isdir")
     @mock.patch("nephos.fabric.crypto.ingress_read")
     @mock.patch("nephos.fabric.crypto.execute")
+    @mock.patch("nephos.fabric.crypto.abspath")
     def test_ca_create_admin_again(
         self,
+        mock_abspath,
         mock_execute,
         mock_ingress_read,
         mock_isdir,
@@ -230,6 +252,7 @@ class TestCreateAdmin:
         mock_isdir.side_effect = [True]
         mock_listdir.side_effect = [True]
         mock_ingress_read.side_effect = [["an-ingress"]]
+        mock_abspath.side_effect = ["/home/nephos/tls_cert.pem"]
         create_admin(self.OPTS, "a_MSP", verbose=True)
         mock_ingress_read.assert_called_once_with(
             "a-ca-hlf-ca", namespace="ca-namespace", verbose=True
@@ -239,6 +262,7 @@ class TestCreateAdmin:
         )
         mock_isdir.assert_called_once_with("./crypto/a_MSP/keystore")
         mock_listdir.assert_called_once_with("./crypto/a_MSP/keystore")
+        mock_abspath.assert_not_called()
         mock_execute.assert_not_called()
 
 

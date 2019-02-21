@@ -110,7 +110,7 @@ def enroll_id(opts, ca, username, password, verbose=False):
             username=username,
             password=password,
             ingress=ingress_urls[0],
-            msp_dir=msp_dir,
+            msp_dir=join(dir_crypto, msp_dir),
             ca_server_tls=abspath(opts["cas"][ca]["tls_cert"]),
         )
         execute_until_success(command)
@@ -163,8 +163,8 @@ def create_admin(opts, msp_name, verbose=False):
                 id=msp_values["org_admin"],
                 pw=msp_values["org_adminpw"],
                 ingress=ca_ingress,
-                msp_dir=msp_name,
-                ca_server_tls=ca_values["tls_cert"],
+                msp_dir=join(dir_crypto, msp_name),
+                ca_server_tls=abspath(ca_values["tls_cert"]),
             ),
             verbose=verbose,
         )
