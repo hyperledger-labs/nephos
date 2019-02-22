@@ -92,7 +92,9 @@ Example of development/QA/production(-ish) networks are provided in the examples
 
 To run the dev example from the git repository, use this command:
 
-    ./nephos/deploy.py --verbose -f ./examples/dev/nephos_settings.yaml fabric
+    ./nephos/deploy.py --verbose -f ./examples/dev/nephos_config.yaml fabric
+
+> Note: The `nephos_config.yaml` is by default set to point to the `minikube` context to prevent accidental deployments to production clusters. If your K8S context name is different, please update this file.
 
 For the QA and production examples, you will need to replace the CA hostname to one pointing to your K8S cluster Ingress Controller  (e.g. NGINX or Traefik) IP address.
 

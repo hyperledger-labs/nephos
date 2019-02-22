@@ -1,6 +1,6 @@
 core:
   # Comment out to make it work on your cluster
-  cluster: hlf-dev-bis-aks
+  cluster: minikube
   # ChartMuseum repository or directory holding charts
   chart_repo: stable
   # Directory where we hold configtx.yaml
