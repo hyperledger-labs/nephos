@@ -9,12 +9,12 @@ ingress:
   path: /
   hosts:
     # TODO: Change this to your Domain Name
-    - ca.nephos.aidtech-test.xyz
+    - ca.nephos.local
   tls:
     - secretName: ca--tls
       hosts:
         # TODO: Change this to your Domain Name
-        - ca.nephos.aidtech-test.xyz
+        - ca.nephos.local
 
 persistence:
   accessMode: ReadWriteOnce
