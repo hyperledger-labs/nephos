@@ -18,6 +18,9 @@ Documentation resides here: https://nephos.readthedocs.io
    * [Testing](#testing)
       * [Unit tests](#unit-tests)
    * [Usage](#usage)
+   * [Examples](#examples)
+      * [Development](#development)
+      * [QA and Production](#qa-and-production)
 
 ## Prerequisites
 
@@ -88,6 +91,8 @@ You can also upgrade a network:
 
 ## Examples
 
+### Development
+
 Example of development/QA/production(-ish) networks are provided in the examples folder.
 
 To run the dev example from the git repository, use this command:
@@ -96,9 +101,13 @@ To run the dev example from the git repository, use this command:
 
 > Note: The `nephos_config.yaml` is by default set to point to the `minikube` context to prevent accidental deployments to production clusters. If your K8S context name is different, please update this file.
 
+### QA and Production
+
 For the QA and production examples, you will need to replace the CA hostname to one pointing to your K8S cluster Ingress Controller  (e.g. NGINX or Traefik) IP address.
 
-For instance, you may wish to install an ingress controller and a certificate manager. We include in the repository two example Cluster Issuers (you will need to modify the email field in them) for the `cert-manager` deployment:
+> Note: If you wish to use the ingress controller with `minikube`, you will need to enable the `ingress` addon. Moreover, when working locally, you may want to update your `/etc/hosts` file to point `ca.nephos.local` to the Minkube cluster.
+
+In a real cluster, you will wish to install an ingress controller and a certificate manager. We include in the repository two example Cluster Issuers (you will need to modify the email field in them) for the `cert-manager` deployment:
 
     helm install stable/nginx-ingress -n nginx-ingress --namespace ingress-controller
 
