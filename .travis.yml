@@ -1,3 +1,5 @@
+# Based on: https://github.com/LiliC/travis-minikube/blob/minikube-30-kube-1.12/.travis.yml
+
 sudo: required
 
 # We need the systemd for the kubeadm and it's default from 16.04+
@@ -32,7 +34,7 @@ before_script:
   # Wait for Kubernetes to be up and ready.
   - JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'; until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do sleep 1; done
   # Start the ingress addon
-  - minikube addons enable ingress
+  - sudo minikube addons enable ingress
   # Add the minikube IP to the hosts file
   - echo "$(minikube ip)  ca.nephos.local" | sudo tee -a /etc/hosts
 
