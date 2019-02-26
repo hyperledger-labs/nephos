@@ -40,7 +40,7 @@ before_script:
 
 # Run tests
 script:
-  - PYTHONPATH=. pytest --cov=. --cov-report xml:coverage.xml --cov-report term-missing
+  - PYTHONPATH=. pytest --ignore=./integration --cov=. --cov-report xml:coverage.xml --cov-report term-missing
   - PYTHONPATH=. pytest -x -s ./integration
   - sonar-scanner
 after_success:
