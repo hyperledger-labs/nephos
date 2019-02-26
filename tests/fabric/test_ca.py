@@ -245,10 +245,10 @@ class TestCheckCa:
         )
 
     @mock.patch("nephos.fabric.ca.execute_until_success")
-    def test_check_ca_verbose(self, mock_execute_until_success):
-        check_ca("an-ingress", verbose=True)
+    def test_check_ca_cert(self, mock_execute_until_success):
+        check_ca("an-ingress", cacert="./tls_cert.pem", verbose=True)
         mock_execute_until_success.assert_called_once_with(
-            "curl https://an-ingress/cainfo", verbose=True
+            "curl https://an-ingress/cainfo --cacert ./tls_cert.pem", verbose=True
         )
 
 
@@ -257,7 +257,7 @@ class TestSetupCa:
         "core": {"dir_config": "./a_dir"},
         "cas": {
             "root-ca": {"namespace": "root-namespace"},
-            "int-ca": {"namespace": "int-namespace"},
+            "int-ca": {"namespace": "int-namespace", "tls_cert": "./ca_cert.pem"},
         },
     }
 
@@ -314,7 +314,7 @@ class TestSetupCa:
                 call("int-ca-hlf-ca", namespace="int-namespace", verbose=False),
             ]
         )
-        mock_check_ca.assert_called_once_with(ingress_host="an-ingress", verbose=False)
+        mock_check_ca.assert_called_once_with(ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=False)
 
     @mock.patch("nephos.fabric.ca.ingress_read")
     @mock.patch("nephos.fabric.ca.get_pod")
@@ -363,4 +363,4 @@ class TestSetupCa:
                 call("int-ca-hlf-ca", namespace="int-namespace", verbose=True),
             ]
         )
-        mock_check_ca.assert_called_once_with(ingress_host="an-ingress", verbose=True)
+        mock_check_ca.assert_called_once_with(ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=True)
