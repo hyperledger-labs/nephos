@@ -41,7 +41,7 @@ before_script:
 # Run tests
 script:
   - PYTHONPATH=. pytest --cov=. --cov-report xml:coverage.xml --cov-report term-missing
-  - PYTHONPATH=. pytest -s ./integration
+  - PYTHONPATH=. pytest -x -s ./integration
   - sonar-scanner
 after_success:
   # Code coverage, deploy to PyPI and, when uploading new version, do mutation testing
