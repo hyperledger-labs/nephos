@@ -24,6 +24,7 @@ class TestIntegrationDev:
         # TODO: There should be a more elegant way of obtaining all the releases
         releases = (
             [key for key in opts['cas'].keys()] +
+            [key + '-pg' for key in opts['cas'].keys()] +
             opts['orderers']['names'] +
             [('cdb-' + key) for key in opts['peers']['names']] +
             [key for key in opts['peers']['names']]
