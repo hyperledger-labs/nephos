@@ -1,6 +1,6 @@
 core:
   # Comment out to make it work on your cluster
-  cluster: hlf-dev-bis-aks
+  cluster: minikube
   # ChartMuseum repository or directory holding charts
   chart_repo: stable
   # Directory where we hold configtx.yaml
@@ -15,6 +15,7 @@ core:
 cas:
   ca:
     namespace: cas
+    # If testing locally on Minikube, replace this with your own self-signed certificate's PEM
     tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
 msps:
   OrdererMSP:

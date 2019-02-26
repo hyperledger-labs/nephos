@@ -5,16 +5,17 @@ ingress:
   enabled: true
   annotations:
     kubernetes.io/ingress.class: nginx
-    certmanager.k8s.io/cluster-issuer: "letsencrypt-production"
+    # TODO: When working locally, we may wish to comment the cluster-issuer
+    #certmanager.k8s.io/cluster-issuer: "letsencrypt-production"
   path: /
   hosts:
-    # TODO: Change this to your Domain Name
-    - ca.nephos.aidtech-test.xyz
+    # TODO: Change this to your Domain Name if not working locally
+    - ca.nephos.local
   tls:
     - secretName: ca--tls
       hosts:
-        # TODO: Change this to your Domain Name
-        - ca.nephos.aidtech-test.xyz
+        # TODO: Change this to your Domain Name if not working locally
+        - ca.nephos.local
 
 persistence:
   accessMode: ReadWriteOnce

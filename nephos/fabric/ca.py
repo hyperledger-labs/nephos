@@ -144,15 +144,18 @@ def ca_enroll(pod_exec):
                 sleep(15)
 
 
-def check_ca(ingress_host, verbose=False):
+def check_ca(ingress_host, cacert=None, verbose=False):
     """Check that the CA Ingress is responsive.
 
     Args:
         ingress_host (str): Ingress host for the CA.
+        cacert (str): Path of the CA cert.
         verbose (bool): Verbosity. False by default.
     """
     # Check that CA ingress is operational
     command = "curl https://{ingress}/cainfo".format(ingress=ingress_host)
+    if cacert:
+        command += " --cacert {}".format(cacert)
     execute_until_success(command, verbose=verbose)
 
 
@@ -190,4 +193,4 @@ def setup_ca(opts, upgrade=False, verbose=False):
             continue
 
         # Check the CA is running
-        check_ca(ingress_host=ingress_urls[0], verbose=verbose)
+        check_ca(ingress_host=ingress_urls[0], cacert=ca_values.get("tls_cert"), verbose=verbose)

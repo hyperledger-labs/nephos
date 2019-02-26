@@ -18,6 +18,9 @@ Documentation resides here: https://nephos.readthedocs.io
    * [Testing](#testing)
       * [Unit tests](#unit-tests)
    * [Usage](#usage)
+   * [Examples](#examples)
+      * [Development](#development)
+      * [QA and Production](#qa-and-production)
 
 ## Prerequisites
 
@@ -88,15 +91,21 @@ You can also upgrade a network:
 
 ## Examples
 
+### Development
+
 Example of development/QA/production(-ish) networks are provided in the examples folder.
 
 To run the dev example from the git repository, use this command:
 
-    ./nephos/deploy.py --verbose -f ./examples/dev/nephos_settings.yaml fabric
+    ./nephos/deploy.py --verbose -f ./examples/dev/nephos_config.yaml fabric
+
+> Note: The `nephos_config.yaml` is by default set to point to the `minikube` context (even for the `prod` example) to prevent accidental deployments to production clusters. If your K8S context name is different, please update this file.
+
+### QA and Production
 
 For the QA and production examples, you will need to replace the CA hostname to one pointing to your K8S cluster Ingress Controller  (e.g. NGINX or Traefik) IP address.
 
-For instance, you may wish to install an ingress controller and a certificate manager. We include in the repository two example Cluster Issuers (you will need to modify the email field in them) for the `cert-manager` deployment:
+In a real cluster, you will wish to install an ingress controller and a certificate manager. We include in the repository two example Cluster Issuers (you will need to modify the email field in them) for the `cert-manager` deployment:
 
     helm install stable/nginx-ingress -n nginx-ingress --namespace ingress-controller
 
@@ -107,3 +116,31 @@ For instance, you may wish to install an ingress controller and a certificate ma
     kubectl create -f ./examples/certManagerCI_production.yaml
 
 To use the Composer examples, you will need a Cloud system capable of a "ReadWriteMany" policy (e.g. "azurefile" on Azure).
+
+### Minikube
+
+Given that we may wish to test locally on Minikube, we will need to use a local ingress controller and ignore cert-manager in favour of self-cooked SSL certificates.
+
+In `./examples` we include the `ca-nephos-local.*` self-signed certificates, created with OpenSSL as follows:
+
+    openssl req -new -newkey rsa:4096 -days 3650 -nodes -x509 -subj "/C=IE/ST=Dublin/L=Dublin/O=AID:Tech/CN=ca.nephos.local" -keyout ca-nephos-local.key -out ca-nephos-local.crt
+
+    openssl x509 -in ca-nephos-local.crt -out ca-nephos-local.pem -outform PEM
+
+    kubectl create ns cas
+
+    kubectl -n cas create secret tls ca--tls --cert=ca-nephos-local.crt --key=ca-nephos-local.key
+
+We can save them to the `cas` namespace as follows
+
+    cd ./examples
+
+    kubectl create ns cas
+
+    kubectl -n cas create secret tls ca--tls --cert=ca-nephos-local.crt --key=ca-nephos-local.key
+
+We can then enable the ingress on minikube and update `/etc/hosts` with the IP of `minikube`:
+
+    minikube addons enable ingress
+
+    echo "$(minikube ip)  ca.nephos.local" | sudo tee -a /etc/hosts
