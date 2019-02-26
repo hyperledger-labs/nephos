@@ -15,7 +15,10 @@ core:
 cas:
   ca:
     namespace: cas
-    tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
+    # If testing locally on Minikube, we use our own self-signed certificate's PEM
+    tls_cert: ./examples/ca-nephos-local.pem
+    # Alternatively, if testing on a cluster with proper DNS and cert-manager...
+    #tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
 msps:
   OrdererMSP:
     ca: ca
