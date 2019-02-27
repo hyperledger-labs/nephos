@@ -21,6 +21,10 @@ Documentation resides here: https://nephos.readthedocs.io
    * [Examples](#examples)
       * [Development](#development)
       * [QA and Production](#qa-and-production)
+      * [Minikube](#minikube)
+   * [Further information](#further-information)
+      * [Helm charts](#helm-charts)
+      * [Educational material](#educational-material)
 
 ## Prerequisites
 
@@ -60,9 +64,13 @@ This library currently only supports Python 3:
 
 #### Requirements
 
-All requirments are held in the requirements.txt file
+All python-related requirments are held in the requirements.txt file
 
     pip install -r requirements.txt
+
+You will also need to install an initialise `helm` for Kubernetes, as described [here](https://helm.sh/docs/using_helm/)
+
+Furthermore, you will need the Hyperledger Fabric utility binaries that can be installed with this [script](https://raw.githubusercontent.com/hyperledger/fabric/master/scripts/bootstrap.sh) on Linux, or via Homebrew for the [Fabric tools](https://github.com/aidtechnology/homebrew-fabric) and [CA tools](https://github.com/aidtechnology/homebrew-fabric-ca) on Mac OS X.
 
 ## Testing
 
@@ -87,7 +95,6 @@ To install a full end-to-end fabric network, you can run:
 You can also upgrade a network:
 
     ./nephos/deploy.py --upgrade -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
-
 
 ## Examples
 
@@ -144,3 +151,24 @@ We can then enable the ingress on minikube and update `/etc/hosts` with the IP o
     minikube addons enable ingress
 
     echo "$(minikube ip)  ca.nephos.local" | sudo tee -a /etc/hosts
+
+## Further information
+
+For more information on how to deploy Hyperledger Fabric to Kubernetes, please see the following resources:
+
+### Helm charts
+
+We have released a set of Helm Charts, currently living in two locations:
+
+* The official Helm Chart [repository](https://github.com/helm/charts) and [KubeApps](https://hub.kubeapps.com/charts?q=hyperledger).
+* The AID:Tech Helm Chart [repository](https://github.com/aidtechnology/at-charts).
+
+### Educational material
+
+A [workshop](https://hgf18.sched.com/event/b76c86de07c3bcaa094a8b149470e0e7) on the Hyperledger Global Forum, featuring [slides](https://schd.ws/hosted_files/hgf18/d2/2018_12_14_CH_Basel_Hyperledger_Global_Forum.pdf) and a [part 1](https://www.youtube.com/watch?v=ubrA3W1JMk0) and [part 2](https://www.youtube.com/watch?v=3tVk7yrGSSE) videos.
+
+A(n older) [webinar](https://www.hyperledger.org/blog/2018/11/08/deploying-hyperledger-fabric-on-kubernetes) on deploying Hyperledger Fabric on Kubernetes.
+
+We have also contributed the Composer chapter on the EdX course [Blockchain for Business](https://www.edx.org/course/blockchain-business-introduction-linuxfoundationx-lfs171x-0).
+
+And we have also released a course on [Packt](https://www.packtpub.com/application-development/hyperledger-blockchain-applications-video), [Udemy](https://www.udemy.com/hyperledger-for-blockchain-applications/) and [O’Reilly](https://www.oreilly.com/library/view/hyperledger-for-blockchain/9781789131963/) called Hyperledger for Blockchain Applications.
