@@ -21,6 +21,7 @@ Documentation resides here: https://nephos.readthedocs.io
    * [Examples](#examples)
       * [Development](#development)
       * [QA and Production](#qa-and-production)
+      * [Minikube](#minikube)
 
 ## Prerequisites
 
@@ -60,9 +61,13 @@ This library currently only supports Python 3:
 
 #### Requirements
 
-All requirments are held in the requirements.txt file
+All python-related requirments are held in the requirements.txt file
 
     pip install -r requirements.txt
+
+You will also need to install an initialise `helm` for Kubernetes, as described [here](https://helm.sh/docs/using_helm/)
+
+Furthermore, you will need the Hyperledger Fabric utility binaries that can be installed with this [script](https://raw.githubusercontent.com/hyperledger/fabric/master/scripts/bootstrap.sh) on Linux, or via Homebrew for the [Fabric tools](https://github.com/aidtechnology/homebrew-fabric) and [CA tools](https://github.com/aidtechnology/homebrew-fabric-ca) on Mac OS X.
 
 ## Testing
 
@@ -87,7 +92,6 @@ To install a full end-to-end fabric network, you can run:
 You can also upgrade a network:
 
     ./nephos/deploy.py --upgrade -f ./PATH_TO_YOUR_SETTINGS/file.yaml fabric
-
 
 ## Examples
 
