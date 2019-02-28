@@ -2,7 +2,13 @@ from copy import deepcopy
 from unittest import mock
 from unittest.mock import call
 
-from nephos.fabric.peer import check_peer, setup_peer, peer_channel_suffix, get_channel_block, create_channel
+from nephos.fabric.peer import (
+    check_peer,
+    setup_peer,
+    peer_channel_suffix,
+    get_channel_block,
+    create_channel,
+)
 from nephos.helpers.helm import HelmPreserve
 
 
@@ -155,7 +161,10 @@ class TestPeerChannelSuffix:
         mock_check_ord_tls.side_effect = [True]
         result = peer_channel_suffix(self.OPTS, "ord42", verbose=False)
         mock_check_ord_tls.assert_called_once_with(self.OPTS, verbose=False)
-        assert result == "--tls --ordererTLSHostnameOverride ord42-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
+        assert (
+            result
+            == "--tls --ordererTLSHostnameOverride ord42-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
+        )
 
     @mock.patch("nephos.fabric.peer.check_ord_tls")
     def test_peer_channel_suffix_notls(self, mock_check_ord_tls):
@@ -169,40 +178,54 @@ class TestGetChannelBlock:
     def test_get_channel_block(self):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
-            ('', None),          # Get channel file
-            ('some logs', None)  # Fetch existing channel
+            ("", None),  # Get channel file
+            ("some logs", None),  # Fetch existing channel
         ]
-        result = get_channel_block(mock_pod_ex, 'ord42', 'ord-namespace', 'a-channel', 'some-suffix')
-        mock_pod_ex.execute.assert_has_calls([
-            call("ls /var/hyperledger/a-channel.block"),
-            call("bash -c 'peer channel fetch 0 /var/hyperledger/a-channel.block -c a-channel " +
-                 "-o ord42-hlf-ord.ord-namespace.svc.cluster.local:7050 some-suffix'")
-        ])
+        result = get_channel_block(
+            mock_pod_ex, "ord42", "ord-namespace", "a-channel", "some-suffix"
+        )
+        mock_pod_ex.execute.assert_has_calls(
+            [
+                call("ls /var/hyperledger/a-channel.block"),
+                call(
+                    "bash -c 'peer channel fetch 0 /var/hyperledger/a-channel.block -c a-channel "
+                    + "-o ord42-hlf-ord.ord-namespace.svc.cluster.local:7050 some-suffix'"
+                ),
+            ]
+        )
         assert result is True
 
     def test_get_channel_block_again(self):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
-            ('/var/hyperledger/a-channel.block', None)  # Get channel file
+            ("/var/hyperledger/a-channel.block", None)  # Get channel file
         ]
-        result = get_channel_block(mock_pod_ex, 'ord42', 'ord-namespace', 'a-channel', 'some-suffix')
-        mock_pod_ex.execute.assert_has_calls([
-            call("ls /var/hyperledger/a-channel.block")
-        ])
+        result = get_channel_block(
+            mock_pod_ex, "ord42", "ord-namespace", "a-channel", "some-suffix"
+        )
+        mock_pod_ex.execute.assert_has_calls(
+            [call("ls /var/hyperledger/a-channel.block")]
+        )
         assert result is True
 
     def test_get_channel_block_error(self):
         mock_pod_ex = mock.Mock()
         mock_pod_ex.execute.side_effect = [
-            ('', None),                  # Get channel file
-            ('some logs', 'some error')  # Fetch existing channel
+            ("", None),  # Get channel file
+            ("some logs", "some error"),  # Fetch existing channel
         ]
-        result = get_channel_block(mock_pod_ex, 'ord42', 'ord-namespace', 'a-channel', 'some-suffix')
-        mock_pod_ex.execute.assert_has_calls([
-            call("ls /var/hyperledger/a-channel.block"),
-            call("bash -c 'peer channel fetch 0 /var/hyperledger/a-channel.block -c a-channel " +
-                 "-o ord42-hlf-ord.ord-namespace.svc.cluster.local:7050 some-suffix'")
-        ])
+        result = get_channel_block(
+            mock_pod_ex, "ord42", "ord-namespace", "a-channel", "some-suffix"
+        )
+        mock_pod_ex.execute.assert_has_calls(
+            [
+                call("ls /var/hyperledger/a-channel.block"),
+                call(
+                    "bash -c 'peer channel fetch 0 /var/hyperledger/a-channel.block -c a-channel "
+                    + "-o ord42-hlf-ord.ord-namespace.svc.cluster.local:7050 some-suffix'"
+                ),
+            ]
+        )
         assert result is False
 
 
@@ -226,7 +249,13 @@ class TestSetupChannel:
     @mock.patch("nephos.fabric.peer.peer_channel_suffix")
     @mock.patch("nephos.fabric.peer.get_pod")
     @mock.patch("nephos.fabric.peer.get_channel_block")
-    def test_create_channel(self, mock_get_channel_block, mock_get_pod, mock_peer_channel_suffix, mock_random):
+    def test_create_channel(
+        self,
+        mock_get_channel_block,
+        mock_get_pod,
+        mock_peer_channel_suffix,
+        mock_random,
+    ):
         mock_random.choice.side_effect = ["ord0"]
         mock_peer_channel_suffix.side_effect = [self.CMD_SUFFIX]
         mock_get_channel_block.side_effect = [False, True, True]
@@ -244,18 +273,28 @@ class TestSetupChannel:
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
         mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
-        mock_peer_channel_suffix.assert_called_once_with(self.OPTS, "ord0", verbose=False)
+        mock_peer_channel_suffix.assert_called_once_with(
+            self.OPTS, "ord0", verbose=False
+        )
         mock_get_pod.assert_has_calls(
             [
                 call("peer-namespace", "peer0", "hlf-peer", verbose=False),
                 call("peer-namespace", "peer1", "hlf-peer", verbose=False),
             ]
         )
-        mock_get_channel_block.assert_has_calls([
-            call(mock_pod0_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX),
-            call(mock_pod0_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX),
-            call(mock_pod1_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX),
-        ])
+        mock_get_channel_block.assert_has_calls(
+            [
+                call(
+                    mock_pod0_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX
+                ),
+                call(
+                    mock_pod0_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX
+                ),
+                call(
+                    mock_pod1_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX
+                ),
+            ]
+        )
         mock_pod0_ex.execute.assert_has_calls(
             [
                 call(
@@ -289,32 +328,46 @@ class TestSetupChannel:
     @mock.patch("nephos.fabric.peer.peer_channel_suffix")
     @mock.patch("nephos.fabric.peer.get_pod")
     @mock.patch("nephos.fabric.peer.get_channel_block")
-    def test_create_channel_again(self, mock_get_channel_block, mock_get_pod, mock_peer_channel_suffix, mock_random):
+    def test_create_channel_again(
+        self,
+        mock_get_channel_block,
+        mock_get_pod,
+        mock_peer_channel_suffix,
+        mock_random,
+    ):
         mock_random.choice.side_effect = ["ord0"]
         mock_peer_channel_suffix.side_effect = [self.CMD_SUFFIX]
         mock_get_channel_block.side_effect = [True, True]
         mock_pod0_ex = mock.Mock()
         mock_pod0_ex.execute.side_effect = [
-            ("Channels peers has joined: a-channel", None),  # List channels
+            ("Channels peers has joined: a-channel", None)  # List channels
         ]
         mock_pod1_ex = mock.Mock()
         mock_pod1_ex.execute.side_effect = [
-            ("Channels peers has joined: a-channel", None),  # List channels
+            ("Channels peers has joined: a-channel", None)  # List channels
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
         mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
-        mock_peer_channel_suffix.assert_called_once_with(self.OPTS, "ord0", verbose=False)
+        mock_peer_channel_suffix.assert_called_once_with(
+            self.OPTS, "ord0", verbose=False
+        )
         mock_get_pod.assert_has_calls(
             [
                 call("peer-namespace", "peer0", "hlf-peer", verbose=False),
                 call("peer-namespace", "peer1", "hlf-peer", verbose=False),
             ]
         )
-        mock_get_channel_block.assert_has_calls([
-            call(mock_pod0_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX),
-            call(mock_pod1_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX),
-        ])
+        mock_get_channel_block.assert_has_calls(
+            [
+                call(
+                    mock_pod0_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX
+                ),
+                call(
+                    mock_pod1_ex, "ord0", "ord-namespace", "a-channel", self.CMD_SUFFIX
+                ),
+            ]
+        )
         mock_pod0_ex.execute.assert_called_once_with("peer channel list")
         mock_pod1_ex.execute.assert_called_once_with("peer channel list")
 
@@ -322,7 +375,13 @@ class TestSetupChannel:
     @mock.patch("nephos.fabric.peer.peer_channel_suffix")
     @mock.patch("nephos.fabric.peer.get_pod")
     @mock.patch("nephos.fabric.peer.get_channel_block")
-    def test_create_channel_notls(self, mock_get_channel_block, mock_get_pod, mock_peer_channel_suffix, mock_random):
+    def test_create_channel_notls(
+        self,
+        mock_get_channel_block,
+        mock_get_pod,
+        mock_peer_channel_suffix,
+        mock_random,
+    ):
         mock_random.choice.side_effect = ["ord1"]
         mock_peer_channel_suffix.side_effect = [""]
         mock_get_channel_block.side_effect = [False, True, True]
@@ -340,18 +399,22 @@ class TestSetupChannel:
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS, verbose=True)
         mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
-        mock_peer_channel_suffix.assert_called_once_with(self.OPTS, "ord1", verbose=True)
+        mock_peer_channel_suffix.assert_called_once_with(
+            self.OPTS, "ord1", verbose=True
+        )
         mock_get_pod.assert_has_calls(
             [
                 call("peer-namespace", "peer0", "hlf-peer", verbose=True),
                 call("peer-namespace", "peer1", "hlf-peer", verbose=True),
             ]
         )
-        mock_get_channel_block.assert_has_calls([
-            call(mock_pod0_ex, "ord1", "ord-namespace", "a-channel", ""),
-            call(mock_pod0_ex, "ord1", "ord-namespace", "a-channel", ""),
-            call(mock_pod1_ex, "ord1", "ord-namespace", "a-channel", ""),
-        ])
+        mock_get_channel_block.assert_has_calls(
+            [
+                call(mock_pod0_ex, "ord1", "ord-namespace", "a-channel", ""),
+                call(mock_pod0_ex, "ord1", "ord-namespace", "a-channel", ""),
+                call(mock_pod1_ex, "ord1", "ord-namespace", "a-channel", ""),
+            ]
+        )
         mock_pod0_ex.execute.assert_has_calls(
             [
                 call(

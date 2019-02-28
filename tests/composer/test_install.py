@@ -80,7 +80,10 @@ class TestComposerConnection:
         )
         mock_json_ct.assert_called_once()
         mock_cm_create.assert_called_once_with(
-            {"connection.json": "cm-data"}, "connection-secret", "peer-namespace", verbose=False
+            {"connection.json": "cm-data"},
+            "connection-secret",
+            "peer-namespace",
+            verbose=False,
         )
 
     @mock.patch("nephos.composer.install.json_ct")

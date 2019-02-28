@@ -223,7 +223,9 @@ class TestCmCreate:
     def test_cm_create(self, mock_api, mock_print):
         cm_create({"a_key": "a_value"}, "a-configmap", "a-namespace", verbose=True)
         mock_api.create_namespaced_config_map.assert_called_once()
-        mock_print.assert_called_once_with("Created ConfigMap a-configmap in namespace a-namespace")
+        mock_print.assert_called_once_with(
+            "Created ConfigMap a-configmap in namespace a-namespace"
+        )
 
 
 class TestCmRead:

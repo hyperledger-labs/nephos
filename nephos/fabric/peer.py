@@ -157,26 +157,22 @@ def get_channel_block(peer_ex, ord_name, ord_namespace, channel, cmd_suffix):
     Returns:
         bool: Were we able to fetch the channel?
     """
-    channel_file = "/var/hyperledger/{channel}.block".format(
-            channel=channel
-        )
-    channel_block, _ = peer_ex.execute(
-        "ls {}".format(channel_file)
-    )
+    channel_file = "/var/hyperledger/{channel}.block".format(channel=channel)
+    channel_block, _ = peer_ex.execute("ls {}".format(channel_file))
     if not channel_block:
         res, err = peer_ex.execute(
-                        (
-                            "bash -c 'peer channel fetch 0 {channel_file} "
-                            + "-c {channel} "
-                            + "-o {orderer}-hlf-ord.{ord_ns}.svc.cluster.local:7050 {cmd_suffix}'"
-                        ).format(
-                            channel_file=channel_file,
-                            channel=channel,
-                            orderer=ord_name,
-                            ord_ns=ord_namespace,
-                            cmd_suffix=cmd_suffix,
-                        )
-                    )
+            (
+                "bash -c 'peer channel fetch 0 {channel_file} "
+                + "-c {channel} "
+                + "-o {orderer}-hlf-ord.{ord_ns}.svc.cluster.local:7050 {cmd_suffix}'"
+            ).format(
+                channel_file=channel_file,
+                channel=channel,
+                orderer=ord_name,
+                ord_ns=ord_namespace,
+                cmd_suffix=cmd_suffix,
+            )
+        )
         if err:
             return False
     return True
@@ -205,21 +201,22 @@ def create_channel(opts, verbose=False):
         # Check if the file exists
         has_channel = False
         while not has_channel:
-            has_channel = get_channel_block(pod_ex, ord_name, ord_namespace, channel, cmd_suffix)
+            has_channel = get_channel_block(
+                pod_ex, ord_name, ord_namespace, channel, cmd_suffix
+            )
             if not has_channel:
-                if index == 0:
-                    pod_ex.execute(
-                        (
-                            "bash -c 'peer channel create "
-                            + "-o {orderer}-hlf-ord.{ns}.svc.cluster.local:7050 "
-                            + "-c {channel} -f /hl_config/channel/{channel}.tx {cmd_suffix}'"
-                        ).format(
-                            orderer=ord_name,
-                            ns=ord_namespace,
-                            channel=opts["peers"]["channel_name"],
-                            cmd_suffix=cmd_suffix,
-                        )
+                pod_ex.execute(
+                    (
+                        "bash -c 'peer channel create "
+                        + "-o {orderer}-hlf-ord.{ns}.svc.cluster.local:7050 "
+                        + "-c {channel} -f /hl_config/channel/{channel}.tx {cmd_suffix}'"
+                    ).format(
+                        orderer=ord_name,
+                        ns=ord_namespace,
+                        channel=opts["peers"]["channel_name"],
+                        cmd_suffix=cmd_suffix,
                     )
+                )
         res, _ = pod_ex.execute("peer channel list")
         channels = (res.split("Channels peers has joined: ")[1]).split()
         if opts["peers"]["channel_name"] not in channels:

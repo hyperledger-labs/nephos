@@ -95,7 +95,12 @@ def composer_connection(opts, verbose=False):
                 opts["peers"]["channel_name"],
             )
         }
-        cm_create(cm_data, opts["composer"]["secret_connection"], peer_namespace, verbose=verbose)
+        cm_create(
+            cm_data,
+            opts["composer"]["secret_connection"],
+            peer_namespace,
+            verbose=verbose,
+        )
 
 
 def deploy_composer(opts, upgrade=False, verbose=False):
