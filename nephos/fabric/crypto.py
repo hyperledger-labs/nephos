@@ -29,6 +29,7 @@ CryptoInfo = namedtuple("CryptoInfo", ("secret_type", "subfolder", "key", "requi
 
 
 # CA Helpers
+# TODO: Excessive cognitive complexity - SQ Code Smell
 # TODO: We can probably split the part that checks the identity and the part that registers it
 def register_id(
     ca_namespace, ca, username, password, node_type="client", admin=False, verbose=False

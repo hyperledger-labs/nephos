@@ -94,6 +94,7 @@ def helm_init():
 
 
 # TODO: Probably split into separate sub-functions
+# TODO: Excessive cognitive complexity - SQ Code Smell
 def helm_env_vars(namespace, env_vars, preserve=None, verbose=False):
     """Convert environmental variables and secrets to a "--set" string for Helm deployments.
 
@@ -140,6 +141,7 @@ def helm_env_vars(namespace, env_vars, preserve=None, verbose=False):
     return env_vars_string
 
 
+# TODO: Too many parameters - SQ Code Smell
 def helm_install(
     repo,
     app,
@@ -179,6 +181,7 @@ def helm_install(
     helm_check(app, release, namespace, pod_num)
 
 
+# TODO: Too many parameters - SQ Code Smell
 def helm_upgrade(
     repo,
     app,

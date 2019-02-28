@@ -80,7 +80,7 @@ def define_peers(peer_names, peer_hosts, organisation, domain=None):
     return peer_options, peer_connections
 
 
-# TODO: Too many parameters.
+# TODO: Too many parameters - SQ Code Smell
 def json_ct(
     peer_names,
     orderer_names,

@@ -78,6 +78,7 @@ def execute_until_success(command, verbose=False, delay=15):
 
 
 # TODO: Do we really need the text append feature?
+# TODO: Excessive cognitive complexity - SQ Code Smell
 def input_files(keys, text_append=None, clean_key=False):
     """Read a set of filenames and return data from them.
 
