@@ -144,19 +144,18 @@ def setup_peer(opts, upgrade=False, verbose=False):
         check_peer(peer_namespace, release, verbose=verbose)
 
 
-# TODO: Split channel creation from channel joining
-def setup_channel(opts, verbose=False):
-    """Setup Channel for Peer.
+def peer_channel_suffix(opts, ord_name, verbose=False):
+    """Get command suffix for "peer channel" commands, as they involve speaking with Orderer.
 
     Args:
         opts (dict): Nephos options dict.
+        ord_name (str): Orderer we wish to speak to.
         verbose (bool): Verbosity. False by default.
+
+    Returns:
+        str: Command suffix we need to use in "peer channel" commands.
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
-    # Get orderer TLS status
     ord_tls = check_ord_tls(opts, verbose=verbose)
-    ord_name = random.choice(opts["orderers"]["names"])
     if ord_tls:
         cmd_suffix = (
             "--tls "
@@ -165,6 +164,23 @@ def setup_channel(opts, verbose=False):
         ).format(orderer=ord_name)
     else:
         cmd_suffix = ""
+    return cmd_suffix
+
+
+# TODO: Split channel creation from channel joining
+def create_channel(opts, verbose=False):
+    """Create Channel for Peer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
+    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
+    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
+    # Get orderer TLS status
+    ord_name = random.choice(opts["orderers"]["names"])
+    # TODO: This should be a function
+    cmd_suffix = peer_channel_suffix(opts, ord_name, verbose=verbose)
 
     for index, release in enumerate(opts["peers"]["names"]):
         # Get peer pod
