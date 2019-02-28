@@ -134,11 +134,8 @@ def get_response(question, permitted_responses=(), sensitive=False):
         else:
             response = input()
         # Check type of response
-        if response in permitted_responses:
-            # Response is among possible responses
-            responded = 1
-        elif not permitted_responses:
-            # Any response permitted
+        if response in permitted_responses or not permitted_responses:
+            # Response is among possible responses (or any response is permitted)
             responded = 1
         # Otherwise we ping the user to input a response
         if not responded:
