@@ -144,6 +144,44 @@ def peer_channel_suffix(opts, ord_name, verbose=False):
     return cmd_suffix
 
 
+def get_channel_block(peer_ex, ord_name, ord_namespace, channel, cmd_suffix):
+    """Get channel block from Peer.
+
+    Args:
+        peer_ex (Executor): A Pod Executor representing a Peer.
+        ord_name (str): Name of the orderer we wish to communicate with.
+        ord_namespace (str): Namespace where the orderer resides.
+        channel (str): Name of the channel we with to retrieve.
+        cmd_suffix (str): Suffix to the "peer channel fetch" command.
+
+    Returns:
+        bool: Were we able to fetch the channel?
+    """
+    channel_file = "/var/hyperledger/{channel}.block".format(
+            channel=channel
+        )
+    channel_block, _ = peer_ex.execute(
+        "ls {}".format(channel_file)
+    )
+    if not channel_block:
+        res, err = peer_ex.execute(
+                        (
+                            "bash -c 'peer channel fetch 0 {channel_file} "
+                            + "-c {channel} "
+                            + "-o {orderer}-hlf-ord.{ord_ns}.svc.cluster.local:7050 {cmd_suffix}'"
+                        ).format(
+                            channel_file=channel_file,
+                            channel=channel,
+                            orderer=ord_name,
+                            ord_ns=ord_namespace,
+                            cmd_suffix=cmd_suffix,
+                        )
+                    )
+        if err:
+            return False
+    return True
+
+
 # TODO: Split channel creation from channel joining
 def create_channel(opts, verbose=False):
     """Create Channel for Peer.
@@ -154,6 +192,7 @@ def create_channel(opts, verbose=False):
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
+    channel = opts["peers"]["channel_name"]
     # Get orderer TLS status
     ord_name = random.choice(opts["orderers"]["names"])
     # TODO: This should be a function
@@ -166,12 +205,8 @@ def create_channel(opts, verbose=False):
         # Check if the file exists
         has_channel = False
         while not has_channel:
-            channel_block, _ = pod_ex.execute(
-                "ls /var/hyperledger/{channel}.block".format(
-                    channel=opts["peers"]["channel_name"]
-                )
-            )
-            if not channel_block:
+            has_channel = get_channel_block(pod_ex, ord_name, ord_namespace, channel, cmd_suffix)
+            if not has_channel:
                 if index == 0:
                     pod_ex.execute(
                         (
@@ -185,22 +220,6 @@ def create_channel(opts, verbose=False):
                             cmd_suffix=cmd_suffix,
                         )
                     )
-                # TODO: This should have same ordering as above command
-                pod_ex.execute(
-                    (
-                        "bash -c 'peer channel fetch 0 "
-                        + "/var/hyperledger/{channel}.block "
-                        + "-c {channel} "
-                        + "-o {orderer}-hlf-ord.{ns}.svc.cluster.local:7050 {cmd_suffix}'"
-                    ).format(
-                        orderer=ord_name,
-                        ns=ord_namespace,
-                        channel=opts["peers"]["channel_name"],
-                        cmd_suffix=cmd_suffix,
-                    )
-                )
-            else:
-                has_channel = True
         res, _ = pod_ex.execute("peer channel list")
         channels = (res.split("Channels peers has joined: ")[1]).split()
         if opts["peers"]["channel_name"] not in channels:
