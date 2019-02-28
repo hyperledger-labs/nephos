@@ -2,7 +2,7 @@ from copy import deepcopy
 from unittest import mock
 from unittest.mock import call
 
-from nephos.fabric.ord import check_ord, setup_ord
+from nephos.fabric.ord import check_ord, check_ord_tls, setup_ord
 
 
 class TestCheckOrd:
@@ -30,6 +30,31 @@ class TestCheckOrd:
         check_ord("a-namespace", "a-release", verbose=True)
         assert mock_pod_ex.logs.call_count == 1
         mock_sleep.assert_not_called()
+
+
+class TestCheckOrdTls:
+    OPTS = {
+        "msps": {"ord_MSP": {"namespace": "orderer-namespace"}},
+        "orderers": {"names": ["an-ord"], "msp": "ord_MSP"},
+    }
+
+    @mock.patch("nephos.fabric.ord.execute")
+    def test_check_ord_tls(self, mock_execute):
+        mock_execute.side_effect = [("value", None)]
+        check_ord_tls(self.OPTS)
+        mock_execute.assert_called_once_with(
+            'kubectl get cm -n orderer-namespace an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"',
+            verbose=False,
+        )
+
+    @mock.patch("nephos.fabric.ord.execute")
+    def test_check_ord_tls_verbose(self, mock_execute):
+        mock_execute.side_effect = [("value", None)]
+        check_ord_tls(self.OPTS, verbose=True)
+        mock_execute.assert_called_once_with(
+            'kubectl get cm -n orderer-namespace an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"',
+            verbose=True,
+        )
 
 
 class TestSetupOrd:

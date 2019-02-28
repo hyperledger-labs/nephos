@@ -17,6 +17,7 @@ from time import sleep
 from nephos.fabric.utils import get_pod
 from nephos.fabric.settings import get_namespace
 from nephos.helpers.helm import helm_install, helm_upgrade
+from nephos.helpers.misc import execute
 
 
 def check_ord(namespace, release, verbose=False):
@@ -42,6 +43,28 @@ def check_ord(namespace, release, verbose=False):
         else:
             sleep(15)
             res = pod_exec.logs(1000)
+
+
+# TODO: We need a similar check to see if Peer uses client TLS as well
+def check_ord_tls(opts, verbose=False):
+    """Check TLS status of Orderer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        bool: True if TLS is enabled, False if TLS is disabled.
+    """
+    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
+    ord_tls, _ = execute(
+        (
+            "kubectl get cm -n {ns} "
+            + '{release}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
+        ).format(ns=ord_namespace, release=opts["orderers"]["names"][0]),
+        verbose=verbose,
+    )
+    return ord_tls == "true"
 
 
 def setup_ord(opts, upgrade=False, verbose=False):
