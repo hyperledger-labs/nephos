@@ -16,9 +16,9 @@ def test_cli():
 
 @mock.patch("nephos.deploy.runner_ca")
 @mock.patch("nephos.deploy.load_config")
-def test_ca(mock_load_config, mock_runner_ca):
+def test_cert_auth(mock_load_config, mock_runner_ca):
     mock_load_config.side_effect = ["some-opts"]
-    result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "ca"])
+    result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "cert-auth"])
     mock_load_config.assert_called_once_with("nephos_config.yaml")
     mock_runner_ca.assert_called_once_with("some-opts", upgrade=False, verbose=False)
     assert result.exit_code == 0
