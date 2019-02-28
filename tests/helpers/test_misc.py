@@ -167,22 +167,6 @@ class TestInputFiles:
     @mock.patch("nephos.helpers.misc.isfile")
     @mock.patch("nephos.helpers.misc.get_response")
     @mock.patch("nephos.helpers.misc.print")
-    def test_input_files_suffix(
-        self, mock_print, mock_get_response, mock_isfile, mock_open
-    ):
-        mock_isfile.side_effect = [True]
-        mock_get_response.side_effect = [self.files[0]]
-        data = input_files(("hello",), text_append="big")
-        mock_print.assert_not_called()
-        mock_get_response.assert_called_with("Input hello big")
-        mock_isfile.assert_called_with(self.files[0])
-        mock_open.assert_called_with(self.files[0], "rb")
-        assert data.keys() == {"hello"}
-
-    @mock.patch("nephos.helpers.misc.open")
-    @mock.patch("nephos.helpers.misc.isfile")
-    @mock.patch("nephos.helpers.misc.get_response")
-    @mock.patch("nephos.helpers.misc.print")
     def test_input_files_multiple(
         self, mock_print, mock_get_response, mock_isfile, mock_open
     ):

@@ -77,14 +77,11 @@ def execute_until_success(command, verbose=False, delay=15):
             return res
 
 
-# TODO: Do we really need the text append feature?
-# TODO: Excessive cognitive complexity - SQ Code Smell
-def input_files(keys, text_append=None, clean_key=False):
+def input_files(keys, clean_key=False):
     """Read a set of filenames and return data from them.
 
     Args:
         keys (tuple): Tuple of keys
-        text_append (str): Text to append to the key request.
         clean_key (bool): Do we clean the key to replace non-alphanumeric symbols with an underscore? False by default.
 
     Returns:
@@ -92,8 +89,6 @@ def input_files(keys, text_append=None, clean_key=False):
     """
     data = {}
     input_text = "Input {key}"
-    if text_append:
-        input_text = input_text + " " + text_append
     for key in keys:
         # TODO: This could be its own function.
         is_file = False
