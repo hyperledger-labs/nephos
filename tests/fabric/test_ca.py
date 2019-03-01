@@ -314,7 +314,9 @@ class TestSetupCa:
                 call("int-ca-hlf-ca", namespace="int-namespace", verbose=False),
             ]
         )
-        mock_check_ca.assert_called_once_with(ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=False)
+        mock_check_ca.assert_called_once_with(
+            ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=False
+        )
 
     @mock.patch("nephos.fabric.ca.ingress_read")
     @mock.patch("nephos.fabric.ca.get_pod")
@@ -363,4 +365,6 @@ class TestSetupCa:
                 call("int-ca-hlf-ca", namespace="int-namespace", verbose=True),
             ]
         )
-        mock_check_ca.assert_called_once_with(ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=True)
+        mock_check_ca.assert_called_once_with(
+            ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=True
+        )

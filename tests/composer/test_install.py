@@ -54,12 +54,8 @@ class TestComposerConnection:
             "ord_MSP": {"namespace": "ord-namespace"},
             "peer_MSP": {"namespace": "peer-namespace", "ca": "peer-ca"},
         },
-        "orderers": {"names": ["ord0", "ord1"], "msp": "ord_MSP"},
-        "peers": {
-            "channel_name": "a-channel",
-            "msp": "peer_MSP",
-            "names": ["peer0", "peer1"],
-        },
+        "orderers": {"msp": "ord_MSP"},
+        "peers": {"channel_name": "a-channel", "msp": "peer_MSP"},
     }
 
     @mock.patch("nephos.composer.install.json_ct")
@@ -80,7 +76,10 @@ class TestComposerConnection:
         )
         mock_json_ct.assert_called_once()
         mock_cm_create.assert_called_once_with(
-            "peer-namespace", "connection-secret", {"connection.json": "cm-data"}
+            {"connection.json": "cm-data"},
+            "connection-secret",
+            "peer-namespace",
+            verbose=False,
         )
 
     @mock.patch("nephos.composer.install.json_ct")
@@ -111,15 +110,10 @@ class TestDeployComposer:
     }
 
     @mock.patch("nephos.composer.install.secret_from_file")
-    @mock.patch("nephos.composer.install.helm_upgrade")
     @mock.patch("nephos.composer.install.helm_install")
     @mock.patch("nephos.composer.install.composer_connection")
     def test_deploy_composer(
-        self,
-        mock_composer_connection,
-        mock_helm_install,
-        mock_helm_upgrade,
-        mock_secret_from_file,
+        self, mock_composer_connection, mock_helm_install, mock_secret_from_file
     ):
         deploy_composer(self.OPTS)
         mock_secret_from_file.assert_called_once_with(
@@ -135,18 +129,12 @@ class TestDeployComposer:
             config_yaml="./a_dir/hl-composer/hlc.yaml",
             verbose=False,
         )
-        mock_helm_upgrade.assert_not_called()
 
     @mock.patch("nephos.composer.install.secret_from_file")
-    @mock.patch("nephos.composer.install.helm_upgrade")
     @mock.patch("nephos.composer.install.helm_install")
     @mock.patch("nephos.composer.install.composer_connection")
     def test_deploy_composer_upgrade(
-        self,
-        mock_composer_connection,
-        mock_helm_install,
-        mock_helm_upgrade,
-        mock_secret_from_file,
+        self, mock_composer_connection, mock_helm_install, mock_secret_from_file
     ):
         deploy_composer(self.OPTS, upgrade=True, verbose=True)
         mock_secret_from_file.assert_called_once_with(
@@ -154,7 +142,6 @@ class TestDeployComposer:
         )
         mock_composer_connection.assert_called_once_with(self.OPTS, verbose=True)
         mock_helm_install.assert_not_called()
-        mock_helm_upgrade.assert_not_called()
 
 
 class TestSetupAdmin:

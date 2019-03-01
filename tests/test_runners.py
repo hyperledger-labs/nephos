@@ -141,7 +141,7 @@ class TestRunnerPeer:
     OPTS = "some-self.OPTS"
 
     @mock.patch("nephos.runners.setup_peer")
-    @mock.patch("nephos.runners.setup_channel")
+    @mock.patch("nephos.runners.create_channel")
     def test_runner_peer(self, mock_setup_channel, mock_setup_peer):
         runner_peer(self.OPTS, upgrade=False)
         mock_setup_peer.assert_called_once_with(self.OPTS, upgrade=False, verbose=False)

@@ -18,7 +18,7 @@ from nephos.composer.connection_template import json_ct
 from nephos.fabric.crypto import admin_creds
 from nephos.fabric.utils import get_pod
 from nephos.fabric.settings import get_namespace
-from nephos.helpers.helm import helm_install, helm_upgrade
+from nephos.helpers.helm import helm_install
 from nephos.helpers.k8s import (
     get_app_info,
     cm_create,
@@ -50,7 +50,6 @@ def get_composer_data(opts, verbose=False):
     return data
 
 
-# TODO: This is highly complex, we can probably simplify
 def composer_connection(opts, verbose=False):
     """Composer connection setup.
 
@@ -61,7 +60,6 @@ def composer_connection(opts, verbose=False):
         verbose (bool): Verbosity. Verbosity. False by default.
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     # TODO: This could be a single function
     peer_msp = opts["peers"]["msp"]
     peer_ca = opts["msps"][peer_msp]["ca"]
@@ -74,19 +72,10 @@ def composer_connection(opts, verbose=False):
         cm_read(opts["composer"]["secret_connection"], peer_namespace, verbose=verbose)
     except ApiException:
         # Set up connection.json
-        # TODO: Improve json_ct to work directly with opts structure
+        # TODO: Improve json_ct to work entirely with opts structure
         cm_data = {
             "connection.json": json_ct(
-                opts["peers"]["names"],
-                opts["orderers"]["names"],
-                [
-                    peer + "-hlf-peer.{ns}.svc.cluster.local".format(ns=peer_namespace)
-                    for peer in opts["peers"]["names"]
-                ],
-                [
-                    orderer + "-hlf-ord.{ns}.svc.cluster.local".format(ns=ord_namespace)
-                    for orderer in opts["orderers"]["names"]
-                ],
+                opts,
                 peer_ca,
                 peer_ca_url,
                 "AidTech",
@@ -95,7 +84,12 @@ def composer_connection(opts, verbose=False):
                 opts["peers"]["channel_name"],
             )
         }
-        cm_create(peer_namespace, opts["composer"]["secret_connection"], cm_data)
+        cm_create(
+            cm_data,
+            opts["composer"]["secret_connection"],
+            peer_namespace,
+            verbose=verbose,
+        )
 
 
 def deploy_composer(opts, upgrade=False, verbose=False):

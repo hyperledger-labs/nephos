@@ -75,7 +75,7 @@ def cli(ctx, settings_file, upgrade, verbose):
 
 @cli.command(help=TERM.cyan("Install Hyperledger Fabric Certificate Authorities"))
 @pass_settings
-def ca(settings):
+def cert_auth(settings):
     opts = load_config(settings.settings_file)
     runner_ca(opts, upgrade=settings.upgrade, verbose=settings.verbose)
 

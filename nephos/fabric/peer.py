@@ -15,33 +15,10 @@
 import random
 from time import sleep
 
+from nephos.fabric.ord import check_ord_tls
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_pod
 from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
-from nephos.helpers.misc import execute
-
-
-# TODO: Move to Ord module
-# TODO: We need a similar check to see if Peer uses client TLS as well
-def check_ord_tls(opts, verbose=False):
-    """Check TLS status of Orderer.
-
-    Args:
-        opts (dict): Nephos options dict.
-        verbose (bool): Verbosity. False by default.
-
-    Returns:
-        bool: True if TLS is enabled, False if TLS is disabled.
-    """
-    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
-    ord_tls, _ = execute(
-        (
-            "kubectl get cm -n {ns} "
-            + '{release}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
-        ).format(ns=ord_namespace, release=opts["orderers"]["names"][0]),
-        verbose=verbose,
-    )
-    return ord_tls == "true"
 
 
 def check_peer(namespace, release, verbose=False):
@@ -144,19 +121,18 @@ def setup_peer(opts, upgrade=False, verbose=False):
         check_peer(peer_namespace, release, verbose=verbose)
 
 
-# TODO: Split channel creation from channel joining
-def setup_channel(opts, verbose=False):
-    """Setup Channel for Peer.
+def peer_channel_suffix(opts, ord_name, verbose=False):
+    """Get command suffix for "peer channel" commands, as they involve speaking with Orderer.
 
     Args:
         opts (dict): Nephos options dict.
+        ord_name (str): Orderer we wish to speak to.
         verbose (bool): Verbosity. False by default.
+
+    Returns:
+        str: Command suffix we need to use in "peer channel" commands.
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
-    # Get orderer TLS status
     ord_tls = check_ord_tls(opts, verbose=verbose)
-    ord_name = random.choice(opts["orderers"]["names"])
     if ord_tls:
         cmd_suffix = (
             "--tls "
@@ -165,6 +141,58 @@ def setup_channel(opts, verbose=False):
         ).format(orderer=ord_name)
     else:
         cmd_suffix = ""
+    return cmd_suffix
+
+
+def get_channel_block(peer_ex, ord_name, ord_namespace, channel, cmd_suffix):
+    """Get channel block from Peer.
+
+    Args:
+        peer_ex (Executor): A Pod Executor representing a Peer.
+        ord_name (str): Name of the orderer we wish to communicate with.
+        ord_namespace (str): Namespace where the orderer resides.
+        channel (str): Name of the channel we with to retrieve.
+        cmd_suffix (str): Suffix to the "peer channel fetch" command.
+
+    Returns:
+        bool: Were we able to fetch the channel?
+    """
+    channel_file = "/var/hyperledger/{channel}.block".format(channel=channel)
+    channel_block, _ = peer_ex.execute("ls {}".format(channel_file))
+    if not channel_block:
+        res, err = peer_ex.execute(
+            (
+                "bash -c 'peer channel fetch 0 {channel_file} "
+                + "-c {channel} "
+                + "-o {orderer}-hlf-ord.{ord_ns}.svc.cluster.local:7050 {cmd_suffix}'"
+            ).format(
+                channel_file=channel_file,
+                channel=channel,
+                orderer=ord_name,
+                ord_ns=ord_namespace,
+                cmd_suffix=cmd_suffix,
+            )
+        )
+        if err:
+            return False
+    return True
+
+
+# TODO: Split channel creation from channel joining
+def create_channel(opts, verbose=False):
+    """Create Channel for Peer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
+    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
+    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
+    channel = opts["peers"]["channel_name"]
+    # Get orderer TLS status
+    ord_name = random.choice(opts["orderers"]["names"])
+    # TODO: This should be a function
+    cmd_suffix = peer_channel_suffix(opts, ord_name, verbose=verbose)
 
     for index, release in enumerate(opts["peers"]["names"]):
         # Get peer pod
@@ -173,32 +201,15 @@ def setup_channel(opts, verbose=False):
         # Check if the file exists
         has_channel = False
         while not has_channel:
-            channel_block, _ = pod_ex.execute(
-                "ls /var/hyperledger/{channel}.block".format(
-                    channel=opts["peers"]["channel_name"]
-                )
+            has_channel = get_channel_block(
+                pod_ex, ord_name, ord_namespace, channel, cmd_suffix
             )
-            if not channel_block:
-                if index == 0:
-                    pod_ex.execute(
-                        (
-                            "bash -c 'peer channel create "
-                            + "-o {orderer}-hlf-ord.{ns}.svc.cluster.local:7050 "
-                            + "-c {channel} -f /hl_config/channel/{channel}.tx {cmd_suffix}'"
-                        ).format(
-                            orderer=ord_name,
-                            ns=ord_namespace,
-                            channel=opts["peers"]["channel_name"],
-                            cmd_suffix=cmd_suffix,
-                        )
-                    )
-                # TODO: This should have same ordering as above command
+            if not has_channel:
                 pod_ex.execute(
                     (
-                        "bash -c 'peer channel fetch 0 "
-                        + "/var/hyperledger/{channel}.block "
-                        + "-c {channel} "
-                        + "-o {orderer}-hlf-ord.{ns}.svc.cluster.local:7050 {cmd_suffix}'"
+                        "bash -c 'peer channel create "
+                        + "-o {orderer}-hlf-ord.{ns}.svc.cluster.local:7050 "
+                        + "-c {channel} -f /hl_config/channel/{channel}.tx {cmd_suffix}'"
                     ).format(
                         orderer=ord_name,
                         ns=ord_namespace,
@@ -206,8 +217,6 @@ def setup_channel(opts, verbose=False):
                         cmd_suffix=cmd_suffix,
                     )
                 )
-            else:
-                has_channel = True
         res, _ = pod_ex.execute("peer channel list")
         channels = (res.split("Channels peers has joined: ")[1]).split()
         if opts["peers"]["channel_name"] not in channels:

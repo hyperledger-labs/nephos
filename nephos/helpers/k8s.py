@@ -154,23 +154,25 @@ def ingress_read(name, namespace="default", verbose=False):
 
 # Configmaps and secrets
 # TODO: Refactor these so we have the same API as with secrets
-def cm_create(namespace, name, cm_data):
+def cm_create(cm_data, name, namespace="default", verbose=False):
     """Create a K8S ConfigMap
 
     Args:
-        namespace (str): Name of namespace.
-        name (str): Name of ConfigMap.
         cm_data (dict): Data to store in ConfigMap as key/value hash.
+        name (str): Name of ConfigMap.
+        namespace (str): Name of namespace.
+        verbose (bool): Verbosity. False by default.
     """
     # TODO: We should check that CM exists before we create it
-    # TODO: We should add verbose option
     cm = client.V1ConfigMap()
     cm.metadata = client.V1ObjectMeta(name=name)
     cm.data = cm_data
     api.create_namespaced_config_map(namespace=namespace, body=cm)
+    if verbose:
+        print("Created ConfigMap {} in namespace {}".format(name, namespace))
 
 
-def cm_read(name, namespace, verbose=False):
+def cm_read(name, namespace="default", verbose=False):
     """Read a K8S ConfigMap.
 
     Args:
@@ -187,7 +189,7 @@ def cm_read(name, namespace, verbose=False):
     return cm.data
 
 
-def secret_create(secret_data, name, namespace, verbose=False):
+def secret_create(secret_data, name, namespace="default", verbose=False):
     """Create a K8S Secret.
 
     Args:
@@ -197,6 +199,7 @@ def secret_create(secret_data, name, namespace, verbose=False):
         verbose (bool): Verbosity. False by default.
     """
     # Encode the data in a copy of the input dictionary
+    # TODO: We should check that Secret exists before we create it
     secret_data = secret_data.copy()
     for key, value in secret_data.items():
         if isinstance(value, str):
@@ -208,7 +211,7 @@ def secret_create(secret_data, name, namespace, verbose=False):
     secret.data = secret_data
     api.create_namespaced_secret(namespace=namespace, body=secret)
     if verbose:
-        print("Created secret {} in namespace {}".format(name, namespace))
+        print("Created Secret {} in namespace {}".format(name, namespace))
 
 
 def secret_read(name, namespace="default", verbose=False):

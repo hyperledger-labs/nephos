@@ -193,4 +193,8 @@ def setup_ca(opts, upgrade=False, verbose=False):
             continue
 
         # Check the CA is running
-        check_ca(ingress_host=ingress_urls[0], cacert=ca_values.get("tls_cert"), verbose=verbose)
+        check_ca(
+            ingress_host=ingress_urls[0],
+            cacert=ca_values.get("tls_cert"),
+            verbose=verbose,
+        )

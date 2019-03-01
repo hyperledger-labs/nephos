@@ -15,7 +15,7 @@
 from nephos.fabric.ca import setup_ca
 from nephos.fabric.crypto import admin_msp, genesis_block, channel_tx, setup_nodes
 from nephos.fabric.ord import setup_ord
-from nephos.fabric.peer import setup_peer, setup_channel
+from nephos.fabric.peer import setup_peer, create_channel
 from nephos.composer.install import deploy_composer, install_network, setup_admin
 from nephos.composer.upgrade import upgrade_network
 
@@ -129,4 +129,4 @@ def runner_peer(opts, upgrade=False, verbose=False):
         verbose (bool): Verbosity. False by default.
     """
     setup_peer(opts, upgrade=upgrade, verbose=verbose)
-    setup_channel(opts, verbose=verbose)
+    create_channel(opts, verbose=verbose)

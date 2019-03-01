@@ -211,10 +211,21 @@ class TestIngressRead:
 
 
 class TestCmCreate:
+    @mock.patch("nephos.helpers.k8s.print")
     @mock.patch("nephos.helpers.k8s.api")
-    def test_cm_create(self, mock_api):
-        cm_create("a-namespace", "a_configmap", {"a_key": "a_value"})
+    def test_cm_create(self, mock_api, mock_print):
+        cm_create({"a_key": "a_value"}, "a-configmap", "a-namespace")
         mock_api.create_namespaced_config_map.assert_called_once()
+        mock_print.assert_not_called()
+
+    @mock.patch("nephos.helpers.k8s.print")
+    @mock.patch("nephos.helpers.k8s.api")
+    def test_cm_create(self, mock_api, mock_print):
+        cm_create({"a_key": "a_value"}, "a-configmap", "a-namespace", verbose=True)
+        mock_api.create_namespaced_config_map.assert_called_once()
+        mock_print.assert_called_once_with(
+            "Created ConfigMap a-configmap in namespace a-namespace"
+        )
 
 
 class TestCmRead:
@@ -254,7 +265,7 @@ class TestSecretCreate:
         secret_create({"a_key": "a_value"}, "a_secret", "a-namespace", verbose=True)
         mock_api.create_namespaced_secret.assert_called_once()
         mock_print.assert_called_once_with(
-            "Created secret a_secret in namespace a-namespace"
+            "Created Secret a_secret in namespace a-namespace"
         )
 
 

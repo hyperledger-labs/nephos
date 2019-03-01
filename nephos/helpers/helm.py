@@ -93,15 +93,11 @@ def helm_init():
                 sleep(15)
 
 
-# TODO: Probably split into separate sub-functions
-def helm_env_vars(namespace, env_vars, preserve=None, verbose=False):
-    """Convert environmental variables and secrets to a "--set" string for Helm deployments.
+def helm_env_vars(env_vars):
+    """Convert environmental variables to a "--set" string for Helm deployments.
 
     Args:
-        namespace (str): Namespace where preserved secrets are located.
-        env_vars (list): Environmental variables we wish to store in Helm.
-        preserve (list): Set of secrets we wish to get data from to assign to the Helm Chart.
-        verbose (bool): Verbosity. False by default.
+        env_vars (tuple): Environmental variables we wish to store in Helm.
 
     Returns:
         str: String containing variables to be set with Helm release.
@@ -116,19 +112,8 @@ def helm_env_vars(namespace, env_vars, preserve=None, verbose=False):
             elif not isinstance(item, HelmSet):
                 raise TypeError("Items in env_vars array must be HelmSet named tuples")
             env_vars[i] = item
-
-    # Any data we need to preserve during upgrade?
-    if preserve:
-        for item in preserve:
-            if isinstance(item, tuple):
-                item = HelmPreserve(*item)
-            elif not isinstance(item, HelmPreserve):
-                raise TypeError(
-                    "Items in preserve array must be HelmPerserve named tuples"
-                )
-            secret_data = secret_read(item.secret_name, namespace, verbose=verbose)
-            env_vars.append(HelmSet(item.values_path, secret_data[item.data_item]))
     # Environmental variables
+    # TODO: This may well be its own subfunction
     env_vars_string = "".join(
         [
             " --set{} {}={}".format(
@@ -140,6 +125,45 @@ def helm_env_vars(namespace, env_vars, preserve=None, verbose=False):
     return env_vars_string
 
 
+def helm_preserve(namespace, preserve, verbose=False):
+    """Convert secret data to a "--set" string for Helm deployments.
+
+    Args:
+        namespace (str): Namespace where preserved secrets are located.
+        preserve (tuple): Set of secrets we wish to get data from to assign to the Helm Chart.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        str: String containing variables to be set with Helm release.
+    """
+
+    # Any data we need to preserve during upgrade?
+    if not preserve:
+        return ""
+    env_vars = []
+    for item in preserve:
+        if isinstance(item, tuple):
+            item = HelmPreserve(*item)
+        elif not isinstance(item, HelmPreserve):
+            raise TypeError("Items in preserve array must be HelmPerserve named tuples")
+        secret_data = secret_read(item.secret_name, namespace, verbose=verbose)
+        env_vars.append(HelmSet(item.values_path, secret_data[item.data_item]))
+    # Environmental variables
+    # TODO: This may well be its own subfunction
+    env_vars_string = "".join(
+        [
+            " --set{} {}={}".format(
+                "-string" if item.set_string else "", item.key, item.value
+            )
+            for item in env_vars
+        ]
+    )
+    return env_vars_string
+
+
+# TODO: Too many parameters - SQ Code Smell
+# TODO: Cleanest way of fixing parameter issues is via a Helm class
+# TODO: We should ideally auto-detect number of pods
 def helm_install(
     repo,
     app,
@@ -158,14 +182,14 @@ def helm_install(
         release (str): Release name on K8S.
         namespace (str): Namespace where to deploy Helm Chart.
         config_yaml (str): Values file to ovverride defaults.
-        env_vars (list): List of env vars we want to set.
+        env_vars (tuple): List of env vars we want to set.
         verbose (bool): Verbosity. False by default.
         pod_num (int): Number of pods we wish to have.
     """
     ls_res, _ = execute("helm status {release}".format(release=release))
 
     # Get Helm Env-Vars
-    env_vars_string = helm_env_vars(namespace, env_vars, verbose=verbose)
+    env_vars_string = helm_env_vars(env_vars)
 
     if not ls_res:
         command = "helm install {repo}/{app} -n {name} --namespace {ns}".format(
@@ -179,6 +203,8 @@ def helm_install(
     helm_check(app, release, namespace, pod_num)
 
 
+# TODO: Too many parameters - SQ Code Smell
+# TODO: We should ideally auto-detect number of pods
 def helm_upgrade(
     repo,
     app,
@@ -206,7 +232,8 @@ def helm_upgrade(
     ls_res, _ = execute("helm status {release}".format(release=release))
 
     # Get Helm Env-Vars
-    env_vars_string = helm_env_vars(namespace, env_vars, preserve, verbose=verbose)
+    env_vars_string = helm_env_vars(env_vars)
+    env_vars_string += helm_preserve(namespace, preserve, verbose=verbose)
 
     if ls_res:
         command = "helm upgrade {name} {repo}/{app}".format(
