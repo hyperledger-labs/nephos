@@ -6,6 +6,7 @@ import pytest
 
 from nephos.fabric.crypto import (
     CryptoInfo,
+    check_id,
     register_id,
     enroll_id,
     create_admin,
@@ -24,39 +25,31 @@ from nephos.fabric.crypto import (
 )
 
 
-class TestRegisterId:
+class TestChechId:
     @mock.patch("nephos.fabric.crypto.sleep")
     @mock.patch("nephos.fabric.crypto.get_pod")
-    def test_register_node(self, mock_get_pod, mock_sleep):
+    def test_check_id(self, mock_get_pod, mock_sleep):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [
-            (None, "no rows in result set"),  # List identities
-            ("Register", None),  # Register identities
+            (None, "no rows in result set")  # List identities
         ]
-        register_id("a-namespace", "a-ca", "an-ord", "a-password", "orderer")
+        check_id("a-namespace", "a-ca", "an-ord")
         mock_get_pod.assert_called_once_with(
             namespace="a-namespace", release="a-ca", app="hlf-ca", verbose=False
         )
-        mock_executor.execute.assert_has_calls(
-            [
-                call("fabric-ca-client identity list --id an-ord"),
-                call(
-                    "fabric-ca-client register --id.name an-ord --id.secret a-password --id.type orderer"
-                ),
-            ]
+        mock_executor.execute.assert_called_once_with(
+            "fabric-ca-client identity list --id an-ord"
         )
         mock_sleep.assert_not_called()
 
     @mock.patch("nephos.fabric.crypto.sleep")
     @mock.patch("nephos.fabric.crypto.get_pod")
-    def test_register_node_again(self, mock_get_pod, mock_sleep):
+    def test_check_id_again(self, mock_get_pod, mock_sleep):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [("an-ord", None)]  # List identities
-        register_id(
-            "a-namespace", "a-ca", "an-ord", "a-password", "orderer", verbose=True
-        )
+        check_id("a-namespace", "a-ca", "an-ord", verbose=True)
         mock_get_pod.assert_called_once_with(
             namespace="a-namespace", release="a-ca", app="hlf-ca", verbose=True
         )
@@ -67,13 +60,90 @@ class TestRegisterId:
 
     @mock.patch("nephos.fabric.crypto.sleep")
     @mock.patch("nephos.fabric.crypto.get_pod")
-    def test_register_node_serverconnection(self, mock_get_pod, mock_sleep):
+    def test_check_id_serverconnection(self, mock_get_pod, mock_sleep):
         mock_executor = mock.Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [
             (None, "could not connect to server"),  # List identities
             (None, "no rows in result set"),  # List identities
-            (None, "could not connect to server"),  # Register identities
+        ]
+        check_id("a-namespace", "a-ca", "an-ord", verbose=False)
+        mock_get_pod.assert_called_once_with(
+            namespace="a-namespace", release="a-ca", app="hlf-ca", verbose=False
+        )
+        mock_executor.execute.assert_has_calls(
+            [
+                call("fabric-ca-client identity list --id an-ord"),
+                call("fabric-ca-client identity list --id an-ord"),
+            ]
+        )
+        mock_sleep.assert_called_once_with(15)
+
+    @mock.patch("nephos.fabric.crypto.sleep")
+    @mock.patch("nephos.fabric.crypto.get_pod")
+    def test_check_id_admin(self, mock_get_pod, mock_sleep):
+        mock_executor = mock.Mock()
+        mock_get_pod.side_effect = [mock_executor]
+        mock_executor.execute.side_effect = [
+            (None, "no rows in result set")  # List identities
+        ]
+        check_id("a-namespace", "a-ca", "an-admin")
+        mock_get_pod.assert_called_once_with(
+            namespace="a-namespace", release="a-ca", app="hlf-ca", verbose=False
+        )
+        mock_executor.execute.assert_called_once_with(
+            "fabric-ca-client identity list --id an-admin"
+        )
+        mock_sleep.assert_not_called()
+
+
+class TestRegisterId:
+    @mock.patch("nephos.fabric.crypto.sleep")
+    @mock.patch("nephos.fabric.crypto.get_pod")
+    @mock.patch("nephos.fabric.crypto.check_id")
+    def test_register_id(self, mock_check_id, mock_get_pod, mock_sleep):
+        mock_executor = mock.Mock()
+        mock_check_id.side_effect = [False]
+        mock_get_pod.side_effect = [mock_executor]
+        mock_executor.execute.side_effect = [("Register", None)]  # Register identities
+        register_id("a-namespace", "a-ca", "an-ord", "a-password", "orderer")
+        mock_get_pod.assert_called_once_with(
+            namespace="a-namespace", release="a-ca", app="hlf-ca", verbose=False
+        )
+        mock_executor.execute.assert_has_calls(
+            [
+                call(
+                    "fabric-ca-client register --id.name an-ord --id.secret a-password --id.type orderer"
+                )
+            ]
+        )
+        mock_sleep.assert_not_called()
+
+    @mock.patch("nephos.fabric.crypto.sleep")
+    @mock.patch("nephos.fabric.crypto.get_pod")
+    @mock.patch("nephos.fabric.crypto.check_id")
+    def test_register_id_again(self, mock_check_id, mock_get_pod, mock_sleep):
+        mock_executor = mock.Mock()
+        mock_check_id.side_effect = [True]
+        mock_get_pod.side_effect = [mock_executor]
+        register_id(
+            "a-namespace", "a-ca", "an-ord", "a-password", "orderer", verbose=True
+        )
+        mock_get_pod.assert_called_once_with(
+            namespace="a-namespace", release="a-ca", app="hlf-ca", verbose=True
+        )
+        mock_executor.execute.assert_not_called()
+        mock_sleep.assert_not_called()
+
+    @mock.patch("nephos.fabric.crypto.sleep")
+    @mock.patch("nephos.fabric.crypto.get_pod")
+    @mock.patch("nephos.fabric.crypto.check_id")
+    def test_register_id_error(self, mock_check_id, mock_get_pod, mock_sleep):
+        mock_executor = mock.Mock()
+        mock_check_id.side_effect = [False]
+        mock_get_pod.side_effect = [mock_executor]
+        mock_executor.execute.side_effect = [
+            (None, "connection error"),  # Error registering identities
             ("Register", None),  # Register identities
         ]
         register_id("a-namespace", "a-ca", "an-ord", "a-password", "orderer")
@@ -82,8 +152,6 @@ class TestRegisterId:
         )
         mock_executor.execute.assert_has_calls(
             [
-                call("fabric-ca-client identity list --id an-ord"),
-                call("fabric-ca-client identity list --id an-ord"),
                 call(
                     "fabric-ca-client register --id.name an-ord --id.secret a-password --id.type orderer"
                 ),
@@ -92,29 +160,23 @@ class TestRegisterId:
                 ),
             ]
         )
-        mock_sleep.assert_has_calls([call(15), call(15)])
+        mock_sleep.assert_called_once_with(15)
 
     @mock.patch("nephos.fabric.crypto.sleep")
     @mock.patch("nephos.fabric.crypto.get_pod")
-    def test_register_id_admin(self, mock_get_pod, mock_sleep):
+    @mock.patch("nephos.fabric.crypto.check_id")
+    def test_register_id_admin(self, mock_check_id, mock_get_pod, mock_sleep):
         mock_executor = mock.Mock()
+        mock_check_id.side_effect = [False]
         mock_get_pod.side_effect = [mock_executor]
-        mock_executor.execute.side_effect = [
-            (None, "no rows in result set"),  # List identities
-            ("Register", None),  # Register identities
-        ]
+        mock_executor.execute.side_effect = [("Register", None)]  # Register identities
         register_id("a-namespace", "a-ca", "an-admin", "a-password", admin=True)
         mock_get_pod.assert_called_once_with(
             namespace="a-namespace", release="a-ca", app="hlf-ca", verbose=False
         )
-        mock_executor.execute.assert_has_calls(
-            [
-                call("fabric-ca-client identity list --id an-admin"),
-                call(
-                    "fabric-ca-client register --id.name an-admin --id.secret a-password --id.type client"
-                    + " --id.attrs 'admin=true:ecert'"
-                ),
-            ]
+        mock_executor.execute.assert_called_once_with(
+            "fabric-ca-client register --id.name an-admin --id.secret a-password --id.type client"
+            + " --id.attrs 'admin=true:ecert'"
         )
         mock_sleep.assert_not_called()
 

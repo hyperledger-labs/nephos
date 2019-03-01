@@ -29,21 +29,17 @@ CryptoInfo = namedtuple("CryptoInfo", ("secret_type", "subfolder", "key", "requi
 
 
 # CA Helpers
-# TODO: Excessive cognitive complexity - SQ Code Smell
-# TODO: We can probably split the part that checks the identity and the part that registers it
-def register_id(
-    ca_namespace, ca, username, password, node_type="client", admin=False, verbose=False
-):
-    """Register an ID with a Fabric Certificate Authority
+def check_id(ca_namespace, ca, username, verbose=False):
+    """
 
     Args:
         ca_namespace (str): K8S namespace where CA is located.
         ca (str): K8S release name of CA.
         username (str): Username for identity.
-        password (str): Password for identity.
-        node_type (str): Node type for identity. "client" by default.
-        admin (bool): Whether the identity is an admin. False by default.
-        verbose (bool): Verbosity. False by default.
+        verbose (bool) Verbosity. False by default.
+
+    Returns:
+        bool: Does the ID exist?
     """
     # Get CA
     ca_exec = get_pod(namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose)
@@ -62,7 +58,27 @@ def register_id(
                 sleep(15)
         else:
             got_id = True
+    return ord_id
+
+
+def register_id(
+    ca_namespace, ca, username, password, node_type="client", admin=False, verbose=False
+):
+    """Register an ID with a Fabric Certificate Authority
+
+    Args:
+        ca_namespace (str): K8S namespace where CA is located.
+        ca (str): K8S release name of CA.
+        username (str): Username for identity.
+        password (str): Password for identity.
+        node_type (str): Node type for identity. "client" by default.
+        admin (bool): Whether the identity is an admin. False by default.
+        verbose (bool): Verbosity. False by default.
+    """
+    # Get CA
+    ord_id = check_id(ca_namespace, ca, username, verbose=verbose)
     # Registered if needed
+    ca_exec = get_pod(namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose)
     if not ord_id:
         command = (
             "fabric-ca-client register --id.name {id} --id.secret {pw} --id.type {type}"
