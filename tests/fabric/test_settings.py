@@ -1,4 +1,4 @@
-from unittest import mock
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -12,11 +12,11 @@ from nephos.fabric.settings import (
 
 
 class TestDictConstuctor:
-    @mock.patch("nephos.fabric.settings.OrderedDict")
+    @patch("nephos.fabric.settings.OrderedDict")
     def test_dict_constructor(self, mock_ordered_dict):
-        mock_loader = mock.Mock()
+        mock_loader = Mock()
         mock_loader.construct_pairs.side_effect = ["pairs"]
-        mock_node = mock.Mock()
+        mock_node = Mock()
         dict_constructor(mock_loader, mock_node)
         mock_loader.construct_pairs.assert_called_once_with(mock_node)
         mock_ordered_dict.assert_called_once_with("pairs")
@@ -24,21 +24,21 @@ class TestDictConstuctor:
 
 class TestDictRepresenter:
     def test_dict_representer(self):
-        mock_dumper = mock.Mock()
-        mock_data = mock.Mock()
+        mock_dumper = Mock()
+        mock_data = Mock()
         mock_data.items.side_effect = [["some-items"]]
         dict_representer(mock_dumper, mock_data)
         mock_dumper.represent_dict.assert_called_once_with(["some-items"])
 
 
 class TestCheckCluster:
-    @mock.patch("nephos.fabric.settings.context_get")
+    @patch("nephos.fabric.settings.context_get")
     def test_check_cluster(self, mock_context_get):
         mock_context_get.side_effect = [{"context": {"cluster": "a-cluster"}}]
         check_cluster("a-cluster")
         mock_context_get.assert_called_once_with()
 
-    @mock.patch("nephos.fabric.settings.context_get")
+    @patch("nephos.fabric.settings.context_get")
     def test_check_cluster_fail(self, mock_context_get):
         with pytest.raises(ValueError):
             check_cluster("a-cluster")
@@ -83,10 +83,10 @@ class TestGetNamespace:
 
 
 class TestLoadHlfConfig:
-    @mock.patch("nephos.fabric.settings.yaml")
-    @mock.patch("nephos.fabric.settings.path")
-    @mock.patch("nephos.fabric.settings.open")
-    @mock.patch("nephos.fabric.settings.check_cluster")
+    @patch("nephos.fabric.settings.yaml")
+    @patch("nephos.fabric.settings.path")
+    @patch("nephos.fabric.settings.open")
+    @patch("nephos.fabric.settings.check_cluster")
     def test_load_config(self, mock_check_cluster, mock_open, mock_path, mock_yaml):
         mock_yaml.safe_load.side_effect = [
             {
@@ -113,10 +113,10 @@ class TestLoadHlfConfig:
         assert mock_path.expanduser.call_count == 3
         assert mock_path.abspath.call_count == 3
 
-    @mock.patch("nephos.fabric.settings.yaml")
-    @mock.patch("nephos.fabric.settings.path")
-    @mock.patch("nephos.fabric.settings.open")
-    @mock.patch("nephos.fabric.settings.check_cluster")
+    @patch("nephos.fabric.settings.yaml")
+    @patch("nephos.fabric.settings.path")
+    @patch("nephos.fabric.settings.open")
+    @patch("nephos.fabric.settings.check_cluster")
     def test_load_config_repodir(
         self, mock_check_cluster, mock_open, mock_path, mock_yaml
     ):

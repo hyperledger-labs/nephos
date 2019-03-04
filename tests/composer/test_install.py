@@ -1,5 +1,4 @@
-from unittest import mock
-from unittest.mock import call
+from unittest.mock import call, patch, Mock
 
 from kubernetes.client.rest import ApiException
 import pytest
@@ -21,7 +20,7 @@ class TestGetComposerData:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @mock.patch("nephos.composer.install.get_app_info")
+    @patch("nephos.composer.install.get_app_info")
     def test_get_composer_data(self, mock_get_app_info):
         mock_get_app_info.side_effect = [{"api-key": "hlc-key", "url": "an-ingress"}]
         get_composer_data(self.OPTS)
@@ -33,7 +32,7 @@ class TestGetComposerData:
             verbose=False,
         )
 
-    @mock.patch("nephos.composer.install.get_app_info")
+    @patch("nephos.composer.install.get_app_info")
     def test_get_composer_data_exception(self, mock_get_app_info):
         mock_get_app_info.side_effect = [ValueError]
         with pytest.raises(ValueError):
@@ -59,10 +58,10 @@ class TestComposerConnection:
         "peers": {"channel_name": "a-channel", "msp": "peer_MSP"},
     }
 
-    @mock.patch("nephos.composer.install.json_ct")
-    @mock.patch("nephos.composer.install.ingress_read")
-    @mock.patch("nephos.composer.install.cm_read")
-    @mock.patch("nephos.composer.install.cm_create")
+    @patch("nephos.composer.install.json_ct")
+    @patch("nephos.composer.install.ingress_read")
+    @patch("nephos.composer.install.cm_read")
+    @patch("nephos.composer.install.cm_create")
     def test_composer_connection(
         self, mock_cm_create, mock_cm_read, mock_ingress_read, mock_json_ct
     ):
@@ -83,10 +82,10 @@ class TestComposerConnection:
             verbose=False,
         )
 
-    @mock.patch("nephos.composer.install.json_ct")
-    @mock.patch("nephos.composer.install.ingress_read")
-    @mock.patch("nephos.composer.install.cm_read")
-    @mock.patch("nephos.composer.install.cm_create")
+    @patch("nephos.composer.install.json_ct")
+    @patch("nephos.composer.install.ingress_read")
+    @patch("nephos.composer.install.cm_read")
+    @patch("nephos.composer.install.cm_create")
     def test_composer_connection_again(
         self, mock_cm_create, mock_cm_read, mock_ingress_read, mock_json_ct
     ):
@@ -110,10 +109,10 @@ class TestDeployComposer:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @mock.patch("nephos.composer.install.secret_from_file")
-    @mock.patch("nephos.composer.install.helm_upgrade")
-    @mock.patch("nephos.composer.install.helm_install")
-    @mock.patch("nephos.composer.install.composer_connection")
+    @patch("nephos.composer.install.secret_from_file")
+    @patch("nephos.composer.install.helm_upgrade")
+    @patch("nephos.composer.install.helm_install")
+    @patch("nephos.composer.install.composer_connection")
     def test_deploy_composer(
         self, mock_composer_connection, mock_helm_install, mock_helm_upgrade, mock_secret_from_file
     ):
@@ -133,10 +132,10 @@ class TestDeployComposer:
         )
         mock_helm_upgrade.assert_not_called()
 
-    @mock.patch("nephos.composer.install.secret_from_file")
-    @mock.patch("nephos.composer.install.helm_upgrade")
-    @mock.patch("nephos.composer.install.helm_install")
-    @mock.patch("nephos.composer.install.composer_connection")
+    @patch("nephos.composer.install.secret_from_file")
+    @patch("nephos.composer.install.helm_upgrade")
+    @patch("nephos.composer.install.helm_install")
+    @patch("nephos.composer.install.composer_connection")
     def test_deploy_composer_upgrade(
         self, mock_composer_connection, mock_helm_install, mock_helm_upgrade, mock_secret_from_file
     ):
@@ -166,9 +165,9 @@ class TestSetupAdmin:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @mock.patch("nephos.composer.install.get_pod")
+    @patch("nephos.composer.install.get_pod")
     def test_setup_admin(self, mock_get_pod):
-        mock_pod = mock.Mock()
+        mock_pod = Mock()
         mock_pod.execute.side_effect = [
             (None, "error"),  # composer card list admin
             ("Create card", None),  # composer card create
@@ -198,9 +197,9 @@ class TestSetupAdmin:
             ]
         )
 
-    @mock.patch("nephos.composer.install.get_pod")
+    @patch("nephos.composer.install.get_pod")
     def test_setup_admin_again(self, mock_get_pod):
-        mock_pod = mock.Mock()
+        mock_pod = Mock()
         mock_pod.execute.side_effect = [
             ("an-admin.card", None)  # composer card list admin
         ]
@@ -229,10 +228,10 @@ class TestInstallNetwork:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @mock.patch("nephos.composer.install.get_pod")
-    @mock.patch("nephos.composer.install.admin_creds")
+    @patch("nephos.composer.install.get_pod")
+    @patch("nephos.composer.install.admin_creds")
     def test_install_network(self, mock_admin_creds, mock_get_pod):
-        mock_pod = mock.Mock()
+        mock_pod = Mock()
         mock_pod.execute.side_effect = [
             ("a-network_a-version.bna", None),  # ls BNA
             (None, "error"),  # composer card list network-admin
@@ -266,11 +265,11 @@ class TestInstallNetwork:
         )
         mock_admin_creds.assert_called_once_with(self.OPTS, "peer_MSP", verbose=False)
 
-    @mock.patch("nephos.composer.install.get_pod")
-    @mock.patch("nephos.composer.install.admin_creds")
+    @patch("nephos.composer.install.get_pod")
+    @patch("nephos.composer.install.admin_creds")
     def test_install_network_again(self, mock_ca_creds, mock_get_pod):
 
-        mock_pod = mock.Mock()
+        mock_pod = Mock()
         mock_pod.execute.side_effect = [
             ("a-network_a-version.bna", None),  # ls BNA
             ("a-network.card", None),  # composer card list network-admin

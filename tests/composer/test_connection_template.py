@@ -1,4 +1,4 @@
-from unittest import mock
+from unittest.mock import patch
 
 from nephos.composer.connection_template import define_orderers, define_peers, json_ct
 
@@ -78,8 +78,8 @@ class TestJsonCt:
         "peers": {"msp": "peer_MSP", "names": ["peer0"]},
     }
 
-    @mock.patch("nephos.composer.connection_template.define_peers")
-    @mock.patch("nephos.composer.connection_template.define_orderers")
+    @patch("nephos.composer.connection_template.define_peers")
+    @patch("nephos.composer.connection_template.define_orderers")
     def test_json_ct(self, mock_define_orderers, mock_define_peers):
         mock_define_peers.side_effect = [
             (

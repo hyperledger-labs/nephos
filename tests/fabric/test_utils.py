@@ -1,4 +1,4 @@
-from unittest import mock
+from unittest.mock import patch
 
 from kubernetes.client.rest import ApiException
 import pytest
@@ -9,9 +9,9 @@ from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
 class TestCredentialsSecret:
     SECRET_DATA = {"CA_USERNAME": "a-user", "CA_PASSWORD": "a-password"}
 
-    @mock.patch("nephos.fabric.utils.secret_read")
-    @mock.patch("nephos.fabric.utils.secret_create")
-    @mock.patch("nephos.fabric.utils.rand_string")
+    @patch("nephos.fabric.utils.secret_read")
+    @patch("nephos.fabric.utils.secret_create")
+    @patch("nephos.fabric.utils.rand_string")
     def test_credentials_secret(
         self, mock_rand_string, mock_secret_create, mock_secret_read
     ):
@@ -26,9 +26,9 @@ class TestCredentialsSecret:
             self.SECRET_DATA, "a-secret", "a-namespace"
         )
 
-    @mock.patch("nephos.fabric.utils.secret_read")
-    @mock.patch("nephos.fabric.utils.secret_create")
-    @mock.patch("nephos.fabric.utils.rand_string")
+    @patch("nephos.fabric.utils.secret_read")
+    @patch("nephos.fabric.utils.secret_create")
+    @patch("nephos.fabric.utils.rand_string")
     def test_credentials_secret_again(
         self, mock_rand_string, mock_secret_create, mock_secret_read
     ):
@@ -40,9 +40,9 @@ class TestCredentialsSecret:
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
 
-    @mock.patch("nephos.fabric.utils.secret_read")
-    @mock.patch("nephos.fabric.utils.secret_create")
-    @mock.patch("nephos.fabric.utils.rand_string")
+    @patch("nephos.fabric.utils.secret_read")
+    @patch("nephos.fabric.utils.secret_create")
+    @patch("nephos.fabric.utils.rand_string")
     def test_credentials_secret_badpassword(
         self, mock_rand_string, mock_secret_create, mock_secret_read
     ):
@@ -57,9 +57,9 @@ class TestCredentialsSecret:
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
 
-    @mock.patch("nephos.fabric.utils.secret_read")
-    @mock.patch("nephos.fabric.utils.secret_create")
-    @mock.patch("nephos.fabric.utils.rand_string")
+    @patch("nephos.fabric.utils.secret_read")
+    @patch("nephos.fabric.utils.secret_create")
+    @patch("nephos.fabric.utils.rand_string")
     def test_credentials_secret_baduser(
         self, mock_rand_string, mock_secret_create, mock_secret_read
     ):
@@ -74,8 +74,8 @@ class TestCredentialsSecret:
 
 
 class TestCryptoSecret:
-    @mock.patch("nephos.fabric.utils.secret_from_file")
-    @mock.patch("nephos.fabric.utils.glob")
+    @patch("nephos.fabric.utils.secret_from_file")
+    @patch("nephos.fabric.utils.glob")
     def test_crypto_secret(self, mock_glob, mock_secret_from_file):
         mock_glob.side_effect = [["./a_path/a_file.txt"]]
         crypto_secret("a-secret", "a-namespace", "./a_dir", "some_file.txt")
@@ -88,8 +88,8 @@ class TestCryptoSecret:
             verbose=False,
         )
 
-    @mock.patch("nephos.fabric.utils.secret_from_file")
-    @mock.patch("nephos.fabric.utils.glob")
+    @patch("nephos.fabric.utils.secret_from_file")
+    @patch("nephos.fabric.utils.glob")
     def test_crypto_secret_fail(self, mock_glob, mock_secret_from_file):
         mock_glob.side_effect = [[]]
         with pytest.raises(Exception):
@@ -99,8 +99,8 @@ class TestCryptoSecret:
 
 
 class TestGetPod:
-    @mock.patch("nephos.fabric.utils.Executer")
-    @mock.patch("nephos.fabric.utils.execute")
+    @patch("nephos.fabric.utils.Executer")
+    @patch("nephos.fabric.utils.execute")
     def test_get_pod(self, mock_execute, mock_Executer):
         mock_execute.side_effect = [("a-pod", None)]
         get_pod("a-namespace", "a-release", "an-app")
@@ -113,8 +113,8 @@ class TestGetPod:
             "a-pod", namespace="a-namespace", verbose=False
         )
 
-    @mock.patch("nephos.fabric.utils.Executer")
-    @mock.patch("nephos.fabric.utils.execute")
+    @patch("nephos.fabric.utils.Executer")
+    @patch("nephos.fabric.utils.execute")
     def test_get_pod_fail(self, mock_execute, mock_Executer):
         mock_execute.side_effect = [(None, "error")]
         with pytest.raises(ValueError):

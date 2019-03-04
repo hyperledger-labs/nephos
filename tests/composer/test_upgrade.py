@@ -1,5 +1,4 @@
-from unittest import mock
-from unittest.mock import call
+from unittest.mock import call, patch, Mock
 
 from nephos.composer.upgrade import upgrade_network
 
@@ -18,11 +17,11 @@ class TestUpgradeNetwork:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @mock.patch("nephos.composer.upgrade.secret_from_file")
-    @mock.patch("nephos.composer.upgrade.print")
-    @mock.patch("nephos.composer.upgrade.get_pod")
+    @patch("nephos.composer.upgrade.secret_from_file")
+    @patch("nephos.composer.upgrade.print")
+    @patch("nephos.composer.upgrade.get_pod")
     def test_upgrade_network(self, mock_get_pod, mock_print, mock_secret_from_file):
-        mock_pod_ex = mock.Mock()
+        mock_pod_ex = Mock()
         mock_pod_ex.execute.side_effect = [
             ("a-network_a-version.bna", None),
             ("Business network version: another-version", None),
@@ -57,13 +56,13 @@ class TestUpgradeNetwork:
             [call("another-version"), call("Upgraded to a-version")]
         )
 
-    @mock.patch("nephos.composer.upgrade.secret_from_file")
-    @mock.patch("nephos.composer.upgrade.print")
-    @mock.patch("nephos.composer.upgrade.get_pod")
+    @patch("nephos.composer.upgrade.secret_from_file")
+    @patch("nephos.composer.upgrade.print")
+    @patch("nephos.composer.upgrade.get_pod")
     def test_upgrade_network_again(
         self, mock_get_pod, mock_print, mock_secret_from_file
     ):
-        mock_pod_ex = mock.Mock()
+        mock_pod_ex = Mock()
         mock_pod_ex.execute.side_effect = [
             ("a-network_a-version.bna", None),
             ("Business network version: a-version", None),
