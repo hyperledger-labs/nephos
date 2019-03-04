@@ -88,7 +88,7 @@ class TestLoadHlfConfig:
     @mock.patch("nephos.fabric.settings.open")
     @mock.patch("nephos.fabric.settings.check_cluster")
     def test_load_config(self, mock_check_cluster, mock_open, mock_path, mock_yaml):
-        mock_yaml.load.side_effect = [
+        mock_yaml.safe_load.side_effect = [
             {
                 "core": {
                     "chart_repo": "a-repo",
@@ -107,7 +107,7 @@ class TestLoadHlfConfig:
         ]
         load_config("./some_settings.yaml")
         mock_open.assert_called_once_with("./some_settings.yaml")
-        mock_yaml.load.assert_called_once()
+        mock_yaml.safe_load.assert_called_once()
         mock_check_cluster.assert_called_once_with("a-cluster")
         mock_path.isdir.assert_called_once_with("a-repo")
         assert mock_path.expanduser.call_count == 3
@@ -120,7 +120,7 @@ class TestLoadHlfConfig:
     def test_load_config_repodir(
         self, mock_check_cluster, mock_open, mock_path, mock_yaml
     ):
-        mock_yaml.load.side_effect = [
+        mock_yaml.safe_load.side_effect = [
             {
                 "core": {
                     "chart_repo": "./a_repo_dir",
@@ -139,7 +139,7 @@ class TestLoadHlfConfig:
         ]
         load_config("./some_settings.yaml")
         mock_open.assert_called_once_with("./some_settings.yaml")
-        mock_yaml.load.assert_called_once()
+        mock_yaml.safe_load.assert_called_once()
         mock_check_cluster.assert_not_called()
         mock_path.isdir.assert_called_once_with("./a_repo_dir")
         assert mock_path.expanduser.call_count == 4

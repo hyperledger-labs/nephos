@@ -88,7 +88,7 @@ def load_config(settings_file):
         dict: Nephos options/settings.
     """
     with open(settings_file) as f:
-        data = yaml.load(f)
+        data = yaml.safe_load(f)
     if "cluster" in data["core"]:
         check_cluster(data["core"]["cluster"])
     if path.isdir(data["core"]["chart_repo"]):
