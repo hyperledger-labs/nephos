@@ -4,6 +4,7 @@ from unittest.mock import call
 from kubernetes.client.rest import ApiException
 import pytest
 
+from nephos.helpers.helm import HelmPreserve
 from nephos.composer.install import (
     get_composer_data,
     composer_connection,
@@ -110,10 +111,11 @@ class TestDeployComposer:
     }
 
     @mock.patch("nephos.composer.install.secret_from_file")
+    @mock.patch("nephos.composer.install.helm_upgrade")
     @mock.patch("nephos.composer.install.helm_install")
     @mock.patch("nephos.composer.install.composer_connection")
     def test_deploy_composer(
-        self, mock_composer_connection, mock_helm_install, mock_secret_from_file
+        self, mock_composer_connection, mock_helm_install, mock_helm_upgrade, mock_secret_from_file
     ):
         deploy_composer(self.OPTS)
         mock_secret_from_file.assert_called_once_with(
@@ -129,12 +131,14 @@ class TestDeployComposer:
             config_yaml="./a_dir/hl-composer/hlc.yaml",
             verbose=False,
         )
+        mock_helm_upgrade.assert_not_called()
 
     @mock.patch("nephos.composer.install.secret_from_file")
+    @mock.patch("nephos.composer.install.helm_upgrade")
     @mock.patch("nephos.composer.install.helm_install")
     @mock.patch("nephos.composer.install.composer_connection")
     def test_deploy_composer_upgrade(
-        self, mock_composer_connection, mock_helm_install, mock_secret_from_file
+        self, mock_composer_connection, mock_helm_install, mock_helm_upgrade, mock_secret_from_file
     ):
         deploy_composer(self.OPTS, upgrade=True, verbose=True)
         mock_secret_from_file.assert_called_once_with(
@@ -142,6 +146,16 @@ class TestDeployComposer:
         )
         mock_composer_connection.assert_called_once_with(self.OPTS, verbose=True)
         mock_helm_install.assert_not_called()
+        mock_helm_upgrade.assert_called_once_with(
+            "a-repo",
+            "hl-composer",
+            "hlc",
+            "peer-namespace",
+            pod_num=3,
+            config_yaml="./a_dir/hl-composer/hlc.yaml",
+            preserve=(HelmPreserve("hlc-hl-composer-rest", "COMPOSER_APIKEY", "rest.config.apiKey"),),
+            verbose=True,
+        )
 
 
 class TestSetupAdmin:
