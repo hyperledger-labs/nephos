@@ -129,8 +129,9 @@ def deploy_composer(opts, upgrade=False, verbose=False):
             HelmPreserve(
                 "{}-hl-composer-rest".format(opts["composer"]["name"]),
                 "COMPOSER_APIKEY",
-                "rest.config.apiKey")
-            ,)
+                "rest.config.apiKey",
+            ),
+        )
         helm_upgrade(
             opts["core"]["chart_repo"],
             "hl-composer",

@@ -114,7 +114,11 @@ class TestDeployComposer:
     @patch("nephos.composer.install.helm_install")
     @patch("nephos.composer.install.composer_connection")
     def test_deploy_composer(
-        self, mock_composer_connection, mock_helm_install, mock_helm_upgrade, mock_secret_from_file
+        self,
+        mock_composer_connection,
+        mock_helm_install,
+        mock_helm_upgrade,
+        mock_secret_from_file,
     ):
         deploy_composer(self.OPTS)
         mock_secret_from_file.assert_called_once_with(
@@ -137,7 +141,11 @@ class TestDeployComposer:
     @patch("nephos.composer.install.helm_install")
     @patch("nephos.composer.install.composer_connection")
     def test_deploy_composer_upgrade(
-        self, mock_composer_connection, mock_helm_install, mock_helm_upgrade, mock_secret_from_file
+        self,
+        mock_composer_connection,
+        mock_helm_install,
+        mock_helm_upgrade,
+        mock_secret_from_file,
     ):
         deploy_composer(self.OPTS, upgrade=True, verbose=True)
         mock_secret_from_file.assert_called_once_with(
@@ -152,7 +160,11 @@ class TestDeployComposer:
             "peer-namespace",
             pod_num=3,
             config_yaml="./a_dir/hl-composer/hlc.yaml",
-            preserve=(HelmPreserve("hlc-hl-composer-rest", "COMPOSER_APIKEY", "rest.config.apiKey"),),
+            preserve=(
+                HelmPreserve(
+                    "hlc-hl-composer-rest", "COMPOSER_APIKEY", "rest.config.apiKey"
+                ),
+            ),
             verbose=True,
         )
 
