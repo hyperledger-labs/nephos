@@ -1,15 +1,14 @@
 from copy import deepcopy
-from unittest import mock
-from unittest.mock import call
+from unittest.mock import call, patch, Mock
 
 from nephos.fabric.ord import check_ord, check_ord_tls, setup_ord
 
 
 class TestCheckOrd:
-    @mock.patch("nephos.fabric.ord.sleep")
-    @mock.patch("nephos.fabric.ord.get_pod")
+    @patch("nephos.fabric.ord.sleep")
+    @patch("nephos.fabric.ord.get_pod")
     def test_check_ord(self, mock_get_pod, mock_sleep):
-        mock_pod_ex = mock.Mock()
+        mock_pod_ex = Mock()
         mock_pod_ex.logs.side_effect = [
             "Not yet started",
             "Not yet started\nStarting orderer",
@@ -19,10 +18,10 @@ class TestCheckOrd:
         assert mock_pod_ex.logs.call_count == 2
         mock_sleep.assert_called_once_with(15)
 
-    @mock.patch("nephos.fabric.ord.sleep")
-    @mock.patch("nephos.fabric.ord.get_pod")
+    @patch("nephos.fabric.ord.sleep")
+    @patch("nephos.fabric.ord.get_pod")
     def test_check_ord_again(self, mock_get_pod, mock_sleep):
-        mock_pod_ex = mock.Mock()
+        mock_pod_ex = Mock()
         mock_pod_ex.logs.side_effect = [
             "Not yet started\nStarting orderer\nOrderer fetching metadata for all topics from broker"
         ]
@@ -38,7 +37,7 @@ class TestCheckOrdTls:
         "orderers": {"names": ["an-ord"], "msp": "ord_MSP"},
     }
 
-    @mock.patch("nephos.fabric.ord.execute")
+    @patch("nephos.fabric.ord.execute")
     def test_check_ord_tls(self, mock_execute):
         mock_execute.side_effect = [("value", None)]
         check_ord_tls(self.OPTS)
@@ -47,7 +46,7 @@ class TestCheckOrdTls:
             verbose=False,
         )
 
-    @mock.patch("nephos.fabric.ord.execute")
+    @patch("nephos.fabric.ord.execute")
     def test_check_ord_tls_verbose(self, mock_execute):
         mock_execute.side_effect = [("value", None)]
         check_ord_tls(self.OPTS, verbose=True)
@@ -64,9 +63,9 @@ class TestSetupOrd:
         "orderers": {"names": ["ord0"], "msp": "ord_MSP"},
     }
 
-    @mock.patch("nephos.fabric.ord.helm_upgrade")
-    @mock.patch("nephos.fabric.ord.helm_install")
-    @mock.patch("nephos.fabric.ord.check_ord")
+    @patch("nephos.fabric.ord.helm_upgrade")
+    @patch("nephos.fabric.ord.helm_install")
+    @patch("nephos.fabric.ord.check_ord")
     def test_ord(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         OPTS["orderers"]["names"] = ["ord0", "ord1"]
@@ -99,9 +98,9 @@ class TestSetupOrd:
             ]
         )
 
-    @mock.patch("nephos.fabric.ord.helm_upgrade")
-    @mock.patch("nephos.fabric.ord.helm_install")
-    @mock.patch("nephos.fabric.ord.check_ord")
+    @patch("nephos.fabric.ord.helm_upgrade")
+    @patch("nephos.fabric.ord.helm_install")
+    @patch("nephos.fabric.ord.check_ord")
     def test_ord_kafka(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         OPTS["orderers"]["kafka"] = {"pod_num": 42}
@@ -130,9 +129,9 @@ class TestSetupOrd:
         mock_helm_upgrade.assert_not_called()
         mock_check_ord.assert_called_once_with("ord-namespace", "ord0", verbose=True)
 
-    @mock.patch("nephos.fabric.ord.helm_upgrade")
-    @mock.patch("nephos.fabric.ord.helm_install")
-    @mock.patch("nephos.fabric.ord.check_ord")
+    @patch("nephos.fabric.ord.helm_upgrade")
+    @patch("nephos.fabric.ord.helm_install")
+    @patch("nephos.fabric.ord.check_ord")
     def test_ord_upgrade(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
         setup_ord(self.OPTS, upgrade=True)
         mock_helm_install.assert_not_called()

@@ -37,6 +37,7 @@ def credentials_secret(secret_name, namespace, username, password=None, verbose=
     try:
         secret_data = secret_read(secret_name, namespace, verbose=verbose)
         # Check that the ID stored is the same as Orderer name
+        # TODO: Remove asserts here, instead raise error
         assert username == secret_data["CA_USERNAME"]
         if password:
             assert password == secret_data["CA_PASSWORD"]

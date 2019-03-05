@@ -1,5 +1,4 @@
-from unittest import mock
-from unittest.mock import call
+from unittest.mock import call, patch, Mock
 
 from kubernetes.client.rest import ApiException
 from nephos.fabric.ca import ca_chart, ca_enroll, check_ca, setup_ca
@@ -11,9 +10,9 @@ class TestCaChart:
         "cas": {"a-release": {"namespace": "ca-namespace"}},
     }
 
-    @mock.patch("nephos.fabric.ca.secret_read")
-    @mock.patch("nephos.fabric.ca.helm_upgrade")
-    @mock.patch("nephos.fabric.ca.helm_install")
+    @patch("nephos.fabric.ca.secret_read")
+    @patch("nephos.fabric.ca.helm_upgrade")
+    @patch("nephos.fabric.ca.helm_install")
     def test_ca_chart(self, mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
         env_vars = [("externalDatabase.password", "a_password")]
@@ -44,9 +43,9 @@ class TestCaChart:
             "a-release-pg-postgresql", "ca-namespace", verbose=False
         )
 
-    @mock.patch("nephos.fabric.ca.secret_read")
-    @mock.patch("nephos.fabric.ca.helm_upgrade")
-    @mock.patch("nephos.fabric.ca.helm_install")
+    @patch("nephos.fabric.ca.secret_read")
+    @patch("nephos.fabric.ca.helm_upgrade")
+    @patch("nephos.fabric.ca.helm_install")
     def test_ca_chart_upgrade(
         self, mock_helm_install, mock_helm_upgrade, mock_secret_read
     ):
@@ -79,9 +78,9 @@ class TestCaChart:
             "a-release-pg-postgresql", "ca-namespace", verbose=False
         )
 
-    @mock.patch("nephos.fabric.ca.secret_read")
-    @mock.patch("nephos.fabric.ca.helm_upgrade")
-    @mock.patch("nephos.fabric.ca.helm_install")
+    @patch("nephos.fabric.ca.secret_read")
+    @patch("nephos.fabric.ca.helm_upgrade")
+    @patch("nephos.fabric.ca.helm_install")
     def test_ca_chart_upgrade_old(
         self, mock_helm_install, mock_helm_upgrade, mock_secret_read
     ):
@@ -135,9 +134,9 @@ class TestCaChart:
             "a-release-pg-postgresql", "ca-namespace", verbose=False
         )
 
-    @mock.patch("nephos.fabric.ca.secret_read")
-    @mock.patch("nephos.fabric.ca.helm_upgrade")
-    @mock.patch("nephos.fabric.ca.helm_install")
+    @patch("nephos.fabric.ca.secret_read")
+    @patch("nephos.fabric.ca.helm_upgrade")
+    @patch("nephos.fabric.ca.helm_install")
     def test_ca_chart_verbose(
         self, mock_helm_install, mock_helm_upgrade, mock_secret_read
     ):
@@ -172,9 +171,9 @@ class TestCaChart:
 
 
 class TestCaEnroll:
-    @mock.patch("nephos.fabric.ca.sleep")
+    @patch("nephos.fabric.ca.sleep")
     def test_ca_enroll(self, mock_sleep):
-        mock_pod_exec = mock.Mock()
+        mock_pod_exec = Mock()
         mock_pod_exec.execute.side_effect = [
             (None, "error"),  # Get CA cert
             ("enrollment", None),
@@ -195,9 +194,9 @@ class TestCaEnroll:
         assert mock_pod_exec.logs.call_count == 2
         mock_sleep.assert_called_once_with(15)
 
-    @mock.patch("nephos.fabric.ca.sleep")
+    @patch("nephos.fabric.ca.sleep")
     def test_ca_enroll_serverfail(self, mock_sleep):
-        mock_pod_exec = mock.Mock()
+        mock_pod_exec = Mock()
         mock_pod_exec.execute.side_effect = [
             (None, "error"),  # Get CA cert
             (None, "error"),  # Enroll
@@ -221,9 +220,9 @@ class TestCaEnroll:
         assert mock_pod_exec.logs.call_count == 1
         mock_sleep.assert_called_once_with(15)
 
-    @mock.patch("nephos.fabric.ca.sleep")
+    @patch("nephos.fabric.ca.sleep")
     def test_ca_enroll_again(self, mock_sleep):
-        mock_pod_exec = mock.Mock()
+        mock_pod_exec = Mock()
         mock_pod_exec.execute.side_effect = [("ca-cert", None)]  # Get CA cert
         mock_pod_exec.logs.side_effect = [
             "Not yet running\nListening on localhost:7050"
@@ -237,14 +236,14 @@ class TestCaEnroll:
 
 
 class TestCheckCa:
-    @mock.patch("nephos.fabric.ca.execute_until_success")
+    @patch("nephos.fabric.ca.execute_until_success")
     def test_check_ca(self, mock_execute_until_success):
         check_ca("an-ingress", verbose=False)
         mock_execute_until_success.assert_called_once_with(
             "curl https://an-ingress/cainfo", verbose=False
         )
 
-    @mock.patch("nephos.fabric.ca.execute_until_success")
+    @patch("nephos.fabric.ca.execute_until_success")
     def test_check_ca_cert(self, mock_execute_until_success):
         check_ca("an-ingress", cacert="./tls_cert.pem", verbose=True)
         mock_execute_until_success.assert_called_once_with(
@@ -261,16 +260,16 @@ class TestSetupCa:
         },
     }
 
-    root_executer = mock.Mock()
+    root_executer = Mock()
     root_executer.pod = "root-pod"
-    int_executer = mock.Mock()
+    int_executer = Mock()
     int_executer.pod = "int-pod"
 
-    @mock.patch("nephos.fabric.ca.ingress_read")
-    @mock.patch("nephos.fabric.ca.get_pod")
-    @mock.patch("nephos.fabric.ca.check_ca")
-    @mock.patch("nephos.fabric.ca.ca_enroll")
-    @mock.patch("nephos.fabric.ca.ca_chart")
+    @patch("nephos.fabric.ca.ingress_read")
+    @patch("nephos.fabric.ca.get_pod")
+    @patch("nephos.fabric.ca.check_ca")
+    @patch("nephos.fabric.ca.ca_enroll")
+    @patch("nephos.fabric.ca.ca_chart")
     def test_setup_ca(
         self,
         mock_ca_chart,
@@ -318,11 +317,11 @@ class TestSetupCa:
             ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=False
         )
 
-    @mock.patch("nephos.fabric.ca.ingress_read")
-    @mock.patch("nephos.fabric.ca.get_pod")
-    @mock.patch("nephos.fabric.ca.check_ca")
-    @mock.patch("nephos.fabric.ca.ca_enroll")
-    @mock.patch("nephos.fabric.ca.ca_chart")
+    @patch("nephos.fabric.ca.ingress_read")
+    @patch("nephos.fabric.ca.get_pod")
+    @patch("nephos.fabric.ca.check_ca")
+    @patch("nephos.fabric.ca.ca_enroll")
+    @patch("nephos.fabric.ca.ca_chart")
     def test_setup_ca_upgrade(
         self,
         mock_ca_chart,

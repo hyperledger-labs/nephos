@@ -1,5 +1,4 @@
-from unittest import mock
-from unittest.mock import call
+from unittest.mock import call, patch
 
 from click.testing import CliRunner
 
@@ -14,8 +13,8 @@ def test_cli():
     assert "Nephos helps you install Hyperledger Fabric on Kubernetes" in result.output
 
 
-@mock.patch("nephos.deploy.runner_ca")
-@mock.patch("nephos.deploy.load_config")
+@patch("nephos.deploy.runner_ca")
+@patch("nephos.deploy.load_config")
 def test_cert_auth(mock_load_config, mock_runner_ca):
     mock_load_config.side_effect = ["some-opts"]
     result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "cert-auth"])
@@ -24,8 +23,8 @@ def test_cert_auth(mock_load_config, mock_runner_ca):
     assert result.exit_code == 0
 
 
-@mock.patch("nephos.deploy.runner_composer")
-@mock.patch("nephos.deploy.load_config")
+@patch("nephos.deploy.runner_composer")
+@patch("nephos.deploy.load_config")
 def test_composer(mock_load_config, mock_runner_composer):
     mock_load_config.side_effect = ["some-opts"]
     result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "composer"])
@@ -36,8 +35,8 @@ def test_composer(mock_load_config, mock_runner_composer):
     assert result.exit_code == 0
 
 
-@mock.patch("nephos.deploy.runner_composer_up")
-@mock.patch("nephos.deploy.load_config")
+@patch("nephos.deploy.runner_composer_up")
+@patch("nephos.deploy.load_config")
 def test_composer_up(mock_load_config, mock_runner_composer_up):
     mock_load_config.side_effect = ["some-opts"]
     result = RUNNER.invoke(
@@ -48,8 +47,8 @@ def test_composer_up(mock_load_config, mock_runner_composer_up):
     assert result.exit_code == 0
 
 
-@mock.patch("nephos.deploy.runner_crypto")
-@mock.patch("nephos.deploy.load_config")
+@patch("nephos.deploy.runner_crypto")
+@patch("nephos.deploy.load_config")
 def test_crypto(mock_load_config, mock_runner_crypto):
     mock_load_config.side_effect = ["some-opts"]
     result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "crypto"])
@@ -58,8 +57,8 @@ def test_crypto(mock_load_config, mock_runner_crypto):
     assert result.exit_code == 0
 
 
-@mock.patch("nephos.deploy.runner_deploy")
-@mock.patch("nephos.deploy.load_config")
+@patch("nephos.deploy.runner_deploy")
+@patch("nephos.deploy.load_config")
 def test_deploy(mock_load_config, mock_runner_deploy):
     mock_load_config.side_effect = ["some-opts"]
     result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "deploy"])
@@ -70,8 +69,8 @@ def test_deploy(mock_load_config, mock_runner_deploy):
     assert result.exit_code == 0
 
 
-@mock.patch("nephos.deploy.runner_fabric")
-@mock.patch("nephos.deploy.load_config")
+@patch("nephos.deploy.runner_fabric")
+@patch("nephos.deploy.load_config")
 def test_fabric(mock_load_config, mock_runner_fabric):
     mock_load_config.side_effect = ["some-opts"]
     result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "fabric"])
@@ -82,8 +81,8 @@ def test_fabric(mock_load_config, mock_runner_fabric):
     assert result.exit_code == 0
 
 
-@mock.patch("nephos.deploy.runner_orderer")
-@mock.patch("nephos.deploy.load_config")
+@patch("nephos.deploy.runner_orderer")
+@patch("nephos.deploy.load_config")
 def test_orderer(mock_load_config, mock_runner_orderer):
     mock_load_config.side_effect = ["some-opts"]
     result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "orderer"])
@@ -94,8 +93,8 @@ def test_orderer(mock_load_config, mock_runner_orderer):
     assert result.exit_code == 0
 
 
-@mock.patch("nephos.deploy.runner_peer")
-@mock.patch("nephos.deploy.load_config")
+@patch("nephos.deploy.runner_peer")
+@patch("nephos.deploy.load_config")
 def test_peer(mock_load_config, mock_runner_peer):
     mock_load_config.side_effect = ["some-opts"]
     result = RUNNER.invoke(cli, ["--settings_file", "nephos_config.yaml", "peer"])
@@ -105,8 +104,8 @@ def test_peer(mock_load_config, mock_runner_peer):
 
 
 class TestSettings:
-    @mock.patch("nephos.deploy.print")
-    @mock.patch("nephos.deploy.load_config")
+    @patch("nephos.deploy.print")
+    @patch("nephos.deploy.load_config")
     def test_settings(self, mock_load_config, mock_print):
         mock_load_config.side_effect = ["some-opts"]
         result = RUNNER.invoke(
@@ -116,8 +115,8 @@ class TestSettings:
         mock_print.assert_called_once_with("Settings successfully loaded...\n")
         assert result.exit_code == 0
 
-    @mock.patch("nephos.deploy.print")
-    @mock.patch("nephos.deploy.load_config")
+    @patch("nephos.deploy.print")
+    @patch("nephos.deploy.load_config")
     def test_settings_verbose(self, mock_load_config, mock_print):
         mock_load_config.side_effect = [{"key": "value"}]
         result = RUNNER.invoke(

@@ -18,7 +18,7 @@ from nephos.composer.connection_template import json_ct
 from nephos.fabric.crypto import admin_creds
 from nephos.fabric.utils import get_pod
 from nephos.fabric.settings import get_namespace
-from nephos.helpers.helm import helm_install
+from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
 from nephos.helpers.k8s import (
     get_app_info,
     cm_create,
@@ -125,8 +125,25 @@ def deploy_composer(opts, upgrade=False, verbose=False):
             verbose=verbose,
         )
     else:
-        # TODO: Implement upgrade: set $CA_USERNAME and $CA_PASSWORD
-        pass
+        preserve = (
+            HelmPreserve(
+                "{}-hl-composer-rest".format(opts["composer"]["name"]),
+                "COMPOSER_APIKEY",
+                "rest.config.apiKey",
+            ),
+        )
+        helm_upgrade(
+            opts["core"]["chart_repo"],
+            "hl-composer",
+            opts["composer"]["name"],
+            peer_namespace,
+            pod_num=3,
+            config_yaml="{dir}/hl-composer/{release}.yaml".format(
+                dir=opts["core"]["dir_values"], release=opts["composer"]["name"]
+            ),
+            preserve=preserve,
+            verbose=verbose,
+        )
 
 
 def setup_admin(opts, verbose=False):

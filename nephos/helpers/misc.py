@@ -34,6 +34,7 @@ def execute(command, verbose=False, show_command=True, show_errors=True):
     if show_command:
         print(t.magenta(command))
     try:
+        # TODO: Can we do this with a different command than check_output (Bandit security issue)
         result = check_output(command, stderr=STDOUT, shell=True)
         decoded = result.decode("utf-8")
         if verbose:

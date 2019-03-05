@@ -1,5 +1,5 @@
 from collections import namedtuple
-from unittest import mock
+from unittest.mock import patch, MagicMock
 
 from kubernetes.client.rest import ApiException
 import pytest
@@ -46,7 +46,7 @@ class TestExecuter:
         assert executer.prefix_exec == "kubectl exec a-pod -n a-namespace -- "
         assert executer.verbose is True
 
-    @mock.patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.k8s.execute")
     def test_executer_execute(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer("a_pod", "a-namespace")
@@ -55,7 +55,7 @@ class TestExecuter:
             "kubectl exec a_pod -n a-namespace -- a_command", verbose=False
         )
 
-    @mock.patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.k8s.execute")
     def test_executer_execute_verbose(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer("a_pod", "a-namespace", verbose=True)
@@ -64,7 +64,7 @@ class TestExecuter:
             "kubectl exec a_pod -n a-namespace -- a_command", verbose=True
         )
 
-    @mock.patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.k8s.execute")
     def test_executer_logs(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer("a_pod", "a-namespace")
@@ -73,7 +73,7 @@ class TestExecuter:
             "kubectl logs a_pod -n a-namespace --tail=-1", verbose=False
         )
 
-    @mock.patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.k8s.execute")
     def test_executer_logs_tail(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer(
@@ -85,7 +85,7 @@ class TestExecuter:
             verbose=True,
         )
 
-    @mock.patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.k8s.execute")
     def test_executer_logs_sincetime(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer("a_pod", "a-namespace", verbose=True)
@@ -99,8 +99,8 @@ class TestExecuter:
 class TestContextGet:
     CONTEXTS = ({"all": "contexts"}, {"active": "context"})
 
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.config")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.config")
     def test_context_get(self, mock_config, mock_pretty_print):
         mock_config.list_kube_config_contexts.side_effect = [self.CONTEXTS]
         context = context_get()
@@ -108,8 +108,8 @@ class TestContextGet:
         mock_pretty_print.assert_not_called()
         assert context == self.CONTEXTS[1]
 
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.config")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.config")
     def test_context_get_verbose(self, mock_config, mock_pretty_print):
         mock_config.list_kube_config_contexts.side_effect = [self.CONTEXTS]
         context = context_get(verbose=True)
@@ -119,9 +119,9 @@ class TestContextGet:
 
 
 class TestNsCreate:
-    @mock.patch("nephos.helpers.k8s.print")
-    @mock.patch("nephos.helpers.k8s.api")
-    @mock.patch("nephos.helpers.k8s.ns_read")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.ns_read")
     def test_ns_create_new(self, mock_ns_read, mock_api, mock_print):
         # TODO: We should ideally replicate the correct API exception
         mock_ns_read.side_effect = ApiException()
@@ -130,9 +130,9 @@ class TestNsCreate:
         mock_api.create_namespace.assert_called_once()
         mock_print.assert_not_called()
 
-    @mock.patch("nephos.helpers.k8s.print")
-    @mock.patch("nephos.helpers.k8s.api")
-    @mock.patch("nephos.helpers.k8s.ns_read")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.ns_read")
     def test_ns_create_new_verbose(self, mock_ns_read, mock_api, mock_print):
         # TODO: We should ideally replicate the correct API exception
         mock_ns_read.side_effect = ApiException()
@@ -141,9 +141,9 @@ class TestNsCreate:
         mock_api.create_namespace.assert_called_once()
         mock_print.assert_called_once_with('Created namespace "a-namespace"')
 
-    @mock.patch("nephos.helpers.k8s.print")
-    @mock.patch("nephos.helpers.k8s.api")
-    @mock.patch("nephos.helpers.k8s.ns_read")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.ns_read")
     def test_ns_create_old(self, mock_ns_read, mock_api, mock_print):
         ns_create("a-namespace")
         mock_ns_read.assert_called_once_with("a-namespace", verbose=False)
@@ -152,15 +152,15 @@ class TestNsCreate:
 
 
 class TestNsRead:
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api")
     def test_ns_read(self, mock_api, mock_pretty_print):
         ns_read("a-namespace")
         mock_api.read_namespace.assert_called_with(name="a-namespace")
         mock_pretty_print.assert_not_called()
 
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api")
     def test_ns_read_verbose(self, mock_api, mock_pretty_print):
         ns_read("a-namespace", verbose=True)
         mock_api.read_namespace.assert_called_with(name="a-namespace")
@@ -168,10 +168,10 @@ class TestNsRead:
 
 
 class TestIngressRead:
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api_ext")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api_ext")
     def test_ingress_read(self, mock_api_ext, mock_pretty_print):
-        mock_ingress = mock.MagicMock()
+        mock_ingress = MagicMock()
         mock_ingress.spec.rules.__getitem__.side_effect = [
             IngressHost("a-url"),
             IngressHost("another-url"),
@@ -183,10 +183,10 @@ class TestIngressRead:
         )
         mock_pretty_print.assert_not_called()
 
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api_ext")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api_ext")
     def test_ingress_read_verbose(self, mock_api_ext, mock_pretty_print):
-        mock_ingress = mock.MagicMock()
+        mock_ingress = MagicMock()
         mock_ingress.spec.rules.__iter__.return_value = [
             IngressHost("a-url"),
             IngressHost("another-url"),
@@ -198,8 +198,8 @@ class TestIngressRead:
         )
         mock_pretty_print.assert_called_once_with('["a-url", "another-url"]')
 
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api_ext")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api_ext")
     def test_ingress_read_fail(self, mock_api_ext, mock_pretty_print):
         mock_api_ext.read_namespaced_ingress.side_effect = [ApiException]
         with pytest.raises(ApiException):
@@ -211,15 +211,15 @@ class TestIngressRead:
 
 
 class TestCmCreate:
-    @mock.patch("nephos.helpers.k8s.print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.api")
     def test_cm_create(self, mock_api, mock_print):
         cm_create({"a_key": "a_value"}, "a-configmap", "a-namespace")
         mock_api.create_namespaced_config_map.assert_called_once()
         mock_print.assert_not_called()
 
-    @mock.patch("nephos.helpers.k8s.print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.api")
     def test_cm_create(self, mock_api, mock_print):
         cm_create({"a_key": "a_value"}, "a-configmap", "a-namespace", verbose=True)
         mock_api.create_namespaced_config_map.assert_called_once()
@@ -229,8 +229,8 @@ class TestCmCreate:
 
 
 class TestCmRead:
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api")
     def test_cm_read(self, mock_api, mock_pretty_print):
         cm_read("a_configmap", "a-namespace")
         mock_api.read_namespaced_config_map.assert_called_once_with(
@@ -238,8 +238,8 @@ class TestCmRead:
         )
         mock_pretty_print.assert_not_called()
 
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api")
     def test_cm_read_verbose(self, mock_api, mock_pretty_print):
         mock_api.read_namespaced_config_map.side_effect = [
             ConfigMap({"a_key": "a_value"})
@@ -252,15 +252,15 @@ class TestCmRead:
 
 
 class TestSecretCreate:
-    @mock.patch("nephos.helpers.k8s.print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.api")
     def test_secret_create(selfself, mock_api, mock_print):
         secret_create({"a_key": "a_value"}, "a_secret", "a-namespace")
         mock_api.create_namespaced_secret.assert_called_once()
         mock_print.assert_not_called()
 
-    @mock.patch("nephos.helpers.k8s.print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.api")
     def test_secret_create_verbose(self, mock_api, mock_print):
         secret_create({"a_key": "a_value"}, "a_secret", "a-namespace", verbose=True)
         mock_api.create_namespaced_secret.assert_called_once()
@@ -270,8 +270,8 @@ class TestSecretCreate:
 
 
 class TestSecretRead:
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api")
     def test_secret_read(self, mock_api, mock_pretty_print):
         mock_api.read_namespaced_secret.side_effect = [
             Secret({"a_key": b"YV92YWx1ZQ=="})
@@ -282,8 +282,8 @@ class TestSecretRead:
         )
         mock_pretty_print.assert_not_called()
 
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api")
     def test_secret_read_verbose(self, mock_api, mock_pretty_print):
         mock_api.read_namespaced_secret.side_effect = [
             Secret({"a_key": b"YV92YWx1ZQ=="})
@@ -294,8 +294,8 @@ class TestSecretRead:
         )
         mock_pretty_print.assert_called_once_with('{"a_key": "a_value"}')
 
-    @mock.patch("nephos.helpers.k8s.pretty_print")
-    @mock.patch("nephos.helpers.k8s.api")
+    @patch("nephos.helpers.k8s.pretty_print")
+    @patch("nephos.helpers.k8s.api")
     def test_secret_read_unicode(self, mock_api, mock_pretty_print):
         mock_api.read_namespaced_secret.side_effect = [
             Secret({"a_key": b"YV92YWx1ZYE="})
@@ -308,10 +308,10 @@ class TestSecretRead:
 
 
 class TestSecretFromFile:
-    @mock.patch("nephos.helpers.k8s.open")
-    @mock.patch("nephos.helpers.k8s.input_files")
-    @mock.patch("nephos.helpers.k8s.secret_create")
-    @mock.patch("nephos.helpers.k8s.secret_read")
+    @patch("nephos.helpers.k8s.open")
+    @patch("nephos.helpers.k8s.input_files")
+    @patch("nephos.helpers.k8s.secret_create")
+    @patch("nephos.helpers.k8s.secret_read")
     def test_secret_from_file(
         self, mock_secret_read, mock_secret_create, mock_input_files, mock_open
     ):
@@ -322,10 +322,10 @@ class TestSecretFromFile:
         mock_input_files.assert_called_once()
         mock_open.assert_not_called()
 
-    @mock.patch("nephos.helpers.k8s.open")
-    @mock.patch("nephos.helpers.k8s.input_files")
-    @mock.patch("nephos.helpers.k8s.secret_create")
-    @mock.patch("nephos.helpers.k8s.secret_read")
+    @patch("nephos.helpers.k8s.open")
+    @patch("nephos.helpers.k8s.input_files")
+    @patch("nephos.helpers.k8s.secret_create")
+    @patch("nephos.helpers.k8s.secret_read")
     def test_secret_from_file_define(
         self, mock_secret_read, mock_secret_create, mock_input_files, mock_open
     ):
@@ -338,8 +338,8 @@ class TestSecretFromFile:
 
 
 class TestGetAppInfo:
-    @mock.patch("nephos.helpers.k8s.secret_read")
-    @mock.patch("nephos.helpers.k8s.ingress_read")
+    @patch("nephos.helpers.k8s.secret_read")
+    @patch("nephos.helpers.k8s.ingress_read")
     def test_get_app_info(self, mock_ingress_read, mock_secret_read):
         mock_secret_read.side_effect = [{"API_KEY": "an-api-key"}]
         mock_ingress_read.side_effect = [["a-url"]]
@@ -348,8 +348,8 @@ class TestGetAppInfo:
             "an-ingress", namespace="a-namespace", verbose=False
         )
 
-    @mock.patch("nephos.helpers.k8s.secret_read")
-    @mock.patch("nephos.helpers.k8s.ingress_read")
+    @patch("nephos.helpers.k8s.secret_read")
+    @patch("nephos.helpers.k8s.ingress_read")
     def test_get_app_info_missingsecret(self, mock_ingress_read, mock_secret_read):
         mock_secret_read.side_effect = [ApiException]
         with pytest.raises(ApiException):
@@ -361,8 +361,8 @@ class TestGetAppInfo:
             "a-secret", "a-namespace", verbose=True
         )
 
-    @mock.patch("nephos.helpers.k8s.secret_read")
-    @mock.patch("nephos.helpers.k8s.ingress_read")
+    @patch("nephos.helpers.k8s.secret_read")
+    @patch("nephos.helpers.k8s.ingress_read")
     def test_get_app_info_noingress(self, mock_ingress_read, mock_secret_read):
         mock_secret_read.side_effect = [{"CUSTOM_KEY": "an-api-key"}]
         mock_ingress_read.side_effect = [ApiException]

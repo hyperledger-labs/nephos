@@ -1,7 +1,6 @@
 from string import ascii_letters, digits, punctuation
 from subprocess import CalledProcessError
-from unittest import mock
-from unittest.mock import call
+from unittest.mock import call, patch
 
 from nephos.helpers.misc import (
     execute,
@@ -14,8 +13,8 @@ from nephos.helpers.misc import (
 
 
 class TestExecute:
-    @mock.patch("nephos.helpers.misc.check_output")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.check_output")
+    @patch("nephos.helpers.misc.print")
     def test_execute(self, mock_print, mock_check_output):
         execute("ls")
         mock_print.assert_called_once()
@@ -23,16 +22,16 @@ class TestExecute:
         mock_check_output.assert_called_once()
         mock_check_output.assert_called_with("ls", shell=True, stderr=-2)
 
-    @mock.patch("nephos.helpers.misc.check_output")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.check_output")
+    @patch("nephos.helpers.misc.print")
     def test_execute_quiet(self, mock_print, mock_check_output):
         execute("ls", show_command=False)
         mock_print.assert_not_called()
         mock_check_output.assert_called_once()
         mock_check_output.assert_called_with("ls", shell=True, stderr=-2)
 
-    @mock.patch("nephos.helpers.misc.check_output")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.check_output")
+    @patch("nephos.helpers.misc.print")
     def test_execute_verbose(self, mock_print, mock_check_output):
         # Add some side effects
         mock_check_output.side_effect = ["output".encode("ascii")]
@@ -43,8 +42,8 @@ class TestExecute:
         # Then print
         mock_print.assert_has_calls([call("ls"), call("output")])
 
-    @mock.patch("nephos.helpers.misc.check_output")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.check_output")
+    @patch("nephos.helpers.misc.print")
     def test_execute_error(self, mock_print, mock_check_output):
         # Add some side effects
         mock_check_output.side_effect = CalledProcessError(
@@ -65,8 +64,8 @@ class TestExecute:
             ]
         )
 
-    @mock.patch("nephos.helpers.misc.check_output")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.check_output")
+    @patch("nephos.helpers.misc.print")
     def test_execute_error_quiet(self, mock_print, mock_check_output):
         # Add some side effects
         mock_check_output.side_effect = CalledProcessError(
@@ -83,8 +82,8 @@ class TestExecute:
 
 
 class TestExecuteUntilSuccess:
-    @mock.patch("nephos.helpers.misc.execute")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.execute")
+    @patch("nephos.helpers.misc.print")
     def test_execute(self, mock_print, mock_execute):
         mock_execute.side_effect = [
             (None, "error"),
@@ -113,8 +112,8 @@ class TestExecuteUntilSuccess:
             * 2
         )
 
-    @mock.patch("nephos.helpers.misc.execute")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.execute")
+    @patch("nephos.helpers.misc.print")
     def test_execute_verbose(self, mock_print, mock_execute):
         mock_execute.side_effect = [
             (None, "error"),
@@ -149,10 +148,10 @@ class TestExecuteUntilSuccess:
 class TestInputFiles:
     files = ["./some_folder/some_file&.txt", "./another_file.txt"]
 
-    @mock.patch("nephos.helpers.misc.open")
-    @mock.patch("nephos.helpers.misc.isfile")
-    @mock.patch("nephos.helpers.misc.get_response")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.open")
+    @patch("nephos.helpers.misc.isfile")
+    @patch("nephos.helpers.misc.get_response")
+    @patch("nephos.helpers.misc.print")
     def test_input_files(self, mock_print, mock_get_response, mock_isfile, mock_open):
         mock_isfile.side_effect = [True]
         mock_get_response.side_effect = [self.files[0]]
@@ -163,10 +162,10 @@ class TestInputFiles:
         mock_open.assert_called_with(self.files[0], "rb")
         assert data.keys() == {"hello"}
 
-    @mock.patch("nephos.helpers.misc.open")
-    @mock.patch("nephos.helpers.misc.isfile")
-    @mock.patch("nephos.helpers.misc.get_response")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.open")
+    @patch("nephos.helpers.misc.isfile")
+    @patch("nephos.helpers.misc.get_response")
+    @patch("nephos.helpers.misc.print")
     def test_input_files_multiple(
         self, mock_print, mock_get_response, mock_isfile, mock_open
     ):
@@ -180,10 +179,10 @@ class TestInputFiles:
         mock_open.assert_any_call(self.files[1], "rb")
         assert data.keys() == {"hello", "goodbye"}
 
-    @mock.patch("nephos.helpers.misc.open")
-    @mock.patch("nephos.helpers.misc.isfile")
-    @mock.patch("nephos.helpers.misc.get_response")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.open")
+    @patch("nephos.helpers.misc.isfile")
+    @patch("nephos.helpers.misc.get_response")
+    @patch("nephos.helpers.misc.print")
     def test_input_files_mistake(
         self, mock_print, mock_get_response, mock_isfile, mock_open
     ):
@@ -200,10 +199,10 @@ class TestInputFiles:
         mock_open.assert_called_with(self.files[0], "rb")
         assert data.keys() == {"hello"}
 
-    @mock.patch("nephos.helpers.misc.open")
-    @mock.patch("nephos.helpers.misc.isfile")
-    @mock.patch("nephos.helpers.misc.get_response")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.open")
+    @patch("nephos.helpers.misc.isfile")
+    @patch("nephos.helpers.misc.get_response")
+    @patch("nephos.helpers.misc.print")
     def test_input_files_cleankey(
         self, mock_print, mock_get_response, mock_isfile, mock_open
     ):
@@ -220,8 +219,8 @@ class TestInputFiles:
 
 
 class TestGetResponse:
-    @mock.patch("nephos.helpers.misc.input")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.input")
+    @patch("nephos.helpers.misc.print")
     def test_get_response(self, mock_print, mock_input):
         mock_input.side_effect = ["An answer"]
         answer = get_response("A question")
@@ -229,9 +228,9 @@ class TestGetResponse:
         mock_print.assert_called_with("A question")
         assert answer == "An answer"
 
-    @mock.patch("nephos.helpers.misc.getpass")
-    @mock.patch("nephos.helpers.misc.input")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.getpass")
+    @patch("nephos.helpers.misc.input")
+    @patch("nephos.helpers.misc.print")
     def test_get_response_password(self, mock_print, mock_input, mock_getpass):
         mock_getpass.side_effect = ["A password"]
         answer = get_response("A question", sensitive=True)
@@ -240,8 +239,8 @@ class TestGetResponse:
         mock_getpass.assert_called_once_with("Password:")
         assert answer == "A password"
 
-    @mock.patch("nephos.helpers.misc.input")
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.input")
+    @patch("nephos.helpers.misc.print")
     def test_get_response_options(self, mock_print, mock_input):
         mock_input.side_effect = ["mistake", "y"]
         get_response("A question", ("y", "n"))
@@ -256,7 +255,7 @@ class TestGetResponse:
 
 
 class TestPrettyPrint:
-    @mock.patch("nephos.helpers.misc.print")
+    @patch("nephos.helpers.misc.print")
     def test_pretty_print(self, mock_print):
         pretty_print('{"some": "json"}')
         mock_print.assert_called_with(

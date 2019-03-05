@@ -1,6 +1,5 @@
 from copy import deepcopy
-from unittest import mock
-from unittest.mock import call
+from unittest.mock import call, patch, Mock
 
 import pytest
 
@@ -26,10 +25,10 @@ from nephos.fabric.crypto import (
 
 
 class TestChechId:
-    @mock.patch("nephos.fabric.crypto.sleep")
-    @mock.patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.sleep")
+    @patch("nephos.fabric.crypto.get_pod")
     def test_check_id(self, mock_get_pod, mock_sleep):
-        mock_executor = mock.Mock()
+        mock_executor = Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [
             (None, "no rows in result set")  # List identities
@@ -43,10 +42,10 @@ class TestChechId:
         )
         mock_sleep.assert_not_called()
 
-    @mock.patch("nephos.fabric.crypto.sleep")
-    @mock.patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.sleep")
+    @patch("nephos.fabric.crypto.get_pod")
     def test_check_id_again(self, mock_get_pod, mock_sleep):
-        mock_executor = mock.Mock()
+        mock_executor = Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [("an-ord", None)]  # List identities
         check_id("a-namespace", "a-ca", "an-ord", verbose=True)
@@ -58,10 +57,10 @@ class TestChechId:
         )
         mock_sleep.assert_not_called()
 
-    @mock.patch("nephos.fabric.crypto.sleep")
-    @mock.patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.sleep")
+    @patch("nephos.fabric.crypto.get_pod")
     def test_check_id_serverconnection(self, mock_get_pod, mock_sleep):
-        mock_executor = mock.Mock()
+        mock_executor = Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [
             (None, "could not connect to server"),  # List identities
@@ -79,10 +78,10 @@ class TestChechId:
         )
         mock_sleep.assert_called_once_with(15)
 
-    @mock.patch("nephos.fabric.crypto.sleep")
-    @mock.patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.sleep")
+    @patch("nephos.fabric.crypto.get_pod")
     def test_check_id_admin(self, mock_get_pod, mock_sleep):
-        mock_executor = mock.Mock()
+        mock_executor = Mock()
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [
             (None, "no rows in result set")  # List identities
@@ -98,11 +97,11 @@ class TestChechId:
 
 
 class TestRegisterId:
-    @mock.patch("nephos.fabric.crypto.sleep")
-    @mock.patch("nephos.fabric.crypto.get_pod")
-    @mock.patch("nephos.fabric.crypto.check_id")
+    @patch("nephos.fabric.crypto.sleep")
+    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.check_id")
     def test_register_id(self, mock_check_id, mock_get_pod, mock_sleep):
-        mock_executor = mock.Mock()
+        mock_executor = Mock()
         mock_check_id.side_effect = [False]
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [("Register", None)]  # Register identities
@@ -119,11 +118,11 @@ class TestRegisterId:
         )
         mock_sleep.assert_not_called()
 
-    @mock.patch("nephos.fabric.crypto.sleep")
-    @mock.patch("nephos.fabric.crypto.get_pod")
-    @mock.patch("nephos.fabric.crypto.check_id")
+    @patch("nephos.fabric.crypto.sleep")
+    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.check_id")
     def test_register_id_again(self, mock_check_id, mock_get_pod, mock_sleep):
-        mock_executor = mock.Mock()
+        mock_executor = Mock()
         mock_check_id.side_effect = [True]
         mock_get_pod.side_effect = [mock_executor]
         register_id(
@@ -135,11 +134,11 @@ class TestRegisterId:
         mock_executor.execute.assert_not_called()
         mock_sleep.assert_not_called()
 
-    @mock.patch("nephos.fabric.crypto.sleep")
-    @mock.patch("nephos.fabric.crypto.get_pod")
-    @mock.patch("nephos.fabric.crypto.check_id")
+    @patch("nephos.fabric.crypto.sleep")
+    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.check_id")
     def test_register_id_error(self, mock_check_id, mock_get_pod, mock_sleep):
-        mock_executor = mock.Mock()
+        mock_executor = Mock()
         mock_check_id.side_effect = [False]
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [
@@ -162,11 +161,11 @@ class TestRegisterId:
         )
         mock_sleep.assert_called_once_with(15)
 
-    @mock.patch("nephos.fabric.crypto.sleep")
-    @mock.patch("nephos.fabric.crypto.get_pod")
-    @mock.patch("nephos.fabric.crypto.check_id")
+    @patch("nephos.fabric.crypto.sleep")
+    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.check_id")
     def test_register_id_admin(self, mock_check_id, mock_get_pod, mock_sleep):
-        mock_executor = mock.Mock()
+        mock_executor = Mock()
         mock_check_id.side_effect = [False]
         mock_get_pod.side_effect = [mock_executor]
         mock_executor.execute.side_effect = [("Register", None)]  # Register identities
@@ -187,10 +186,10 @@ class TestEnrollId:
         "cas": {"a-ca": {"namespace": "ca-namespace", "tls_cert": "./tls_cert.pem"}},
     }
 
-    @mock.patch("nephos.fabric.crypto.isdir")
-    @mock.patch("nephos.fabric.crypto.ingress_read")
-    @mock.patch("nephos.fabric.crypto.execute_until_success")
-    @mock.patch("nephos.fabric.crypto.abspath")
+    @patch("nephos.fabric.crypto.isdir")
+    @patch("nephos.fabric.crypto.ingress_read")
+    @patch("nephos.fabric.crypto.execute_until_success")
+    @patch("nephos.fabric.crypto.abspath")
     def test_enroll_id(
         self, mock_abspath, mock_execute_until_success, mock_ingress_read, mock_isdir
     ):
@@ -209,10 +208,10 @@ class TestEnrollId:
             + "--tls.certfiles /home/nephos/tls_cert.pem"
         )
 
-    @mock.patch("nephos.fabric.crypto.isdir")
-    @mock.patch("nephos.fabric.crypto.ingress_read")
-    @mock.patch("nephos.fabric.crypto.execute_until_success")
-    @mock.patch("nephos.fabric.crypto.abspath")
+    @patch("nephos.fabric.crypto.isdir")
+    @patch("nephos.fabric.crypto.ingress_read")
+    @patch("nephos.fabric.crypto.execute_until_success")
+    @patch("nephos.fabric.crypto.abspath")
     def test_enroll_id_again(
         self, mock_abspath, mock_execute_until_success, mock_ingress_read, mock_isdir
     ):
@@ -226,10 +225,10 @@ class TestEnrollId:
         mock_isdir.assert_called_once_with("./crypto/a-peer_MSP")
         mock_execute_until_success.assert_not_called()
 
-    @mock.patch("nephos.fabric.crypto.isdir")
-    @mock.patch("nephos.fabric.crypto.ingress_read")
-    @mock.patch("nephos.fabric.crypto.execute_until_success")
-    @mock.patch("nephos.fabric.crypto.abspath")
+    @patch("nephos.fabric.crypto.isdir")
+    @patch("nephos.fabric.crypto.ingress_read")
+    @patch("nephos.fabric.crypto.execute_until_success")
+    @patch("nephos.fabric.crypto.abspath")
     def test_enroll_verbose(
         self, mock_abspath, mock_execute_until_success, mock_ingress_read, mock_isdir
     ):
@@ -261,12 +260,12 @@ class TestCreateAdmin:
         "cas": {"a-ca": {"namespace": "ca-namespace", "tls_cert": "./tls_cert.pem"}},
     }
 
-    @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.listdir")
-    @mock.patch("nephos.fabric.crypto.isdir")
-    @mock.patch("nephos.fabric.crypto.ingress_read")
-    @mock.patch("nephos.fabric.crypto.execute")
-    @mock.patch("nephos.fabric.crypto.abspath")
+    @patch("nephos.fabric.crypto.register_id")
+    @patch("nephos.fabric.crypto.listdir")
+    @patch("nephos.fabric.crypto.isdir")
+    @patch("nephos.fabric.crypto.ingress_read")
+    @patch("nephos.fabric.crypto.execute")
+    @patch("nephos.fabric.crypto.abspath")
     def test_ca_create_admin(
         self,
         mock_abspath,
@@ -296,12 +295,12 @@ class TestCreateAdmin:
             verbose=False,
         )
 
-    @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.listdir")
-    @mock.patch("nephos.fabric.crypto.isdir")
-    @mock.patch("nephos.fabric.crypto.ingress_read")
-    @mock.patch("nephos.fabric.crypto.execute")
-    @mock.patch("nephos.fabric.crypto.abspath")
+    @patch("nephos.fabric.crypto.register_id")
+    @patch("nephos.fabric.crypto.listdir")
+    @patch("nephos.fabric.crypto.isdir")
+    @patch("nephos.fabric.crypto.ingress_read")
+    @patch("nephos.fabric.crypto.execute")
+    @patch("nephos.fabric.crypto.abspath")
     def test_ca_create_admin_again(
         self,
         mock_abspath,
@@ -331,7 +330,7 @@ class TestCreateAdmin:
 class TestAdminCreds:
     OPTS = {"msps": {"an-msp": {"namespace": "msp-ns", "org_admin": "an-admin"}}}
 
-    @mock.patch("nephos.fabric.crypto.credentials_secret")
+    @patch("nephos.fabric.crypto.credentials_secret")
     def test_admin_creds(self, mock_credentials_secret):
         mock_credentials_secret.side_effect = [{"CA_PASSWORD": "a_password"}]
         admin_creds(self.OPTS, "an-msp")
@@ -344,7 +343,7 @@ class TestAdminCreds:
         )
         assert self.OPTS["msps"]["an-msp"].get("org_adminpw") == "a_password"
 
-    @mock.patch("nephos.fabric.crypto.credentials_secret")
+    @patch("nephos.fabric.crypto.credentials_secret")
     def test_admin_creds_again(self, mock_credentials_secret):
         mock_credentials_secret.side_effect = [{"CA_PASSWORD": "a_password"}]
         admin_creds(self.OPTS, "an-msp", verbose=True)
@@ -359,11 +358,11 @@ class TestAdminCreds:
 
 
 class TestCopySecret:
-    @mock.patch("nephos.fabric.crypto.shutil")
-    @mock.patch("nephos.fabric.crypto.makedirs")
-    @mock.patch("nephos.fabric.crypto.isfile")
-    @mock.patch("nephos.fabric.crypto.isdir")
-    @mock.patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.shutil")
+    @patch("nephos.fabric.crypto.makedirs")
+    @patch("nephos.fabric.crypto.isfile")
+    @patch("nephos.fabric.crypto.isdir")
+    @patch("nephos.fabric.crypto.glob")
     def test_copy_secret(
         self, mock_glob, mock_isdir, mock_isfile, mock_makedirs, mock_shutil
     ):
@@ -379,11 +378,11 @@ class TestCopySecret:
             "./a_dir/a_MSP/signcerts/cert.pem", "./a_dir/a_MSP/admincerts/cert.pem"
         )
 
-    @mock.patch("nephos.fabric.crypto.shutil")
-    @mock.patch("nephos.fabric.crypto.makedirs")
-    @mock.patch("nephos.fabric.crypto.isfile")
-    @mock.patch("nephos.fabric.crypto.isdir")
-    @mock.patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.shutil")
+    @patch("nephos.fabric.crypto.makedirs")
+    @patch("nephos.fabric.crypto.isfile")
+    @patch("nephos.fabric.crypto.isdir")
+    @patch("nephos.fabric.crypto.glob")
     def test_copy_secret_again(
         self, mock_glob, mock_isdir, mock_isfile, mock_makedirs, mock_shutil
     ):
@@ -396,11 +395,11 @@ class TestCopySecret:
         mock_makedirs.assert_not_called()
         mock_shutil.copy.assert_not_called()
 
-    @mock.patch("nephos.fabric.crypto.shutil")
-    @mock.patch("nephos.fabric.crypto.makedirs")
-    @mock.patch("nephos.fabric.crypto.isfile")
-    @mock.patch("nephos.fabric.crypto.isdir")
-    @mock.patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.shutil")
+    @patch("nephos.fabric.crypto.makedirs")
+    @patch("nephos.fabric.crypto.isfile")
+    @patch("nephos.fabric.crypto.isdir")
+    @patch("nephos.fabric.crypto.glob")
     def test_copy_secret_fail(
         self, mock_glob, mock_isdir, mock_isfile, mock_makedirs, mock_shutil
     ):
@@ -424,10 +423,10 @@ class TestMspSecrets:
         },
     }
 
-    @mock.patch("nephos.fabric.crypto.id_to_secrets")
-    @mock.patch("nephos.fabric.crypto.glob")
-    @mock.patch("nephos.fabric.crypto.copy_secret")
-    @mock.patch("nephos.fabric.crypto.cacerts_to_secrets")
+    @patch("nephos.fabric.crypto.id_to_secrets")
+    @patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.copy_secret")
+    @patch("nephos.fabric.crypto.cacerts_to_secrets")
     def test_msp_secrets(
         self, mock_cacerts_to_secrets, mock_copy_secret, mock_glob, mock_id_to_secrets
     ):
@@ -444,10 +443,10 @@ class TestMspSecrets:
             "msp-ns", "./crypto/a_MSP", "an-admin", verbose=False
         )
 
-    @mock.patch("nephos.fabric.crypto.id_to_secrets")
-    @mock.patch("nephos.fabric.crypto.glob")
-    @mock.patch("nephos.fabric.crypto.copy_secret")
-    @mock.patch("nephos.fabric.crypto.cacerts_to_secrets")
+    @patch("nephos.fabric.crypto.id_to_secrets")
+    @patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.copy_secret")
+    @patch("nephos.fabric.crypto.cacerts_to_secrets")
     def test_msp_secrets_cryptogen(
         self, mock_cacerts_to_secrets, mock_copy_secret, mock_glob, mock_id_to_secrets
     ):
@@ -479,10 +478,10 @@ class TestMspSecrets:
             verbose=False,
         )
 
-    @mock.patch("nephos.fabric.crypto.id_to_secrets")
-    @mock.patch("nephos.fabric.crypto.glob")
-    @mock.patch("nephos.fabric.crypto.copy_secret")
-    @mock.patch("nephos.fabric.crypto.cacerts_to_secrets")
+    @patch("nephos.fabric.crypto.id_to_secrets")
+    @patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.copy_secret")
+    @patch("nephos.fabric.crypto.cacerts_to_secrets")
     def test_msp_secrets_cryptogen_fail(
         self, mock_cacerts_to_secrets, mock_copy_secret, mock_glob, mock_id_to_secrets
     ):
@@ -514,10 +513,10 @@ class TestAdminMsp:
         },
     }
 
-    @mock.patch("nephos.fabric.crypto.ns_create")
-    @mock.patch("nephos.fabric.crypto.msp_secrets")
-    @mock.patch("nephos.fabric.crypto.create_admin")
-    @mock.patch("nephos.fabric.crypto.admin_creds")
+    @patch("nephos.fabric.crypto.ns_create")
+    @patch("nephos.fabric.crypto.msp_secrets")
+    @patch("nephos.fabric.crypto.create_admin")
+    @patch("nephos.fabric.crypto.admin_creds")
     def test_admin_msp(
         self, mock_ca_creds, mock_create_admin, mock_msp_secrets, mock_ns_create
     ):
@@ -528,10 +527,10 @@ class TestAdminMsp:
         mock_create_admin.assert_called_once_with(opts, "an-msp", verbose=False)
         mock_msp_secrets.assert_called_once_with(opts, "an-msp", verbose=False)
 
-    @mock.patch("nephos.fabric.crypto.ns_create")
-    @mock.patch("nephos.fabric.crypto.msp_secrets")
-    @mock.patch("nephos.fabric.crypto.create_admin")
-    @mock.patch("nephos.fabric.crypto.admin_creds")
+    @patch("nephos.fabric.crypto.ns_create")
+    @patch("nephos.fabric.crypto.msp_secrets")
+    @patch("nephos.fabric.crypto.create_admin")
+    @patch("nephos.fabric.crypto.admin_creds")
     def test_admin_msp_cryptogen(
         self, mock_ca_creds, mock_create_admin, mock_msp_secrets, mock_ns_create
     ):
@@ -545,8 +544,8 @@ class TestAdminMsp:
 
 
 class TestItemToSecret:
-    @mock.patch("nephos.fabric.crypto.print")
-    @mock.patch("nephos.fabric.crypto.crypto_secret")
+    @patch("nephos.fabric.crypto.print")
+    @patch("nephos.fabric.crypto.crypto_secret")
     def test_item_to_secret(self, mock_crypto_secret, mock_print):
         item_to_secret(
             "msp-ns",
@@ -563,8 +562,8 @@ class TestItemToSecret:
         )
         mock_print.assert_not_called()
 
-    @mock.patch("nephos.fabric.crypto.print")
-    @mock.patch("nephos.fabric.crypto.crypto_secret")
+    @patch("nephos.fabric.crypto.print")
+    @patch("nephos.fabric.crypto.crypto_secret")
     def test_item_to_secret_unrequired(self, mock_crypto_secret, mock_print):
         mock_crypto_secret.side_effect = [Exception()]
         item_to_secret(
@@ -584,8 +583,8 @@ class TestItemToSecret:
             'No ./crypto/a_subfolder found, so secret "hlf--a-user-a-type" was not created'
         )
 
-    @mock.patch("nephos.fabric.crypto.print")
-    @mock.patch("nephos.fabric.crypto.crypto_secret")
+    @patch("nephos.fabric.crypto.print")
+    @patch("nephos.fabric.crypto.crypto_secret")
     def test_item_to_secret_failed(self, mock_crypto_secret, mock_print):
         mock_crypto_secret.side_effect = [Exception()]
         with pytest.raises(Exception):
@@ -606,7 +605,7 @@ class TestItemToSecret:
 
 
 class TestIdToSecrets:
-    @mock.patch("nephos.fabric.crypto.item_to_secret")
+    @patch("nephos.fabric.crypto.item_to_secret")
     def test_id_to_secrets(self, mock_item_to_secret):
         mock_item_to_secret.side_effect = [None, None]
         id_to_secrets("msp-ns", "./crypto", "a-user")
@@ -629,7 +628,7 @@ class TestIdToSecrets:
             ]
         )
 
-    @mock.patch("nephos.fabric.crypto.item_to_secret")
+    @patch("nephos.fabric.crypto.item_to_secret")
     def test_id_to_secrets_nocert(self, mock_item_to_secret):
         mock_item_to_secret.side_effect = [Exception()]
         with pytest.raises(Exception):
@@ -644,7 +643,7 @@ class TestIdToSecrets:
 
 
 class TestCaCertsToSecrets:
-    @mock.patch("nephos.fabric.crypto.item_to_secret")
+    @patch("nephos.fabric.crypto.item_to_secret")
     def test_cacerts_to_secrets(self, mock_item_to_secret):
         mock_item_to_secret.side_effect = [None, None]
         cacerts_to_secrets("msp-ns", "./crypto", "a-user")
@@ -672,7 +671,7 @@ class TestCaCertsToSecrets:
             ]
         )
 
-    @mock.patch("nephos.fabric.crypto.item_to_secret")
+    @patch("nephos.fabric.crypto.item_to_secret")
     def test_cacerts_to_secrets_nocacert(self, mock_item_to_secret):
         mock_item_to_secret.side_effect = [Exception()]
         with pytest.raises(Exception):
@@ -701,11 +700,11 @@ class TestSetupId:
         "orderers": {"names": ["ord0"], "msp": "ord_MSP"},
     }
 
-    @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.enroll_id")
-    @mock.patch("nephos.fabric.crypto.id_to_secrets")
-    @mock.patch("nephos.fabric.crypto.glob")
-    @mock.patch("nephos.fabric.crypto.credentials_secret")
+    @patch("nephos.fabric.crypto.register_id")
+    @patch("nephos.fabric.crypto.enroll_id")
+    @patch("nephos.fabric.crypto.id_to_secrets")
+    @patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.credentials_secret")
     def test_setup_id(
         self,
         mock_credentials_secret,
@@ -734,11 +733,11 @@ class TestSetupId:
             namespace="peer-ns", msp_path="./peer0_MSP", username="peer0", verbose=False
         )
 
-    @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.enroll_id")
-    @mock.patch("nephos.fabric.crypto.id_to_secrets")
-    @mock.patch("nephos.fabric.crypto.glob")
-    @mock.patch("nephos.fabric.crypto.credentials_secret")
+    @patch("nephos.fabric.crypto.register_id")
+    @patch("nephos.fabric.crypto.enroll_id")
+    @patch("nephos.fabric.crypto.id_to_secrets")
+    @patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.credentials_secret")
     def test_setup_id_ord(
         self,
         mock_credentials_secret,
@@ -767,11 +766,11 @@ class TestSetupId:
             namespace="ord-ns", msp_path="./ord0_MSP", username="ord0", verbose=False
         )
 
-    @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.enroll_id")
-    @mock.patch("nephos.fabric.crypto.id_to_secrets")
-    @mock.patch("nephos.fabric.crypto.glob")
-    @mock.patch("nephos.fabric.crypto.credentials_secret")
+    @patch("nephos.fabric.crypto.register_id")
+    @patch("nephos.fabric.crypto.enroll_id")
+    @patch("nephos.fabric.crypto.id_to_secrets")
+    @patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.credentials_secret")
     def test_setup_id_cryptogen(
         self,
         mock_credentials_secret,
@@ -801,11 +800,11 @@ class TestSetupId:
             verbose=False,
         )
 
-    @mock.patch("nephos.fabric.crypto.register_id")
-    @mock.patch("nephos.fabric.crypto.enroll_id")
-    @mock.patch("nephos.fabric.crypto.id_to_secrets")
-    @mock.patch("nephos.fabric.crypto.glob")
-    @mock.patch("nephos.fabric.crypto.credentials_secret")
+    @patch("nephos.fabric.crypto.register_id")
+    @patch("nephos.fabric.crypto.enroll_id")
+    @patch("nephos.fabric.crypto.id_to_secrets")
+    @patch("nephos.fabric.crypto.glob")
+    @patch("nephos.fabric.crypto.credentials_secret")
     def test_setup_id_cryptogen_fail(
         self,
         mock_credentials_secret,
@@ -847,7 +846,7 @@ class TestSetupNodes:
         "orderers": {"names": ["ord0"], "msp": "ord_MSP"},
     }
 
-    @mock.patch("nephos.fabric.crypto.setup_id")
+    @patch("nephos.fabric.crypto.setup_id")
     def test_setup_nodes(self, mock_setup_id):
         setup_nodes(self.OPTS, "peer")
         mock_setup_id.assert_has_calls(
@@ -857,7 +856,7 @@ class TestSetupNodes:
             ]
         )
 
-    @mock.patch("nephos.fabric.crypto.setup_id")
+    @patch("nephos.fabric.crypto.setup_id")
     def test_setup_nodes_ord(self, mock_setup_id):
         setup_nodes(self.OPTS, "orderer", verbose=True)
         mock_setup_id.assert_has_calls(
@@ -872,11 +871,11 @@ class TestGenesisBlock:
         "orderers": {"secret_genesis": "a-genesis-secret", "msp": "ord_MSP"},
     }
 
-    @mock.patch("nephos.fabric.crypto.secret_from_file")
-    @mock.patch("nephos.fabric.crypto.print")
-    @mock.patch("nephos.fabric.crypto.exists")
-    @mock.patch("nephos.fabric.crypto.execute")
-    @mock.patch("nephos.fabric.crypto.chdir")
+    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.print")
+    @patch("nephos.fabric.crypto.exists")
+    @patch("nephos.fabric.crypto.execute")
+    @patch("nephos.fabric.crypto.chdir")
     def test_blocks(
         self, mock_chdir, mock_execute, mock_exists, mock_print, mock_secret_from_file
     ):
@@ -897,11 +896,11 @@ class TestGenesisBlock:
             verbose=False,
         )
 
-    @mock.patch("nephos.fabric.crypto.secret_from_file")
-    @mock.patch("nephos.fabric.crypto.print")
-    @mock.patch("nephos.fabric.crypto.exists")
-    @mock.patch("nephos.fabric.crypto.execute")
-    @mock.patch("nephos.fabric.crypto.chdir")
+    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.print")
+    @patch("nephos.fabric.crypto.exists")
+    @patch("nephos.fabric.crypto.execute")
+    @patch("nephos.fabric.crypto.chdir")
     def test_again(
         self, mock_chdir, mock_execute, mock_exists, mock_print, mock_secret_from_file
     ):
@@ -932,11 +931,11 @@ class TestChannelTx:
         },
     }
 
-    @mock.patch("nephos.fabric.crypto.secret_from_file")
-    @mock.patch("nephos.fabric.crypto.print")
-    @mock.patch("nephos.fabric.crypto.exists")
-    @mock.patch("nephos.fabric.crypto.execute")
-    @mock.patch("nephos.fabric.crypto.chdir")
+    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.print")
+    @patch("nephos.fabric.crypto.exists")
+    @patch("nephos.fabric.crypto.execute")
+    @patch("nephos.fabric.crypto.chdir")
     def test_blocks(
         self, mock_chdir, mock_execute, mock_exists, mock_print, mock_secret_from_file
     ):
@@ -957,11 +956,11 @@ class TestChannelTx:
             verbose=False,
         )
 
-    @mock.patch("nephos.fabric.crypto.secret_from_file")
-    @mock.patch("nephos.fabric.crypto.print")
-    @mock.patch("nephos.fabric.crypto.exists")
-    @mock.patch("nephos.fabric.crypto.execute")
-    @mock.patch("nephos.fabric.crypto.chdir")
+    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.print")
+    @patch("nephos.fabric.crypto.exists")
+    @patch("nephos.fabric.crypto.execute")
+    @patch("nephos.fabric.crypto.chdir")
     def test_again(
         self, mock_chdir, mock_execute, mock_exists, mock_print, mock_secret_from_file
     ):

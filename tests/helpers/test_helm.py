@@ -1,6 +1,5 @@
 from collections import namedtuple
-from unittest import mock
-from unittest.mock import call
+from unittest.mock import call, patch
 
 import pytest
 
@@ -20,9 +19,9 @@ IngressHost = namedtuple("IngressHost", ("host",))
 
 
 class TestHelmInit:
-    @mock.patch("nephos.helpers.helm.sleep")
-    @mock.patch("nephos.helpers.helm.print")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.sleep")
+    @patch("nephos.helpers.helm.print")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_init(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
             (None, "error"),
@@ -38,9 +37,9 @@ class TestHelmInit:
         mock_print.assert_called_once_with(".", end="", flush=True)
         mock_sleep.assert_called_once()
 
-    @mock.patch("nephos.helpers.helm.sleep")
-    @mock.patch("nephos.helpers.helm.print")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.sleep")
+    @patch("nephos.helpers.helm.print")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_init_repeat(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [("Helm list", None)]
         helm_init()
@@ -50,9 +49,9 @@ class TestHelmInit:
 
 
 class TestHelmCheck:
-    @mock.patch("nephos.helpers.helm.sleep")
-    @mock.patch("nephos.helpers.helm.print")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.sleep")
+    @patch("nephos.helpers.helm.print")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_check(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
             ("Pending", None),  # Get states
@@ -71,9 +70,9 @@ class TestHelmCheck:
         )
         mock_sleep.assert_called_once()
 
-    @mock.patch("nephos.helpers.helm.sleep")
-    @mock.patch("nephos.helpers.helm.print")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.sleep")
+    @patch("nephos.helpers.helm.print")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_check_podnum(self, mock_execute, mock_print, mock_sleep):
         mock_execute.side_effect = [
             ("Pending Running", None),  # Get states
@@ -94,19 +93,19 @@ class TestHelmCheck:
 
 
 class TestHelmEnvVars:
-    @mock.patch("nephos.helpers.helm.secret_read")
+    @patch("nephos.helpers.helm.secret_read")
     def test_helm_env_vars_empty(self, mock_secret_read):
         result = helm_env_vars(None)
         assert result == ""
         mock_secret_read.assert_not_called()
 
-    @mock.patch("nephos.helpers.helm.secret_read")
+    @patch("nephos.helpers.helm.secret_read")
     def test_helm_env_vars_values(self, mock_secret_read):
         result = helm_env_vars((("foo", "bar"), ("egg", "sausage", True)))
         assert result == " --set foo=bar --set-string egg=sausage"
         mock_secret_read.assert_not_called()
 
-    @mock.patch("nephos.helpers.helm.secret_read")
+    @patch("nephos.helpers.helm.secret_read")
     def test_helm_env_vars_bad(self, mock_secret_read):
         with pytest.raises(TypeError):
             helm_env_vars(("foo", "egg"))
@@ -114,13 +113,13 @@ class TestHelmEnvVars:
 
 
 class TestHelmPreserve:
-    @mock.patch("nephos.helpers.helm.secret_read")
+    @patch("nephos.helpers.helm.secret_read")
     def test_helm_preserve_empty(self, mock_secret_read):
         result = helm_preserve("a-namespace", preserve=None)
         assert result == ""
         mock_secret_read.assert_not_called()
 
-    @mock.patch("nephos.helpers.helm.secret_read")
+    @patch("nephos.helpers.helm.secret_read")
     def test_helm_preserve(self, mock_secret_read):
         mock_secret_read.side_effect = [{"BAR_ENV": "sausage"}]
         result = helm_preserve(
@@ -131,13 +130,13 @@ class TestHelmPreserve:
             "a-secret", "a-namespace", verbose=False
         )
 
-    @mock.patch("nephos.helpers.helm.secret_read")
+    @patch("nephos.helpers.helm.secret_read")
     def test_helm_preserve_bad(self, mock_secret_read):
         with pytest.raises(TypeError):
             helm_preserve("a-namespace", preserve=("foo", "egg"))
         mock_secret_read.assert_not_called()
 
-    @mock.patch("nephos.helpers.helm.secret_read")
+    @patch("nephos.helpers.helm.secret_read")
     def test_helm_preserve_preserve_bad(self, mock_secret_read):
         mock_secret_read.side_effect = [{"BAR_ENV": "sausage"}]
         with pytest.raises(TypeError):
@@ -146,9 +145,9 @@ class TestHelmPreserve:
 
 
 class TestHelmInstall:
-    @mock.patch("nephos.helpers.helm.helm_env_vars")
-    @mock.patch("nephos.helpers.helm.helm_check")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    @patch("nephos.helpers.helm.helm_check")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_install(self, mock_execute, mock_helm_check, mock_helm_env_vars):
         mock_helm_env_vars.side_effect = [""]
         mock_execute.side_effect = [
@@ -168,9 +167,9 @@ class TestHelmInstall:
         )
         mock_helm_check.assert_called_once_with("an_app", "a-release", "a-namespace", 1)
 
-    @mock.patch("nephos.helpers.helm.helm_env_vars")
-    @mock.patch("nephos.helpers.helm.helm_check")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    @patch("nephos.helpers.helm.helm_check")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_install_again(
         self, mock_execute, mock_helm_check, mock_helm_env_vars
     ):
@@ -181,9 +180,9 @@ class TestHelmInstall:
         mock_execute.assert_called_once_with("helm status a-release")
         mock_helm_check.assert_called_once_with("an_app", "a-release", "a-namespace", 1)
 
-    @mock.patch("nephos.helpers.helm.helm_env_vars")
-    @mock.patch("nephos.helpers.helm.helm_check")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    @patch("nephos.helpers.helm.helm_check")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_install_config(
         self, mock_execute, mock_helm_check, mock_helm_env_vars
     ):
@@ -211,9 +210,9 @@ class TestHelmInstall:
         )
         mock_helm_check.assert_called_once_with("an_app", "a-release", "a-namespace", 1)
 
-    @mock.patch("nephos.helpers.helm.helm_env_vars")
-    @mock.patch("nephos.helpers.helm.helm_check")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    @patch("nephos.helpers.helm.helm_check")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_install_envvars(
         self, mock_execute, mock_helm_check, mock_helm_env_vars
     ):
@@ -245,10 +244,10 @@ class TestHelmInstall:
 
 
 class TestHelmUpgrade:
-    @mock.patch("nephos.helpers.helm.helm_preserve")
-    @mock.patch("nephos.helpers.helm.helm_env_vars")
-    @mock.patch("nephos.helpers.helm.helm_check")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.helm_preserve")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    @patch("nephos.helpers.helm.helm_check")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_upgrade(
         self, mock_execute, mock_helm_check, mock_helm_env_vars, mock_helm_preserve
     ):
@@ -269,10 +268,10 @@ class TestHelmUpgrade:
         )
         mock_helm_check.assert_called_once_with("an_app", "a-release", "a-namespace", 1)
 
-    @mock.patch("nephos.helpers.helm.helm_preserve")
-    @mock.patch("nephos.helpers.helm.helm_env_vars")
-    @mock.patch("nephos.helpers.helm.helm_check")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.helm_preserve")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    @patch("nephos.helpers.helm.helm_check")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_upgrade_preinstall(
         self, mock_execute, mock_helm_check, mock_helm_env_vars, mock_helm_preserve
     ):
@@ -286,10 +285,10 @@ class TestHelmUpgrade:
         mock_execute.assert_called_once_with("helm status a-release")
         mock_helm_check.assert_not_called()
 
-    @mock.patch("nephos.helpers.helm.helm_preserve")
-    @mock.patch("nephos.helpers.helm.helm_env_vars")
-    @mock.patch("nephos.helpers.helm.helm_check")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.helm_preserve")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    @patch("nephos.helpers.helm.helm_check")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_upgrade_config(
         self, mock_execute, mock_helm_check, mock_helm_env_vars, mock_helm_preserve
     ):
@@ -319,10 +318,10 @@ class TestHelmUpgrade:
         )
         mock_helm_check.assert_called_once_with("an_app", "a-release", "a-namespace", 1)
 
-    @mock.patch("nephos.helpers.helm.helm_preserve")
-    @mock.patch("nephos.helpers.helm.helm_env_vars")
-    @mock.patch("nephos.helpers.helm.helm_check")
-    @mock.patch("nephos.helpers.helm.execute")
+    @patch("nephos.helpers.helm.helm_preserve")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    @patch("nephos.helpers.helm.helm_check")
+    @patch("nephos.helpers.helm.execute")
     def test_helm_upgrade_preserve(
         self, mock_execute, mock_helm_check, mock_helm_env_vars, mock_helm_preserve
     ):
