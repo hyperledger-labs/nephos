@@ -249,7 +249,7 @@ def secret_from_file(secret, namespace, key=None, filename=None, verbose=False):
     except ApiException:
         # Get relevant variables
         if not filename:
-            secret_data = input_files((key,), secret, clean_key=True)
+            secret_data = input_files((key,), clean_key=True)
         else:
             with open(filename, "rb") as f:
                 data = f.read()
