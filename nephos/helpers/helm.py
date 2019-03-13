@@ -9,7 +9,7 @@ from blessings import Terminal
 from nephos.helpers.k8s import secret_read
 from nephos.helpers.misc import execute
 
-t = Terminal()
+TERM = Terminal()
 
 HelmPreserve = namedtuple("HelmPreserve", ("secret_name", "data_item", "values_path"))
 # noinspection PyArgumentList
@@ -29,7 +29,7 @@ def helm_check(app, release, namespace, pod_num=None):
         namespace (str): Namespace where Helm deployment is located.
         pod_num (int): Number of pods expected to exist in the release.
     """
-    print(t.yellow("Ensuring that all pods are running "))
+    print(TERM.yellow("Ensuring that all pods are running "))
     running = False
     first_pass = True
     while not running:
@@ -42,6 +42,7 @@ def helm_check(app, release, namespace, pod_num=None):
         )
         states_list = states.split()
         # Let us also check the number of pods we have
+        # TODO: This is probably not necessary
         pods, _ = execute(
             'kubectl get pods -n {ns} -l "app={app},release={name}" -o jsonpath="{{.items[*].metadata.name}}"'.format(
                 app=app, name=release, ns=namespace
@@ -57,10 +58,10 @@ def helm_check(app, release, namespace, pod_num=None):
             and "Running" in states
             and (pod_num is None or len(pod_list) == pod_num)
         ):
-            print(t.green("All pods in {} are running".format(release)))
+            print(TERM.green("All pods in {} are running".format(release)))
             running = True
         else:
-            print(t.red("."), end="", flush=True)
+            print(TERM.red("."), end="", flush=True)
             sleep(15)
 
 
@@ -68,7 +69,7 @@ def helm_init():
     """Initialise Helm on cluster, using RBAC."""
     res, _ = execute("helm list")
     if res is not None:
-        print(t.green("Helm is already installed!"))
+        print(TERM.green("Helm is already installed!"))
     else:
         execute("kubectl create -f {}/../extras/helm-rbac.yaml".format(CURRENT_DIR))
         execute("helm init --service-account tiller")
@@ -89,7 +90,7 @@ def helm_init():
             if res is not None:
                 running = True
             else:
-                print(t.red("."), end="", flush=True)
+                print(TERM.red("."), end="", flush=True)
                 sleep(15)
 
 
