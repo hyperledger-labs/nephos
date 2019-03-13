@@ -49,47 +49,15 @@ class TestHelmInit:
 
 
 class TestHelmCheck:
-    @patch("nephos.helpers.helm.sleep")
-    @patch("nephos.helpers.helm.print")
-    @patch("nephos.helpers.helm.execute")
-    def test_helm_check(self, mock_execute, mock_print, mock_sleep):
-        mock_execute.side_effect = [
-            ("Pending", None),  # Get states
-            ("a_pod", None),  # Get pods
-            ("Running", None),
-            ("a_pod", None),
-        ]
+    @patch("nephos.helpers.helm.pod_check")
+    def test_helm_check(self, mock_pod_check):
         helm_check("an_app", "a-release", "a-namespace")
-        assert mock_execute.call_count == 4
-        mock_print.assert_has_calls(
-            [
-                call("Ensuring that all pods are running "),
-                call(".", end="", flush=True),
-                call("All pods in a-release are running"),
-            ]
-        )
-        mock_sleep.assert_called_once()
+        mock_pod_check.assert_called_once_with("a-namespace", '-l "app=an_app,release=a-release"', pod_num=None)
 
-    @patch("nephos.helpers.helm.sleep")
-    @patch("nephos.helpers.helm.print")
-    @patch("nephos.helpers.helm.execute")
-    def test_helm_check_podnum(self, mock_execute, mock_print, mock_sleep):
-        mock_execute.side_effect = [
-            ("Pending Running", None),  # Get states
-            ("a_pod another_pod", None),  # Get pods
-            ("Running Running", None),
-            ("a_pod another_pod", None),
-        ]
+    @patch("nephos.helpers.helm.pod_check")
+    def test_helm_check_podnum(self, mock_pod_check):
         helm_check("an_app", "a-release", "a-namespace", pod_num=2)
-        assert mock_execute.call_count == 4
-        mock_print.assert_has_calls(
-            [
-                call("Ensuring that all pods are running "),
-                call(".", end="", flush=True),
-                call("All pods in a-release are running"),
-            ]
-        )
-        mock_sleep.assert_called_once()
+        mock_pod_check.assert_called_once_with("a-namespace", '-l "app=an_app,release=a-release"', pod_num=2)
 
 
 class TestHelmEnvVars:

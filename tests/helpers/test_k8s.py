@@ -1,5 +1,5 @@
 from collections import namedtuple
-from unittest.mock import patch, MagicMock
+from unittest.mock import call, patch, MagicMock
 
 from kubernetes.client.rest import ApiException
 import pytest
@@ -10,6 +10,7 @@ from nephos.helpers.k8s import (
     ns_create,
     ns_read,
     ingress_read,
+    pod_check,
     cm_create,
     cm_read,
     get_app_info,
@@ -208,6 +209,46 @@ class TestIngressRead:
             name="an_ingress", namespace="a-namespace"
         )
         mock_pretty_print.assert_not_called()
+
+
+class TestPodCheck:
+    @patch("nephos.helpers.k8s.sleep")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.execute")
+    def test_helm_check(self, mock_execute, mock_print, mock_sleep):
+        mock_execute.side_effect = [
+            ("Pending", None),  # Get states
+            ("Running", None),
+        ]
+        pod_check("a-namespace", "an-identifier", sleep_interval=15)
+        assert mock_execute.call_count == 2
+        mock_print.assert_has_calls(
+            [
+                call("Ensuring that all pods are running "),
+                call(".", end="", flush=True),
+                call("All pods are running"),
+            ]
+        )
+        mock_sleep.assert_called_once_with(15)
+
+    @patch("nephos.helpers.k8s.sleep")
+    @patch("nephos.helpers.k8s.print")
+    @patch("nephos.helpers.k8s.execute")
+    def test_pod_check_podnum(self, mock_execute, mock_print, mock_sleep):
+        mock_execute.side_effect = [
+            ("Pending Running", None),  # Get states
+            ("Running Running", None),
+        ]
+        pod_check("a-namespace", "an_identifier", pod_num=2)
+        assert mock_execute.call_count == 2
+        mock_print.assert_has_calls(
+            [
+                call("Ensuring that all pods are running "),
+                call(".", end="", flush=True),
+                call("All pods are running"),
+            ]
+        )
+        mock_sleep.assert_called_once_with(10)
 
 
 class TestCmCreate:
