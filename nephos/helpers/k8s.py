@@ -3,6 +3,7 @@ from __future__ import print_function
 import base64
 import json
 from shutil import which
+from time import sleep
 
 from blessings import Terminal
 from kubernetes import client, config
@@ -150,6 +151,44 @@ def ingress_read(name, namespace="default", verbose=False):
     if verbose:
         pretty_print(json.dumps(hosts))
     return hosts
+
+
+# Pods
+# TODO: We should not need to specify pod number.
+def pod_check(namespace, identifier, sleep_interval=10, pod_num=None):
+    """Check if a set of pods exist and are functional.
+
+    Args:
+        namespace (str): Namespace where Helm deployment is located.
+        identifier (str): Name of pod, or a label descriptor.
+        sleep_interval (int): Number of seconds to sleep between attempts.
+        pod_num (int): Number of pods expected to exist in the release. None by default.
+    """
+    print(TERM.yellow("Ensuring that all pods are running "))
+    running = False
+    first_pass = True
+    while not running:
+        states, _ = execute(
+            'kubectl get pods -n {ns} {identifier} -o jsonpath="{{.items[*].status.phase}}"'.format(
+                ns=namespace, identifier=identifier
+            ),
+            show_command=first_pass,
+        )
+        states_list = states.split()
+        # Let us also check the number of pods we have
+        first_pass = False
+        # We keep checking the state of the pods until they are running
+        states = set(states_list)
+        if (
+            len(states) == 1
+            and "Running" in states
+            and (pod_num is None or len(states_list) == pod_num)
+        ):
+            print(TERM.green("All pods are running"))
+            running = True
+        else:
+            print(TERM.red("."), end="", flush=True)
+            sleep(sleep_interval)
 
 
 # Configmaps and secrets

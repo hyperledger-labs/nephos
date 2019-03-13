@@ -6,10 +6,10 @@ from time import sleep
 
 from blessings import Terminal
 
-from nephos.helpers.k8s import secret_read
+from nephos.helpers.k8s import pod_check, secret_read
 from nephos.helpers.misc import execute
 
-t = Terminal()
+TERM = Terminal()
 
 HelmPreserve = namedtuple("HelmPreserve", ("secret_name", "data_item", "values_path"))
 # noinspection PyArgumentList
@@ -19,7 +19,6 @@ CURRENT_DIR = path.abspath(path.split(__file__)[0])
 
 
 # TODO: We should be able to get the namespace from the Helm release...
-# TODO: We should not need to specify pod number.
 def helm_check(app, release, namespace, pod_num=None):
     """Check if a Helm release exists and is functional.
 
@@ -29,46 +28,17 @@ def helm_check(app, release, namespace, pod_num=None):
         namespace (str): Namespace where Helm deployment is located.
         pod_num (int): Number of pods expected to exist in the release.
     """
-    print(t.yellow("Ensuring that all pods are running "))
-    running = False
-    first_pass = True
-    while not running:
-        # TODO: Best to generate a function that checks app state
-        states, _ = execute(
-            'kubectl get pods -n {ns} -l "app={app},release={name}" -o jsonpath="{{.items[*].status.phase}}"'.format(
-                app=app, name=release, ns=namespace
-            ),
-            show_command=first_pass,
-        )
-        states_list = states.split()
-        # Let us also check the number of pods we have
-        pods, _ = execute(
-            'kubectl get pods -n {ns} -l "app={app},release={name}" -o jsonpath="{{.items[*].metadata.name}}"'.format(
-                app=app, name=release, ns=namespace
-            ),
-            show_command=first_pass,
-        )
-        pod_list = pods.split()
-        first_pass = False
-        # We keep checking the state of the pods until they are running
-        states = set(states_list)
-        if (
-            len(states) == 1
-            and "Running" in states
-            and (pod_num is None or len(pod_list) == pod_num)
-        ):
-            print(t.green("All pods in {} are running".format(release)))
-            running = True
-        else:
-            print(t.red("."), end="", flush=True)
-            sleep(15)
+    identifier = '-l "app={app},release={name}"'.format(
+        app=app, name=release
+    )
+    pod_check(namespace, identifier, pod_num=pod_num)
 
 
 def helm_init():
     """Initialise Helm on cluster, using RBAC."""
     res, _ = execute("helm list")
     if res is not None:
-        print(t.green("Helm is already installed!"))
+        print(TERM.green("Helm is already installed!"))
     else:
         execute("kubectl create -f {}/../extras/helm-rbac.yaml".format(CURRENT_DIR))
         execute("helm init --service-account tiller")
@@ -89,7 +59,7 @@ def helm_init():
             if res is not None:
                 running = True
             else:
-                print(t.red("."), end="", flush=True)
+                print(TERM.red("."), end="", flush=True)
                 sleep(15)
 
 
