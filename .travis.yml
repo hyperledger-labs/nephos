@@ -14,7 +14,7 @@ python:
 
 addons:
   sonarcloud:
-    organization: "aidtechnology"
+    organization: "hyperledger-labs"
 
 install:
   - sudo apt-get install jq
