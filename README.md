@@ -5,7 +5,7 @@
 
 # Nephos
 
-Library to deploy Hyperledger Fabric projects to Kubernetes.
+Library to deploy [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io) projects to [Kubernetes](https://kubernetes.io/)
 
 Source resides at https://github.com/hyperledger-labs/nephos, originally developed at [**AID:Tech**](https://github.com/aidtechnology/nephos)
 
