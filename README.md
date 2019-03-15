@@ -44,7 +44,7 @@ Either way, you will need to have the following tools installed:
 
 ### Pip
 
-You can install nephos from PyPI by running:
+You can install nephos from [PyPI](https://pypi.org/project/nephos/) by running:
 
     pip install nephos
 
