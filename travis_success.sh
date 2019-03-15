@@ -11,8 +11,11 @@ echo "On PyPI we have $PACKAGE_PYPI"
 if [[ ${PACKAGE_PYPI} ]]
 then
     echo "Package has already been uploaded to PyPI"
-else
+elif [[ ${TWINE_USERNAME} && ${TWINE_PASSWORD} ]]
+then
     python setup.py upload
+else
+    echo "TWINE_USERNAME and/or TWINE_PASSWORD not available"
 fi
 
 if [[ ${TRAVIS_PULL_REQUEST} == "true" ]]
