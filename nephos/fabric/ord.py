@@ -82,10 +82,10 @@ def setup_ord(opts, upgrade=False, verbose=False):
         helm_install(
             "incubator",
             "kafka",
-            "kafka-hlf",
+            opts["orderers"]["kafka"]["name"],
             ord_namespace,
-            config_yaml="{dir}/kafka/kafka-hlf.yaml".format(
-                dir=opts["core"]["dir_values"]
+            config_yaml="{dir}/kafka/{release}.yaml".format(
+                dir=opts["core"]["dir_values"], release=opts["orderers"]["kafka"]["name"]
             ),
             pod_num=opts["orderers"]["kafka"]["pod_num"],
             verbose=verbose,
