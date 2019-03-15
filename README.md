@@ -1,14 +1,15 @@
-[![Build Status](https://travis-ci.com/aidtechnology/nephos.svg?branch=master)](https://travis-ci.com/aidtechnology/nephos)
-[![Known Vulnerabilities](https://snyk.io/test/github/aidtechnology/nephos/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/aidtechnology/nephos?targetFile=requirements.txt)
-[![<Sonarcloud quality gate>](https://sonarcloud.io/api/project_badges/measure?project=aidtechnology_nephos&metric=alert_status)](https://sonarcloud.io/dashboard?id=aidtechnology_nephos)
-[![codecov.io](http://codecov.io/github/aidtechnology/nephos/coverage.svg?branch=master)](http://codecov.io/github/aidtechnology/nephos?branch=master)
+[![Build Status](https://travis-ci.com/aidtechnology/nephos.svg?branch=master)](https://travis-ci.org/hyperledger-labs/nephos)
+[![Known Vulnerabilities](https://snyk.io/test/github/aidtechnology/nephos/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/hyperledger-labs/nephos?targetFile=requirements.txt)
+[![<Sonarcloud quality gate>](https://sonarcloud.io/api/project_badges/measure?project=aidtechnology_nephos&metric=alert_status)](https://sonarcloud.io/dashboard?id=hyperledger-labs_nephos)
+[![codecov.io](http://codecov.io/github/aidtechnology/nephos/coverage.svg?branch=master)](http://codecov.io/github/hyperledger-labs/nephos?branch=master)
 
-# nephos
+# Nephos
 
-Library to deploy Hyperledger Fabric projects to Kubernetes.
+Library to deploy [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io) projects to [Kubernetes](https://kubernetes.io/)
 
-Source resides here: https://github.com/aidtechnology/nephos
-Documentation resides here: https://nephos.readthedocs.io
+Source resides at https://github.com/hyperledger-labs/nephos, originally developed at [**AID:Tech**](https://github.com/aidtechnology/nephos)
+
+Documentation resides at https://nephos.readthedocs.io
 
    * [Prerequisites](#prerequisites)
    * [Installation](#installation)
@@ -43,7 +44,7 @@ Either way, you will need to have the following tools installed:
 
 ### Pip
 
-You can install nephos from PyPI by running:
+You can install nephos from [PyPI](https://pypi.org/project/nephos/) by running:
 
     pip install nephos
 
