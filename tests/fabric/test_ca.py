@@ -58,8 +58,8 @@ class TestCaChart:
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
         env_vars = [("externalDatabase.password", "a_password")]
         preserve = (
-            ("a-release-hlf-ca", "CA_ADMIN", "adminUsername"),
-            ("a-release-hlf-ca", "CA_PASSWORD", "adminPassword"),
+            ("ca-namespace", "a-release-hlf-ca", "CA_ADMIN", "adminUsername"),
+            ("ca-namespace", "a-release-hlf-ca", "CA_PASSWORD", "adminPassword"),
         )
         ca_chart(self.OPTS, "a-release", upgrade=True)
         mock_helm_install.assert_called_once_with(
@@ -100,12 +100,12 @@ class TestCaChart:
         env_vars = [("externalDatabase.password", "a_password")]
         preserves = [
             (
-                ("a-release-hlf-ca", "CA_ADMIN", "adminUsername"),
-                ("a-release-hlf-ca", "CA_PASSWORD", "adminPassword"),
+                ("ca-namespace", "a-release-hlf-ca", "CA_ADMIN", "adminUsername"),
+                ("ca-namespace", "a-release-hlf-ca", "CA_PASSWORD", "adminPassword"),
             ),
             (
-                ("a-release-hlf-ca--ca", "CA_ADMIN", "adminUsername"),
-                ("a-release-hlf-ca--ca", "CA_PASSWORD", "adminPassword"),
+                ("ca-namespace", "a-release-hlf-ca--ca", "CA_ADMIN", "adminUsername"),
+                ("ca-namespace", "a-release-hlf-ca--ca", "CA_PASSWORD", "adminPassword"),
             ),
         ]
         ca_chart(self.OPTS, "a-release", upgrade=True)

@@ -31,8 +31,8 @@ def define_orderers(orderer_names, orderer_hosts, domain=None):
     """Define orderers as connection objects.
 
         Args:
-            orderer_names (list): List of orderer names.
-            orderer_hosts (list): List of orderer hosts.
+            orderer_names (Iterable): List of orderer names.
+            orderer_hosts (Iterable): List of orderer hosts.
             domain (str): Domain used. Defaults to none.
 
         Returns:
@@ -52,8 +52,8 @@ def define_peers(peer_names, peer_hosts, organisation, domain=None):
     """Define peers as connection objects.
 
         Args:
-            peer_names (list): List of peer names.
-            peer_hosts (list): List of peer hosts.
+            peer_names (Iterable): List of peer names.
+            peer_hosts (Iterable): List of peer hosts.
             organisation (str): What organisation the peers belong to
             domain (str): Domain used. Defaults to none.
 

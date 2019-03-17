@@ -126,6 +126,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
     else:
         preserve = (
             HelmPreserve(
+                peer_namespace,
                 "{}-hl-composer-rest".format(opts["composer"]["name"]),
                 "COMPOSER_APIKEY",
                 "rest.config.apiKey",

@@ -166,7 +166,7 @@ class TestDeployComposer:
             config_yaml="./a_dir/hl-composer/hlc.yaml",
             preserve=(
                 HelmPreserve(
-                    "hlc-hl-composer-rest", "COMPOSER_APIKEY", "rest.config.apiKey"
+                    "peer-namespace", "hlc-hl-composer-rest", "COMPOSER_APIKEY", "rest.config.apiKey"
                 ),
             ),
             verbose=True,

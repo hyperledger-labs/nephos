@@ -11,7 +11,7 @@ from nephos.helpers.misc import execute
 
 TERM = Terminal()
 
-HelmPreserve = namedtuple("HelmPreserve", ("secret_name", "data_item", "values_path"))
+HelmPreserve = namedtuple("HelmPreserve", ("secret_namespace", "secret_name", "data_item", "values_path"))
 # noinspection PyArgumentList
 HelmSet = namedtuple("HelmSet", ("key", "value", "set_string"), defaults=(False,))
 
@@ -67,7 +67,7 @@ def helm_env_vars(env_vars):
     """Convert environmental variables to a "--set" string for Helm deployments.
 
     Args:
-        env_vars (tuple): Environmental variables we wish to store in Helm.
+        env_vars (Iterable): Environmental variables we wish to store in Helm.
 
     Returns:
         str: String containing variables to be set with Helm release.
@@ -95,12 +95,11 @@ def helm_env_vars(env_vars):
     return env_vars_string
 
 
-def helm_preserve(namespace, preserve, verbose=False):
+def helm_preserve(preserve, verbose=False):
     """Convert secret data to a "--set" string for Helm deployments.
 
     Args:
-        namespace (str): Namespace where preserved secrets are located.
-        preserve (tuple): Set of secrets we wish to get data from to assign to the Helm Chart.
+        preserve (Iterable): Set of secrets we wish to get data from to assign to the Helm Chart.
         verbose (bool): Verbosity. False by default.
 
     Returns:
@@ -116,7 +115,7 @@ def helm_preserve(namespace, preserve, verbose=False):
             item = HelmPreserve(*item)
         elif not isinstance(item, HelmPreserve):
             raise TypeError("Items in preserve array must be HelmPerserve named tuples")
-        secret_data = secret_read(item.secret_name, namespace, verbose=verbose)
+        secret_data = secret_read(item.secret_name, item.secret_namespace, verbose=verbose)
         env_vars.append(HelmSet(item.values_path, secret_data[item.data_item]))
     # Environmental variables
     # TODO: This may well be its own subfunction
@@ -138,6 +137,7 @@ def helm_install(
     app,
     release,
     namespace,
+    # extra_vars=None,
     config_yaml=None,
     env_vars=None,
     version=None,
@@ -150,8 +150,9 @@ def helm_install(
         app (str): Helm application name.
         release (str): Release name on K8S.
         namespace (str): Namespace where to deploy Helm Chart.
+        # extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
         config_yaml (str): Values file to override defaults.
-        env_vars (tuple): List of env vars we want to set.
+        env_vars (Iterable): List of env vars we want to set.
         version (str): Which Chart version do we wish to install?
         verbose (bool): Verbosity. False by default.
     """
@@ -178,7 +179,7 @@ def helm_upgrade(
     repo,
     app,
     release,
-    namespace,
+    # extra_vars=None,
     config_yaml=None,
     env_vars=None,
     preserve=None,
@@ -191,10 +192,10 @@ def helm_upgrade(
         repo (str): Repository or folder from which to install Helm chart.
         app (str): Helm application name.
         release (str): Release name on K8S.
-        namespace (str): Namespace where to deploy Helm Chart.
+        # extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
         config_yaml (str): Values file to override defaults.
-        env_vars (tuple): Environmental variables we wish to store in Helm.
-        preserve (tuple): Set of secrets we wish to get data from to assign to the Helm Chart.
+        env_vars (Iterable): Environmental variables we wish to store in Helm.
+        preserve (Iterable): Set of secrets we wish to get data from to assign to the Helm Chart.
         version (str): Which Chart version do we wish to install?
         verbose (bool): Verbosity. False by default.
     """
@@ -202,7 +203,7 @@ def helm_upgrade(
 
     # Get Helm Env-Vars
     env_vars_string = helm_env_vars(env_vars)
-    env_vars_string += helm_preserve(namespace, preserve, verbose=verbose)
+    env_vars_string += helm_preserve(preserve, verbose=verbose)
 
     if ls_res:
         command = "helm upgrade {name} {repo}/{app}".format(

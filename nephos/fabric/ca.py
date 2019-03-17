@@ -73,9 +73,11 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
         # TODO: Remove this try/catch once all CAs are updated
         try:
             preserve = (
-                HelmPreserve("{}-hlf-ca".format(release), "CA_ADMIN", "adminUsername"),
                 HelmPreserve(
-                    "{}-hlf-ca".format(release), "CA_PASSWORD", "adminPassword"
+                    ca_namespace, "{}-hlf-ca".format(release), "CA_ADMIN", "adminUsername"
+                ),
+                HelmPreserve(
+                    ca_namespace, "{}-hlf-ca".format(release), "CA_PASSWORD", "adminPassword"
                 ),
             )
             helm_upgrade(
@@ -93,10 +95,10 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
         except:
             preserve = (
                 HelmPreserve(
-                    "{}-hlf-ca--ca".format(release), "CA_ADMIN", "adminUsername"
+                    ca_namespace, "{}-hlf-ca--ca".format(release), "CA_ADMIN", "adminUsername"
                 ),
                 HelmPreserve(
-                    "{}-hlf-ca--ca".format(release), "CA_PASSWORD", "adminPassword"
+                    ca_namespace, "{}-hlf-ca--ca".format(release), "CA_PASSWORD", "adminPassword"
                 ),
             )
             helm_upgrade(

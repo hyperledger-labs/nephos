@@ -133,11 +133,13 @@ class TestSetupPeer:
                     config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
                     preserve=(
                         HelmPreserve(
+                            "peer-namespace",
                             "cdb-peer0-hlf-couchdb",
                             "COUCHDB_USERNAME",
                             "couchdbUsername",
                         ),
                         HelmPreserve(
+                            "peer-namespace",
                             "cdb-peer0-hlf-couchdb",
                             "COUCHDB_PASSWORD",
                             "couchdbPassword",

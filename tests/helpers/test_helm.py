@@ -83,7 +83,7 @@ class TestHelmEnvVars:
 class TestHelmPreserve:
     @patch("nephos.helpers.helm.secret_read")
     def test_helm_preserve_empty(self, mock_secret_read):
-        result = helm_preserve("a-namespace", preserve=None)
+        result = helm_preserve(preserve=None)
         assert result == ""
         mock_secret_read.assert_not_called()
 
@@ -91,7 +91,7 @@ class TestHelmPreserve:
     def test_helm_preserve(self, mock_secret_read):
         mock_secret_read.side_effect = [{"BAR_ENV": "sausage"}]
         result = helm_preserve(
-            "a-namespace", preserve=(("a-secret", "BAR_ENV", "egg"),)
+            preserve=(("a-namespace", "a-secret", "BAR_ENV", "egg"),)
         )
         assert result == " --set egg=sausage"
         mock_secret_read.assert_called_once_with(
@@ -101,14 +101,7 @@ class TestHelmPreserve:
     @patch("nephos.helpers.helm.secret_read")
     def test_helm_preserve_bad(self, mock_secret_read):
         with pytest.raises(TypeError):
-            helm_preserve("a-namespace", preserve=("foo", "egg"))
-        mock_secret_read.assert_not_called()
-
-    @patch("nephos.helpers.helm.secret_read")
-    def test_helm_preserve_preserve_bad(self, mock_secret_read):
-        mock_secret_read.side_effect = [{"BAR_ENV": "sausage"}]
-        with pytest.raises(TypeError):
-            helm_preserve("a-namespace", preserve=("a-secret", "BAR_ENV"))
+            helm_preserve(preserve=("foo", "egg"))
         mock_secret_read.assert_not_called()
 
 
@@ -218,9 +211,9 @@ class TestHelmUpgrade:
             ("a-release", None),  # Helm list
             ("Helm install", None),  # Helm install
         ]
-        helm_upgrade("a_repo", "an_app", "a-release", "a-namespace")
+        helm_upgrade("a_repo", "an_app", "a-release")
         mock_helm_env_vars.assert_called_once_with(None)
-        mock_helm_preserve.assert_called_once_with("a-namespace", None, verbose=False)
+        mock_helm_preserve.assert_called_once_with(None, verbose=False)
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
@@ -238,9 +231,9 @@ class TestHelmUpgrade:
         mock_helm_preserve.side_effect = [""]
         mock_execute.side_effect = [(None, "error")]  # Helm list
         with pytest.raises(Exception):
-            helm_upgrade("a_repo", "an_app", "a-release", "a-namespace")
+            helm_upgrade("a_repo", "an_app", "a-release")
         mock_helm_env_vars.assert_called_once_with(None)
-        mock_helm_preserve.assert_called_once_with("a-namespace", None, verbose=False)
+        mock_helm_preserve.assert_called_once_with(None, verbose=False)
         mock_execute.assert_called_once_with("helm status a-release")
 
     @patch("nephos.helpers.helm.helm_preserve")
@@ -259,12 +252,11 @@ class TestHelmUpgrade:
             "a_repo",
             "an_app",
             "a-release",
-            "a-namespace",
             version="a-version",
             config_yaml="some_config.yaml",
         )
         mock_helm_env_vars.assert_called_once_with(None)
-        mock_helm_preserve.assert_called_once_with("a-namespace", None, verbose=False)
+        mock_helm_preserve.assert_called_once_with(None, verbose=False)
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
@@ -292,15 +284,12 @@ class TestHelmUpgrade:
             "a_repo",
             "an_app",
             "a-release",
-            "a-namespace",
             env_vars="env-vars",
             preserve="preserve",
             verbose=True,
         )
         mock_helm_env_vars.assert_called_once_with("env-vars")
-        mock_helm_preserve.assert_called_once_with(
-            "a-namespace", "preserve", verbose=True
-        )
+        mock_helm_preserve.assert_called_once_with("preserve", verbose=True)
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),

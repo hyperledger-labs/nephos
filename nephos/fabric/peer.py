@@ -72,11 +72,13 @@ def setup_peer(opts, upgrade=False, verbose=False):
         else:
             preserve = (
                 HelmPreserve(
+                    peer_namespace,
                     "cdb-{}-hlf-couchdb".format(release),
                     "COUCHDB_USERNAME",
                     "couchdbUsername",
                 ),
                 HelmPreserve(
+                    peer_namespace,
                     "cdb-{}-hlf-couchdb".format(release),
                     "COUCHDB_PASSWORD",
                     "couchdbPassword",
