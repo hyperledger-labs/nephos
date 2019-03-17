@@ -78,9 +78,13 @@ Furthermore, you will need the Hyperledger Fabric utility binaries that can be i
 
 ### Unit tests
 
-Once you have all requirments installed, all the unit tests should pass:
+Once you have all requirments installed, all the unit tests should pass and provide full coverage:
 
-    PYTHONPATH=. pytest --cov=. --cov-report term-missing
+    PYTHONPATH=. pytest --ignore=./integration --cov=. --cov-report xml:coverage.xml --cov-report term-missing
+
+The integration tests should also pass:
+
+    PYTHONPATH=. pytest -x -s ./integration
 
 ## Usage
 
