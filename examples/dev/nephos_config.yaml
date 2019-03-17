@@ -37,3 +37,12 @@ peers:
   channel_name: mychannel
   channel_profile: MyChannel
   secret_channel: hlf--channel
+# You can specify a particular version of a chart for each chart used, or use the latest by default
+versions:
+  postgres:
+  hlf-ca:
+  kafka:
+  hlf-ord:
+  hlf-couchdb:
+  hlf-peer:
+  hl-composer:

@@ -78,6 +78,22 @@ def get_namespace(opts, msp=None, ca=None):
     return opts["core"]["namespace"]
 
 
+def get_version(opts, app):
+    """Get version of a specific app
+
+    Args:
+        opts (dict): Nephos options dict.
+        app (str): Helm application name.
+
+    Returns:
+        str: Desired version of Helm app, if specified. Defaults to None.
+    """
+    if app in opts["versions"]:
+        return opts["versions"][app]
+    else:
+        return None
+
+
 def load_config(settings_file):
     """Load configuration from Nephos options/settings YAML file.
 
