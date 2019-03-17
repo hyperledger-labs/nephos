@@ -141,6 +141,7 @@ def helm_install(
     namespace,
     config_yaml=None,
     env_vars=None,
+    version=None,
     verbose=False,
     pod_num=1,
 ):
@@ -151,8 +152,9 @@ def helm_install(
         app (str): Helm application name.
         release (str): Release name on K8S.
         namespace (str): Namespace where to deploy Helm Chart.
-        config_yaml (str): Values file to ovverride defaults.
+        config_yaml (str): Values file to override defaults.
         env_vars (tuple): List of env vars we want to set.
+        version (str): Which Chart version do we wish to install?
         verbose (bool): Verbosity. False by default.
         pod_num (int): Number of pods we wish to have.
     """
@@ -165,6 +167,8 @@ def helm_install(
         command = "helm install {repo}/{app} -n {name} --namespace {ns}".format(
             app=app, name=release, ns=namespace, repo=repo
         )
+        if version:
+            command += " --version {}".format(version)
         if config_yaml:
             command += " -f {}".format(config_yaml)
         command += env_vars_string
@@ -183,6 +187,7 @@ def helm_upgrade(
     config_yaml=None,
     env_vars=None,
     preserve=None,
+    version=None,
     verbose=False,
     pod_num=1,
 ):
@@ -193,9 +198,10 @@ def helm_upgrade(
         app (str): Helm application name.
         release (str): Release name on K8S.
         namespace (str): Namespace where to deploy Helm Chart.
-        config_yaml (str): Values file to ovverride defaults.
+        config_yaml (str): Values file to override defaults.
         env_vars (tuple): Environmental variables we wish to store in Helm.
         preserve (tuple): Set of secrets we wish to get data from to assign to the Helm Chart.
+        version (str): Which Chart version do we wish to install?
         verbose (bool): Verbosity. False by default.
         pod_num (int): Number of pods we wish to have.
     """
@@ -209,6 +215,8 @@ def helm_upgrade(
         command = "helm upgrade {name} {repo}/{app}".format(
             app=app, name=release, repo=repo
         )
+        if version:
+            command += " --version {}".format(version)
         if config_yaml:
             command += " -f {}".format(config_yaml)
         command += env_vars_string

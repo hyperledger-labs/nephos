@@ -164,6 +164,7 @@ class TestHelmInstall:
             "an_app",
             "a-release",
             "a-namespace",
+            version="a-version",
             config_yaml="some_config.yaml",
         )
         mock_helm_env_vars.assert_called_once_with(None)
@@ -171,7 +172,8 @@ class TestHelmInstall:
             [
                 call("helm status a-release"),
                 call(
-                    "helm install a_repo/an_app -n a-release --namespace a-namespace -f some_config.yaml",
+                    "helm install a_repo/an_app -n a-release " +
+                    "--namespace a-namespace --version a-version -f some_config.yaml",
                     verbose=False,
                 ),
             ]
@@ -271,6 +273,7 @@ class TestHelmUpgrade:
             "an_app",
             "a-release",
             "a-namespace",
+            version="a-version",
             config_yaml="some_config.yaml",
         )
         mock_helm_env_vars.assert_called_once_with(None)
@@ -279,7 +282,8 @@ class TestHelmUpgrade:
             [
                 call("helm status a-release"),
                 call(
-                    "helm upgrade a-release a_repo/an_app -f some_config.yaml",
+                    "helm upgrade a-release a_repo/an_app " +
+                    "--version a-version -f some_config.yaml",
                     verbose=False,
                 ),
             ]
