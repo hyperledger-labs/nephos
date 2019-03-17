@@ -91,7 +91,7 @@ def setup_peer(opts, upgrade=False, verbose=False):
                 opts["core"]["chart_repo"],
                 "hlf-couchdb",
                 "cdb-{}".format(release),
-                extra_vars,
+                extra_vars=extra_vars,
                 verbose=verbose,
             )
         helm_check("hlf-couchdb", "cdb-{}".format(release), peer_namespace)

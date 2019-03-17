@@ -65,7 +65,19 @@ class TestSetupPeer:
     def test_peer(self, mock_check_peer, mock_helm_check,
                   mock_helm_extra_vars, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
+        mock_helm_extra_vars.side_effect = [
+            "extra-vars-cdb-peer0",
+            "extra-vars-peer0",
+            "extra-vars-cdb-peer1",
+            "extra-vars-peer1"
+        ]
         setup_peer(OPTS)
+        mock_helm_extra_vars.assert_has_calls([
+            call(config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml"),
+            call(config_yaml="./a_dir/hlf-peer/peer0.yaml"),
+            call(config_yaml="./a_dir/hlf-couchdb/cdb-peer1.yaml",),
+            call(config_yaml="./a_dir/hlf-peer/peer1.yaml")
+        ])
         mock_helm_install.assert_has_calls(
             [
                 call(
@@ -73,7 +85,7 @@ class TestSetupPeer:
                     "hlf-couchdb",
                     "cdb-peer0",
                     "peer-namespace",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
+                    extra_vars="extra-vars-cdb-peer0",
                     verbose=False,
                 ),
                 call(
@@ -81,7 +93,7 @@ class TestSetupPeer:
                     "hlf-peer",
                     "peer0",
                     "peer-namespace",
-                    config_yaml="./a_dir/hlf-peer/peer0.yaml",
+                    extra_vars="extra-vars-peer0",
                     verbose=False,
                 ),
                 call(
@@ -89,7 +101,7 @@ class TestSetupPeer:
                     "hlf-couchdb",
                     "cdb-peer1",
                     "peer-namespace",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer1.yaml",
+                    extra_vars="extra-vars-cdb-peer1",
                     verbose=False,
                 ),
                 call(
@@ -97,7 +109,7 @@ class TestSetupPeer:
                     "hlf-peer",
                     "peer1",
                     "peer-namespace",
-                    config_yaml="./a_dir/hlf-peer/peer1.yaml",
+                    extra_vars="extra-vars-peer1",
                     verbose=False,
                 ),
             ]
@@ -125,17 +137,14 @@ class TestSetupPeer:
                           mock_helm_extra_vars, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         OPTS["peers"]["names"] = ["peer0"]
+        mock_helm_extra_vars.side_effect = [
+            "extra-vars-cdb-peer0",
+            "extra-vars-peer0"
+        ]
         setup_peer(OPTS, upgrade=True)
-        mock_helm_install.assert_not_called()
-        mock_helm_upgrade.assert_has_calls(
-            [
-                call(
-                    "a-repo",
-                    "hlf-couchdb",
-                    "cdb-peer0",
-                    "peer-namespace",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
-                    preserve=(
+        mock_helm_extra_vars.assert_has_calls([
+            call(config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
+                 preserve=(
                         HelmPreserve(
                             "peer-namespace",
                             "cdb-peer0-hlf-couchdb",
@@ -148,15 +157,24 @@ class TestSetupPeer:
                             "COUCHDB_PASSWORD",
                             "couchdbPassword",
                         ),
-                    ),
+                    )),
+            call(config_yaml="./a_dir/hlf-peer/peer0.yaml")
+        ])
+        mock_helm_install.assert_not_called()
+        mock_helm_upgrade.assert_has_calls(
+            [
+                call(
+                    "a-repo",
+                    "hlf-couchdb",
+                    "cdb-peer0",
+                    extra_vars="extra-vars-cdb-peer0",
                     verbose=False,
                 ),
                 call(
                     "a-repo",
                     "hlf-peer",
                     "peer0",
-                    "peer-namespace",
-                    config_yaml="./a_dir/hlf-peer/peer0.yaml",
+                    extra_vars="extra-vars-peer0",
                     verbose=False,
                 ),
             ]
