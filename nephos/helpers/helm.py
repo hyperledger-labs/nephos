@@ -72,16 +72,13 @@ def helm_env_vars(env_vars):
     Returns:
         str: String containing variables to be set with Helm release.
     """
-    if not env_vars:
-        env_vars = []
-    else:
-        env_vars = list(env_vars)
-        for i, item in enumerate(env_vars):
-            if isinstance(item, tuple):
-                item = HelmSet(*item)
-            elif not isinstance(item, HelmSet):
-                raise TypeError("Items in env_vars array must be HelmSet named tuples")
-            env_vars[i] = item
+    env_vars = list(env_vars)
+    for i, item in enumerate(env_vars):
+        if isinstance(item, tuple):
+            item = HelmSet(*item)
+        elif not isinstance(item, HelmSet):
+            raise TypeError("Items in env_vars array must be HelmSet named tuples")
+        env_vars[i] = item
     # Environmental variables
     # TODO: This may well be its own subfunction
     env_vars_string = "".join(
@@ -106,9 +103,6 @@ def helm_preserve(preserve, verbose=False):
         str: String containing variables to be set with Helm release.
     """
 
-    # Any data we need to preserve during upgrade?
-    if not preserve:
-        return ""
     env_vars = []
     for item in preserve:
         if isinstance(item, tuple):
@@ -128,6 +122,37 @@ def helm_preserve(preserve, verbose=False):
         ]
     )
     return env_vars_string
+
+
+def helm_extra_vars(version=None, config_yaml=None, env_vars=None, preserve=None, verbose=False):
+    """Centralise obtaining extra variables for our helm_install and/or helm_upgrade
+
+    Args:
+        version (str): Which Chart version do we wish to install?
+        config_yaml (str, Iterable): Values file(s) to override defaults.
+        env_vars (Iterable): Environmental variables we wish to store in Helm.
+        preserve (Iterable): Set of secrets we wish to get data from to assign to the Helm Chart.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        str: String of Chart version, values files, environmental variables,
+    """
+    # Get Helm Env-Vars
+    extra_vars_string = ""
+    if version:
+        extra_vars_string += " --version {}".format(version)
+    if config_yaml:
+        if isinstance(config_yaml, (str, bytes)):
+            config_yaml = (config_yaml,)
+        if isinstance(config_yaml, (list, tuple)):
+            extra_vars_string += " -f " + " -f ".join(config_yaml)
+        else:
+            raise ValueError("'config_yaml' variable should be a string, tuple or list")
+    if env_vars:
+        extra_vars_string += helm_env_vars(env_vars)
+    if preserve:
+        extra_vars_string += helm_preserve(preserve, verbose=verbose)
+    return extra_vars_string
 
 
 # TODO: Too many parameters - SQ Code Smell

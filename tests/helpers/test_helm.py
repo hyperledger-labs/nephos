@@ -8,6 +8,7 @@ from nephos.helpers.helm import (
     helm_check,
     helm_env_vars,
     helm_preserve,
+    helm_extra_vars,
     helm_install,
     helm_upgrade,
 )
@@ -62,12 +63,6 @@ class TestHelmCheck:
 
 class TestHelmEnvVars:
     @patch("nephos.helpers.helm.secret_read")
-    def test_helm_env_vars_empty(self, mock_secret_read):
-        result = helm_env_vars(None)
-        assert result == ""
-        mock_secret_read.assert_not_called()
-
-    @patch("nephos.helpers.helm.secret_read")
     def test_helm_env_vars_values(self, mock_secret_read):
         result = helm_env_vars((("foo", "bar"), ("egg", "sausage", True)))
         assert result == " --set foo=bar --set-string egg=sausage"
@@ -79,12 +74,18 @@ class TestHelmEnvVars:
             helm_env_vars(("foo", "egg"))
         mock_secret_read.assert_not_called()
 
+    @patch("nephos.helpers.helm.secret_read")
+    def test_helm_env_vars_emptyerror(self, mock_secret_read):
+        with pytest.raises(TypeError):
+            helm_env_vars()
+        mock_secret_read.assert_not_called()
+
 
 class TestHelmPreserve:
     @patch("nephos.helpers.helm.secret_read")
     def test_helm_preserve_empty(self, mock_secret_read):
-        result = helm_preserve(preserve=None)
-        assert result == ""
+        with pytest.raises(TypeError):
+            helm_preserve()
         mock_secret_read.assert_not_called()
 
     @patch("nephos.helpers.helm.secret_read")
@@ -103,6 +104,43 @@ class TestHelmPreserve:
         with pytest.raises(TypeError):
             helm_preserve(preserve=("foo", "egg"))
         mock_secret_read.assert_not_called()
+
+
+class TestHelmExtraVars:
+    @patch("nephos.helpers.helm.helm_preserve")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    def test_helm_extra_vars(self, mock_helm_env_vars, mock_helm_preserve):
+        result = helm_extra_vars()
+        mock_helm_env_vars.assert_not_called()
+        mock_helm_preserve.assert_not_called()
+        assert result == ""
+
+    @patch("nephos.helpers.helm.helm_preserve")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    def test_helm_extra_vars_everything(self, mock_helm_env_vars, mock_helm_preserve):
+        mock_helm_env_vars.side_effect = [" --set foo=bar"]
+        mock_helm_preserve.side_effect = [" --set egg=sausage"]
+        result = helm_extra_vars(version="a-version", config_yaml="some-config",
+                                 env_vars="some-env-vars", preserve="some-preserve", verbose=True)
+        mock_helm_env_vars.assert_called_once_with("some-env-vars")
+        mock_helm_preserve.assert_called_once_with("some-preserve", verbose=True)
+        assert result == " --version a-version -f some-config --set foo=bar --set egg=sausage"
+
+    @patch("nephos.helpers.helm.helm_preserve")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    def test_helm_extra_vars_multiconf(self, mock_helm_env_vars, mock_helm_preserve):
+        result = helm_extra_vars(config_yaml=("some-config", "another-config"))
+        mock_helm_env_vars.assert_not_called()
+        mock_helm_preserve.assert_not_called()
+        assert result == " -f some-config -f another-config"
+
+    @patch("nephos.helpers.helm.helm_preserve")
+    @patch("nephos.helpers.helm.helm_env_vars")
+    def test_helm_extra_vars_errorconf(self, mock_helm_env_vars, mock_helm_preserve):
+        with pytest.raises(ValueError):
+            helm_extra_vars(config_yaml={"some-config": "another-config"})
+        mock_helm_env_vars.assert_not_called()
+        mock_helm_preserve.assert_not_called()
 
 
 class TestHelmInstall:
