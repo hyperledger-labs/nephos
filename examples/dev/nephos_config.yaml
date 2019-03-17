@@ -39,7 +39,7 @@ peers:
   secret_channel: hlf--channel
 # You can specify a particular version of a chart for each chart used, or use the latest by default
 versions:
-  postgres:
+  postgresql:
   hlf-ca:
   kafka:
   hlf-ord:

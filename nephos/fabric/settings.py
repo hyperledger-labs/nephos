@@ -88,7 +88,7 @@ def get_version(opts, app):
     Returns:
         str: Desired version of Helm app, if specified. Defaults to None.
     """
-    if app in opts["versions"]:
+    if "versions" in opts and app in opts["versions"]:
         return opts["versions"][app]
     else:
         return None

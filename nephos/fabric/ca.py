@@ -16,7 +16,7 @@ from os import path
 from time import sleep
 
 from kubernetes.client.rest import ApiException
-from nephos.fabric.settings import get_namespace
+from nephos.fabric.settings import get_namespace, get_version
 from nephos.fabric.utils import get_pod
 from nephos.helpers.helm import HelmPreserve, helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.k8s import ingress_read, secret_read
@@ -41,9 +41,11 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
     # PostgreSQL (Upgrades here are dangerous, deactivated by default)
     # Upgrading database is risky, so we disallow it by default
     if not upgrade:
-        extra_vars = helm_extra_vars(config_yaml="{dir}/postgres-ca/{name}-pg.yaml".format(
+        version = get_version(opts, "postgresql")
+        config_yaml = "{dir}/postgres-ca/{name}-pg.yaml".format(
             dir=values_dir, name=release
-        ))
+        )
+        extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
             "stable",
             "postgresql",
@@ -61,12 +63,13 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
         psql_secret.get("postgres-password") or psql_secret["postgresql-password"]
     )
     # Fabric CA
+    version = get_version(opts, "hlf-ca")
     env_vars = [("externalDatabase.password", psql_password)]
     config_yaml = "{dir}/hlf-ca/{name}.yaml".format(
         dir=values_dir, name=release
     )
     if not upgrade:
-        extra_vars = helm_extra_vars(config_yaml=config_yaml, env_vars=env_vars)
+        extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml, env_vars=env_vars)
         helm_install(
             repository,
             "hlf-ca",
@@ -84,7 +87,7 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
                 ca_namespace, "{}-hlf-ca--ca".format(release), "CA_PASSWORD", "adminPassword"
             ),
         )
-        extra_vars = helm_extra_vars(config_yaml=config_yaml, env_vars=env_vars, preserve=preserve)
+        extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml, env_vars=env_vars, preserve=preserve)
         helm_upgrade(
             repository,
             "hlf-ca",

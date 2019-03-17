@@ -16,7 +16,7 @@ import random
 from time import sleep
 
 from nephos.fabric.ord import check_ord_tls
-from nephos.fabric.settings import get_namespace
+from nephos.fabric.settings import get_namespace, get_version
 from nephos.fabric.utils import get_pod
 from nephos.helpers.helm import HelmPreserve, helm_check, helm_extra_vars, helm_install, helm_upgrade
 
@@ -58,11 +58,12 @@ def setup_peer(opts, upgrade=False, verbose=False):
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     for release in opts["peers"]["names"]:
         # Deploy the CouchDB instances
+        version = get_version(opts, "hlf-couchdb")
         config_yaml = "{dir}/hlf-couchdb/cdb-{name}.yaml".format(
             dir=opts["core"]["dir_values"], name=release
         )
         if not upgrade:
-            extra_vars = helm_extra_vars(config_yaml=config_yaml)
+            extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
             helm_install(
                 opts["core"]["chart_repo"],
                 "hlf-couchdb",
@@ -86,7 +87,7 @@ def setup_peer(opts, upgrade=False, verbose=False):
                     "couchdbPassword",
                 ),
             )
-            extra_vars = helm_extra_vars(config_yaml=config_yaml, preserve=preserve)
+            extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml, preserve=preserve)
             helm_upgrade(
                 opts["core"]["chart_repo"],
                 "hlf-couchdb",
@@ -97,9 +98,11 @@ def setup_peer(opts, upgrade=False, verbose=False):
         helm_check("hlf-couchdb", "cdb-{}".format(release), peer_namespace)
 
         # Deploy the HL-Peer charts
-        extra_vars = helm_extra_vars(config_yaml="{dir}/hlf-peer/{name}.yaml".format(
+        version = get_version(opts, "hlf-peer")
+        config_yaml = "{dir}/hlf-peer/{name}.yaml".format(
             dir=opts["core"]["dir_values"], name=release
-        ))
+        )
+        extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         if not upgrade:
             helm_install(
                 opts["core"]["chart_repo"],
