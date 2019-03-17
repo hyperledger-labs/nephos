@@ -16,7 +16,7 @@ from time import sleep
 
 from nephos.fabric.utils import get_pod
 from nephos.fabric.settings import get_namespace
-from nephos.helpers.helm import helm_check, helm_install, helm_upgrade
+from nephos.helpers.helm import helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
 
 
@@ -79,29 +79,33 @@ def setup_ord(opts, upgrade=False, verbose=False):
     # Kafka
     if "kafka" in opts["orderers"]:
         # Kafka upgrade is risky, so we disallow it by default
+        extra_vars = helm_extra_vars(
+            config_yaml="{dir}/kafka/kafka-hlf.yaml".format(
+                dir=opts["core"]["dir_values"]
+            ))
         helm_install(
             "incubator",
             "kafka",
             "kafka-hlf",
             ord_namespace,
-            config_yaml="{dir}/kafka/kafka-hlf.yaml".format(
-                dir=opts["core"]["dir_values"]
-            ),
+            extra_vars=extra_vars,
             verbose=verbose,
         )
         helm_check("kafka", "kafka-hlf", ord_namespace, pod_num=opts["orderers"]["kafka"]["pod_num"])
 
     for release in opts["orderers"]["names"]:
         # HL-Ord
+        extra_vars = helm_extra_vars(
+            config_yaml="{dir}/hlf-ord/{name}.yaml".format(
+                dir=opts["core"]["dir_values"], name=release
+            ))
         if not upgrade:
             helm_install(
                 opts["core"]["chart_repo"],
                 "hlf-ord",
                 release,
                 ord_namespace,
-                config_yaml="{dir}/hlf-ord/{name}.yaml".format(
-                    dir=opts["core"]["dir_values"], name=release
-                ),
+                extra_vars=extra_vars,
                 verbose=verbose,
             )
         else:
@@ -109,10 +113,7 @@ def setup_ord(opts, upgrade=False, verbose=False):
                 opts["core"]["chart_repo"],
                 "hlf-ord",
                 release,
-                ord_namespace,
-                config_yaml="{dir}/hlf-ord/{name}.yaml".format(
-                    dir=opts["core"]["dir_values"], name=release
-                ),
+                extra_vars=extra_vars,
                 verbose=verbose,
             )
         helm_check("hlf-ord", release, ord_namespace)

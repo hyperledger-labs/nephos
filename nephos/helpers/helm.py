@@ -155,17 +155,12 @@ def helm_extra_vars(version=None, config_yaml=None, env_vars=None, preserve=None
     return extra_vars_string
 
 
-# TODO: Too many parameters - SQ Code Smell
-# TODO: Cleanest way of fixing parameter issues is via a Helm class
 def helm_install(
     repo,
     app,
     release,
     namespace,
-    # extra_vars=None,
-    config_yaml=None,
-    env_vars=None,
-    version=None,
+    extra_vars="",
     verbose=False,
 ):
     """Install Helm chart.
@@ -175,40 +170,25 @@ def helm_install(
         app (str): Helm application name.
         release (str): Release name on K8S.
         namespace (str): Namespace where to deploy Helm Chart.
-        # extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
-        config_yaml (str): Values file to override defaults.
-        env_vars (Iterable): List of env vars we want to set.
-        version (str): Which Chart version do we wish to install?
+        extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
         verbose (bool): Verbosity. False by default.
     """
     ls_res, _ = execute("helm status {release}".format(release=release))
-
-    # Get Helm Env-Vars
-    env_vars_string = helm_env_vars(env_vars)
 
     if not ls_res:
         command = "helm install {repo}/{app} -n {name} --namespace {ns}".format(
             app=app, name=release, ns=namespace, repo=repo
         )
-        if version:
-            command += " --version {}".format(version)
-        if config_yaml:
-            command += " -f {}".format(config_yaml)
-        command += env_vars_string
+        command += extra_vars
         # Execute
         execute(command, verbose=verbose)
 
 
-# TODO: Too many parameters - SQ Code Smell
 def helm_upgrade(
     repo,
     app,
     release,
-    # extra_vars=None,
-    config_yaml=None,
-    env_vars=None,
-    preserve=None,
-    version=None,
+    extra_vars="",
     verbose=False,
 ):
     """Upgrade Helm chart.
@@ -217,28 +197,17 @@ def helm_upgrade(
         repo (str): Repository or folder from which to install Helm chart.
         app (str): Helm application name.
         release (str): Release name on K8S.
-        # extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
-        config_yaml (str): Values file to override defaults.
-        env_vars (Iterable): Environmental variables we wish to store in Helm.
-        preserve (Iterable): Set of secrets we wish to get data from to assign to the Helm Chart.
-        version (str): Which Chart version do we wish to install?
+        extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
         verbose (bool): Verbosity. False by default.
     """
     ls_res, _ = execute("helm status {release}".format(release=release))
-
-    # Get Helm Env-Vars
-    env_vars_string = helm_env_vars(env_vars)
-    env_vars_string += helm_preserve(preserve, verbose=verbose)
 
     if ls_res:
         command = "helm upgrade {name} {repo}/{app}".format(
             app=app, name=release, repo=repo
         )
-        if version:
-            command += " --version {}".format(version)
-        if config_yaml:
-            command += " -f {}".format(config_yaml)
-        command += env_vars_string
+
+        command += extra_vars or ""
         # Execute
         execute(command, verbose=verbose)
     else:

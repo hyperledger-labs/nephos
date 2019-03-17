@@ -18,7 +18,7 @@ from time import sleep
 from kubernetes.client.rest import ApiException
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_pod
-from nephos.helpers.helm import HelmPreserve, helm_check, helm_install, helm_upgrade
+from nephos.helpers.helm import HelmPreserve, helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.k8s import ingress_read, secret_read
 from nephos.helpers.misc import execute_until_success
 
@@ -39,14 +39,15 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
     repository = opts["core"]["chart_repo"]
     ca_namespace = get_namespace(opts, ca=release)
     # PostgreSQL (Upgrades here are dangerous, deactivated by default)
+    extra_vars = helm_extra_vars(config_yaml="{dir}/postgres-ca/{name}-pg.yaml".format(
+            dir=values_dir, name=release
+        ))
     helm_install(
         "stable",
         "postgresql",
         "{}-pg".format(release),
         ca_namespace,
-        config_yaml="{dir}/postgres-ca/{name}-pg.yaml".format(
-            dir=values_dir, name=release
-        ),
+        extra_vars=extra_vars,
         verbose=verbose,
     )
     helm_check("postgresql", "{}-pg".format(release), ca_namespace)
@@ -57,62 +58,35 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
     psql_password = (
         psql_secret.get("postgres-password") or psql_secret["postgresql-password"]
     )
-    env_vars = [("externalDatabase.password", psql_password)]
     # Fabric CA
+    env_vars = [("externalDatabase.password", psql_password)]
     if not upgrade:
+        extra_vars = helm_extra_vars(env_vars=env_vars)
         helm_install(
             repository,
             "hlf-ca",
             release,
             ca_namespace,
-            config_yaml="{dir}/hlf-ca/{name}.yaml".format(dir=values_dir, name=release),
-            env_vars=env_vars,
+            extra_vars=extra_vars,
             verbose=verbose,
         )
     else:
-        # TODO: Remove this try/catch once all CAs are updated
-        try:
-            preserve = (
-                HelmPreserve(
-                    ca_namespace, "{}-hlf-ca".format(release), "CA_ADMIN", "adminUsername"
-                ),
-                HelmPreserve(
-                    ca_namespace, "{}-hlf-ca".format(release), "CA_PASSWORD", "adminPassword"
-                ),
-            )
-            helm_upgrade(
-                repository,
-                "hlf-ca",
-                release,
-                ca_namespace,
-                config_yaml="{dir}/hlf-ca/{name}.yaml".format(
-                    dir=values_dir, name=release
-                ),
-                env_vars=env_vars,
-                preserve=preserve,
-                verbose=verbose,
-            )
-        except:
-            preserve = (
-                HelmPreserve(
-                    ca_namespace, "{}-hlf-ca--ca".format(release), "CA_ADMIN", "adminUsername"
-                ),
-                HelmPreserve(
-                    ca_namespace, "{}-hlf-ca--ca".format(release), "CA_PASSWORD", "adminPassword"
-                ),
-            )
-            helm_upgrade(
-                repository,
-                "hlf-ca",
-                release,
-                ca_namespace,
-                config_yaml="{dir}/hlf-ca/{name}.yaml".format(
-                    dir=values_dir, name=release
-                ),
-                env_vars=env_vars,
-                preserve=preserve,
-                verbose=verbose,
-            )
+        preserve = (
+            HelmPreserve(
+                ca_namespace, "{}-hlf-ca--ca".format(release), "CA_ADMIN", "adminUsername"
+            ),
+            HelmPreserve(
+                ca_namespace, "{}-hlf-ca--ca".format(release), "CA_PASSWORD", "adminPassword"
+            ),
+        )
+        extra_vars = helm_extra_vars(env_vars=env_vars, preserve=preserve)
+        helm_upgrade(
+            repository,
+            "hlf-ca",
+            release,
+            extra_vars=extra_vars,
+            verbose=verbose,
+        )
     helm_check("hlf-ca", release, ca_namespace)
 
 

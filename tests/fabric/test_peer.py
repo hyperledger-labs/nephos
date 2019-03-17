@@ -59,9 +59,11 @@ class TestSetupPeer:
 
     @patch("nephos.fabric.peer.helm_upgrade")
     @patch("nephos.fabric.peer.helm_install")
+    @patch("nephos.fabric.peer.helm_extra_vars")
     @patch("nephos.fabric.peer.helm_check")
     @patch("nephos.fabric.peer.check_peer")
-    def test_peer(self, mock_check_peer, mock_helm_check, mock_helm_install, mock_helm_upgrade):
+    def test_peer(self, mock_check_peer, mock_helm_check,
+                  mock_helm_extra_vars, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         setup_peer(OPTS)
         mock_helm_install.assert_has_calls(
@@ -116,9 +118,11 @@ class TestSetupPeer:
 
     @patch("nephos.fabric.peer.helm_upgrade")
     @patch("nephos.fabric.peer.helm_install")
+    @patch("nephos.fabric.peer.helm_extra_vars")
     @patch("nephos.fabric.peer.helm_check")
     @patch("nephos.fabric.peer.check_peer")
-    def test_peer_upgrade(self, mock_check_peer, mock_helm_check, mock_helm_install, mock_helm_upgrade):
+    def test_peer_upgrade(self, mock_check_peer, mock_helm_check,
+                          mock_helm_extra_vars, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         OPTS["peers"]["names"] = ["peer0"]
         setup_peer(OPTS, upgrade=True)

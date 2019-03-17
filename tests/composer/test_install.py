@@ -112,12 +112,14 @@ class TestDeployComposer:
     @patch("nephos.composer.install.secret_from_file")
     @patch("nephos.composer.install.helm_upgrade")
     @patch("nephos.composer.install.helm_install")
+    @patch("nephos.composer.install.helm_extra_vars")
     @patch("nephos.composer.install.helm_check")
     @patch("nephos.composer.install.composer_connection")
     def test_deploy_composer(
         self,
         mock_composer_connection,
         mock_helm_check,
+        mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
         mock_secret_from_file,
@@ -142,12 +144,14 @@ class TestDeployComposer:
     @patch("nephos.composer.install.secret_from_file")
     @patch("nephos.composer.install.helm_upgrade")
     @patch("nephos.composer.install.helm_install")
+    @patch("nephos.composer.install.helm_extra_vars")
     @patch("nephos.composer.install.helm_check")
     @patch("nephos.composer.install.composer_connection")
     def test_deploy_composer_upgrade(
         self,
         mock_composer_connection,
         mock_helm_check,
+        mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
         mock_secret_from_file,

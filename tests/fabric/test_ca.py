@@ -13,8 +13,10 @@ class TestCaChart:
     @patch("nephos.fabric.ca.secret_read")
     @patch("nephos.fabric.ca.helm_upgrade")
     @patch("nephos.fabric.ca.helm_install")
+    @patch("nephos.fabric.ca.helm_extra_vars")
     @patch("nephos.fabric.ca.helm_check")
-    def test_ca_chart(self, mock_helm_check, mock_helm_install, mock_helm_upgrade, mock_secret_read):
+    def test_ca_chart(self, mock_helm_check, mock_helm_extra_vars,
+                      mock_helm_install, mock_helm_upgrade, mock_secret_read):
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
         env_vars = [("externalDatabase.password", "a_password")]
         ca_chart(self.OPTS, "a-release")
@@ -51,9 +53,11 @@ class TestCaChart:
     @patch("nephos.fabric.ca.secret_read")
     @patch("nephos.fabric.ca.helm_upgrade")
     @patch("nephos.fabric.ca.helm_install")
+    @patch("nephos.fabric.ca.helm_extra_vars")
     @patch("nephos.fabric.ca.helm_check")
     def test_ca_chart_upgrade(
-        self, mock_helm_check, mock_helm_install, mock_helm_upgrade, mock_secret_read
+        self, mock_helm_check, mock_helm_extra_vars,
+            mock_helm_install, mock_helm_upgrade, mock_secret_read
     ):
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
         env_vars = [("externalDatabase.password", "a_password")]
@@ -91,9 +95,11 @@ class TestCaChart:
     @patch("nephos.fabric.ca.secret_read")
     @patch("nephos.fabric.ca.helm_upgrade")
     @patch("nephos.fabric.ca.helm_install")
+    @patch("nephos.fabric.ca.helm_extra_vars")
     @patch("nephos.fabric.ca.helm_check")
     def test_ca_chart_upgrade_old(
-        self, mock_helm_check, mock_helm_install, mock_helm_upgrade, mock_secret_read
+        self, mock_helm_check, mock_helm_extra_vars,
+            mock_helm_install, mock_helm_upgrade, mock_secret_read
     ):
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
         mock_helm_upgrade.side_effect = [Exception, None]
@@ -152,9 +158,11 @@ class TestCaChart:
     @patch("nephos.fabric.ca.secret_read")
     @patch("nephos.fabric.ca.helm_upgrade")
     @patch("nephos.fabric.ca.helm_install")
+    @patch("nephos.fabric.ca.helm_extra_vars")
     @patch("nephos.fabric.ca.helm_check")
     def test_ca_chart_verbose(
-        self, mock_helm_check, mock_helm_install, mock_helm_upgrade, mock_secret_read
+        self, mock_helm_check, mock_helm_extra_vars,
+            mock_helm_install, mock_helm_upgrade, mock_secret_read
     ):
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
         env_vars = [("externalDatabase.password", "a_password")]

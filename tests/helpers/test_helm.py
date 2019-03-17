@@ -144,16 +144,13 @@ class TestHelmExtraVars:
 
 
 class TestHelmInstall:
-    @patch("nephos.helpers.helm.helm_env_vars")
     @patch("nephos.helpers.helm.execute")
-    def test_helm_install(self, mock_execute, mock_helm_env_vars):
-        mock_helm_env_vars.side_effect = [""]
+    def test_helm_install(self, mock_execute):
         mock_execute.side_effect = [
             (None, "error"),  # Helm list
             ("Helm install", None),  # Helm install
         ]
         helm_install("a_repo", "an_app", "a-release", "a-namespace")
-        mock_helm_env_vars.assert_called_once_with(None)
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
@@ -164,23 +161,18 @@ class TestHelmInstall:
             ]
         )
 
-    @patch("nephos.helpers.helm.helm_env_vars")
     @patch("nephos.helpers.helm.execute")
     def test_helm_install_again(
-        self, mock_execute, mock_helm_env_vars
+        self, mock_execute
     ):
-        mock_helm_env_vars.side_effect = [""]
         mock_execute.side_effect = [("a-release", None)]  # Helm list
         helm_install("a_repo", "an_app", "a-release", "a-namespace")
-        mock_helm_env_vars.assert_called_once_with(None)
         mock_execute.assert_called_once_with("helm status a-release")
 
-    @patch("nephos.helpers.helm.helm_env_vars")
     @patch("nephos.helpers.helm.execute")
-    def test_helm_install_config(
-        self, mock_execute, mock_helm_env_vars
+    def test_helm_install_extra(
+        self, mock_execute
     ):
-        mock_helm_env_vars.side_effect = [""]
         mock_execute.side_effect = [
             (None, "error"),  # Helm list
             ("Helm install", None),  # Helm install
@@ -190,68 +182,30 @@ class TestHelmInstall:
             "an_app",
             "a-release",
             "a-namespace",
-            version="a-version",
-            config_yaml="some_config.yaml",
+            extra_vars=" EXTRA-VARS",
         )
-        mock_helm_env_vars.assert_called_once_with(None)
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
                 call(
                     "helm install a_repo/an_app -n a-release " +
-                    "--namespace a-namespace --version a-version -f some_config.yaml",
+                    "--namespace a-namespace EXTRA-VARS",
                     verbose=False,
-                ),
-            ]
-        )
-
-    @patch("nephos.helpers.helm.helm_env_vars")
-    @patch("nephos.helpers.helm.execute")
-    def test_helm_install_envvars(
-        self, mock_execute, mock_helm_env_vars
-    ):
-        mock_helm_env_vars.side_effect = [" --set foo=bar"]
-        mock_execute.side_effect = [
-            (None, "error"),  # Helm list
-            ("Helm install", None),  # Helm install
-        ]
-        helm_install(
-            "a_repo",
-            "an_app",
-            "a-release",
-            "a-namespace",
-            env_vars="env-vars",
-            verbose=True,
-        )
-        mock_helm_env_vars.assert_called_once_with("env-vars")
-        mock_execute.assert_has_calls(
-            [
-                call("helm status a-release"),
-                call(
-                    "helm install a_repo/an_app -n a-release --namespace a-namespace "
-                    + "--set foo=bar",
-                    verbose=True,
                 ),
             ]
         )
 
 
 class TestHelmUpgrade:
-    @patch("nephos.helpers.helm.helm_preserve")
-    @patch("nephos.helpers.helm.helm_env_vars")
     @patch("nephos.helpers.helm.execute")
     def test_helm_upgrade(
-        self, mock_execute, mock_helm_env_vars, mock_helm_preserve
+        self, mock_execute
     ):
-        mock_helm_env_vars.side_effect = [""]
-        mock_helm_preserve.side_effect = [""]
         mock_execute.side_effect = [
             ("a-release", None),  # Helm list
             ("Helm install", None),  # Helm install
         ]
         helm_upgrade("a_repo", "an_app", "a-release")
-        mock_helm_env_vars.assert_called_once_with(None)
-        mock_helm_preserve.assert_called_once_with(None, verbose=False)
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
@@ -259,29 +213,19 @@ class TestHelmUpgrade:
             ]
         )
 
-    @patch("nephos.helpers.helm.helm_preserve")
-    @patch("nephos.helpers.helm.helm_env_vars")
     @patch("nephos.helpers.helm.execute")
     def test_helm_upgrade_preinstall(
-        self, mock_execute, mock_helm_env_vars, mock_helm_preserve
+        self, mock_execute
     ):
-        mock_helm_env_vars.side_effect = [""]
-        mock_helm_preserve.side_effect = [""]
         mock_execute.side_effect = [(None, "error")]  # Helm list
         with pytest.raises(Exception):
             helm_upgrade("a_repo", "an_app", "a-release")
-        mock_helm_env_vars.assert_called_once_with(None)
-        mock_helm_preserve.assert_called_once_with(None, verbose=False)
         mock_execute.assert_called_once_with("helm status a-release")
 
-    @patch("nephos.helpers.helm.helm_preserve")
-    @patch("nephos.helpers.helm.helm_env_vars")
     @patch("nephos.helpers.helm.execute")
-    def test_helm_upgrade_config(
-        self, mock_execute, mock_helm_env_vars, mock_helm_preserve
+    def test_helm_upgrade_extra_vars(
+        self, mock_execute
     ):
-        mock_helm_env_vars.side_effect = [""]
-        mock_helm_preserve.side_effect = [""]
         mock_execute.side_effect = [
             ("a-release", None),  # Helm list
             ("Helm upgrade", None),  # Helm upgrade
@@ -290,50 +234,14 @@ class TestHelmUpgrade:
             "a_repo",
             "an_app",
             "a-release",
-            version="a-version",
-            config_yaml="some_config.yaml",
+            extra_vars=" EXTRA-VARS"
         )
-        mock_helm_env_vars.assert_called_once_with(None)
-        mock_helm_preserve.assert_called_once_with(None, verbose=False)
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
                 call(
-                    "helm upgrade a-release a_repo/an_app " +
-                    "--version a-version -f some_config.yaml",
+                    "helm upgrade a-release a_repo/an_app EXTRA-VARS",
                     verbose=False,
-                ),
-            ]
-        )
-
-    @patch("nephos.helpers.helm.helm_preserve")
-    @patch("nephos.helpers.helm.helm_env_vars")
-    @patch("nephos.helpers.helm.execute")
-    def test_helm_upgrade_preserve(
-        self, mock_execute, mock_helm_env_vars, mock_helm_preserve
-    ):
-        mock_helm_env_vars.side_effect = [" --set foo=bar"]
-        mock_helm_preserve.side_effect = [" --set egg=sausage"]
-        mock_execute.side_effect = [
-            ("a-release", None),  # Helm list
-            ("Helm upgrade", None),  # Helm upgrade
-        ]
-        helm_upgrade(
-            "a_repo",
-            "an_app",
-            "a-release",
-            env_vars="env-vars",
-            preserve="preserve",
-            verbose=True,
-        )
-        mock_helm_env_vars.assert_called_once_with("env-vars")
-        mock_helm_preserve.assert_called_once_with("preserve", verbose=True)
-        mock_execute.assert_has_calls(
-            [
-                call("helm status a-release"),
-                call(
-                    "helm upgrade a-release a_repo/an_app --set foo=bar --set egg=sausage",
-                    verbose=True,
                 ),
             ]
         )
