@@ -39,18 +39,20 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
     repository = opts["core"]["chart_repo"]
     ca_namespace = get_namespace(opts, ca=release)
     # PostgreSQL (Upgrades here are dangerous, deactivated by default)
-    extra_vars = helm_extra_vars(config_yaml="{dir}/postgres-ca/{name}-pg.yaml".format(
+    # Upgrading database is risky, so we disallow it by default
+    if not upgrade:
+        extra_vars = helm_extra_vars(config_yaml="{dir}/postgres-ca/{name}-pg.yaml".format(
             dir=values_dir, name=release
         ))
-    helm_install(
-        "stable",
-        "postgresql",
-        "{}-pg".format(release),
-        ca_namespace,
-        extra_vars=extra_vars,
-        verbose=verbose,
-    )
-    helm_check("postgresql", "{}-pg".format(release), ca_namespace)
+        helm_install(
+            "stable",
+            "postgresql",
+            "{}-pg".format(release),
+            ca_namespace,
+            extra_vars=extra_vars,
+            verbose=verbose,
+        )
+        helm_check("postgresql", "{}-pg".format(release), ca_namespace)
     psql_secret = secret_read(
         "{}-pg-postgresql".format(release), ca_namespace, verbose=verbose
     )
@@ -60,8 +62,11 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
     )
     # Fabric CA
     env_vars = [("externalDatabase.password", psql_password)]
+    config_yaml = "{dir}/hlf-ca/{name}.yaml".format(
+        dir=values_dir, name=release
+    )
     if not upgrade:
-        extra_vars = helm_extra_vars(env_vars=env_vars)
+        extra_vars = helm_extra_vars(config_yaml=config_yaml, env_vars=env_vars)
         helm_install(
             repository,
             "hlf-ca",
@@ -79,7 +84,7 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
                 ca_namespace, "{}-hlf-ca--ca".format(release), "CA_PASSWORD", "adminPassword"
             ),
         )
-        extra_vars = helm_extra_vars(env_vars=env_vars, preserve=preserve)
+        extra_vars = helm_extra_vars(config_yaml=config_yaml, env_vars=env_vars, preserve=preserve)
         helm_upgrade(
             repository,
             "hlf-ca",
