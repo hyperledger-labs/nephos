@@ -59,8 +59,9 @@ class TestSetupPeer:
 
     @patch("nephos.fabric.peer.helm_upgrade")
     @patch("nephos.fabric.peer.helm_install")
+    @patch("nephos.fabric.peer.helm_check")
     @patch("nephos.fabric.peer.check_peer")
-    def test_peer(self, mock_check_peer, mock_helm_install, mock_helm_upgrade):
+    def test_peer(self, mock_check_peer, mock_helm_check, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         setup_peer(OPTS)
         mock_helm_install.assert_has_calls(
@@ -100,6 +101,12 @@ class TestSetupPeer:
             ]
         )
         mock_helm_upgrade.assert_not_called()
+        mock_helm_check.assert_has_calls([
+            call("hlf-couchdb", "cdb-peer0", "peer-namespace"),
+            call("hlf-peer", "peer0", "peer-namespace"),
+            call("hlf-couchdb", "cdb-peer1", "peer-namespace"),
+            call("hlf-peer", "peer1", "peer-namespace"),
+        ])
         mock_check_peer.assert_has_calls(
             [
                 call("peer-namespace", "peer0", verbose=False),
@@ -109,8 +116,9 @@ class TestSetupPeer:
 
     @patch("nephos.fabric.peer.helm_upgrade")
     @patch("nephos.fabric.peer.helm_install")
+    @patch("nephos.fabric.peer.helm_check")
     @patch("nephos.fabric.peer.check_peer")
-    def test_peer_upgrade(self, mock_check_peer, mock_helm_install, mock_helm_upgrade):
+    def test_peer_upgrade(self, mock_check_peer, mock_helm_check, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         OPTS["peers"]["names"] = ["peer0"]
         setup_peer(OPTS, upgrade=True)
@@ -147,6 +155,10 @@ class TestSetupPeer:
                 ),
             ]
         )
+        mock_helm_check.assert_has_calls([
+            call("hlf-couchdb", "cdb-peer0", "peer-namespace"),
+            call("hlf-peer", "peer0", "peer-namespace"),
+        ])
         mock_check_peer.assert_called_once_with(
             "peer-namespace", "peer0", verbose=False
         )

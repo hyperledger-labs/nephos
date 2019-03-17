@@ -16,7 +16,7 @@ from time import sleep
 
 from nephos.fabric.utils import get_pod
 from nephos.fabric.settings import get_namespace
-from nephos.helpers.helm import helm_install, helm_upgrade
+from nephos.helpers.helm import helm_check, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
 
 
@@ -87,9 +87,9 @@ def setup_ord(opts, upgrade=False, verbose=False):
             config_yaml="{dir}/kafka/kafka-hlf.yaml".format(
                 dir=opts["core"]["dir_values"]
             ),
-            pod_num=opts["orderers"]["kafka"]["pod_num"],
             verbose=verbose,
         )
+        helm_check("kafka", "kafka-hlf", ord_namespace, pod_num=opts["orderers"]["kafka"]["pod_num"])
 
     for release in opts["orderers"]["names"]:
         # HL-Ord
@@ -115,5 +115,6 @@ def setup_ord(opts, upgrade=False, verbose=False):
                 ),
                 verbose=verbose,
             )
+        helm_check("hlf-ord", release, ord_namespace)
         # Check that Orderer is running
         check_ord(ord_namespace, release, verbose=verbose)

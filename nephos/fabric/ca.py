@@ -18,7 +18,7 @@ from time import sleep
 from kubernetes.client.rest import ApiException
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_pod
-from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
+from nephos.helpers.helm import HelmPreserve, helm_check, helm_install, helm_upgrade
 from nephos.helpers.k8s import ingress_read, secret_read
 from nephos.helpers.misc import execute_until_success
 
@@ -49,6 +49,7 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
         ),
         verbose=verbose,
     )
+    helm_check("postgresql", "{}-pg".format(release), ca_namespace)
     psql_secret = secret_read(
         "{}-pg-postgresql".format(release), ca_namespace, verbose=verbose
     )
@@ -110,6 +111,7 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
                 preserve=preserve,
                 verbose=verbose,
             )
+    helm_check("hlf-ca", release, ca_namespace)
 
 
 def ca_enroll(pod_exec):

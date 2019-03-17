@@ -18,7 +18,7 @@ from time import sleep
 from nephos.fabric.ord import check_ord_tls
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_pod
-from nephos.helpers.helm import HelmPreserve, helm_install, helm_upgrade
+from nephos.helpers.helm import HelmPreserve, helm_check, helm_install, helm_upgrade
 
 
 def check_peer(namespace, release, verbose=False):
@@ -93,6 +93,7 @@ def setup_peer(opts, upgrade=False, verbose=False):
                 preserve=preserve,
                 verbose=verbose,
             )
+        helm_check("hlf-couchdb", "cdb-{}".format(release), peer_namespace)
 
         # Deploy the HL-Peer charts
         if not upgrade:
@@ -117,7 +118,8 @@ def setup_peer(opts, upgrade=False, verbose=False):
                 ),
                 verbose=verbose,
             )
-
+        helm_check("hlf-peer", release, peer_namespace)
+        # Check that peer is running
         check_peer(peer_namespace, release, verbose=verbose)
 
 

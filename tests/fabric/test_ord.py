@@ -65,8 +65,9 @@ class TestSetupOrd:
 
     @patch("nephos.fabric.ord.helm_upgrade")
     @patch("nephos.fabric.ord.helm_install")
+    @patch("nephos.fabric.ord.helm_check")
     @patch("nephos.fabric.ord.check_ord")
-    def test_ord(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
+    def test_ord(self, mock_check_ord, mock_helm_check, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         OPTS["orderers"]["names"] = ["ord0", "ord1"]
         setup_ord(OPTS)
@@ -91,6 +92,10 @@ class TestSetupOrd:
             ]
         )
         mock_helm_upgrade.assert_not_called()
+        mock_helm_check.assert_has_calls([
+            call("hlf-ord", "ord0", "ord-namespace"),
+            call("hlf-ord", "ord1", "ord-namespace"),
+        ])
         mock_check_ord.assert_has_calls(
             [
                 call("ord-namespace", "ord0", verbose=False),
@@ -100,8 +105,9 @@ class TestSetupOrd:
 
     @patch("nephos.fabric.ord.helm_upgrade")
     @patch("nephos.fabric.ord.helm_install")
+    @patch("nephos.fabric.ord.helm_check")
     @patch("nephos.fabric.ord.check_ord")
-    def test_ord_kafka(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
+    def test_ord_kafka(self, mock_check_ord, mock_helm_check, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
         OPTS["orderers"]["kafka"] = {"pod_num": 42}
         setup_ord(OPTS, verbose=True)
@@ -113,7 +119,6 @@ class TestSetupOrd:
                     "kafka-hlf",
                     "ord-namespace",
                     config_yaml="./a_dir/kafka/kafka-hlf.yaml",
-                    pod_num=42,
                     verbose=True,
                 ),
                 call(
@@ -127,12 +132,17 @@ class TestSetupOrd:
             ]
         )
         mock_helm_upgrade.assert_not_called()
+        mock_helm_check.assert_has_calls([
+            call("kafka", "kafka-hlf", "ord-namespace", pod_num=42),
+            call("hlf-ord", "ord0", "ord-namespace"),
+        ])
         mock_check_ord.assert_called_once_with("ord-namespace", "ord0", verbose=True)
 
     @patch("nephos.fabric.ord.helm_upgrade")
     @patch("nephos.fabric.ord.helm_install")
+    @patch("nephos.fabric.ord.helm_check")
     @patch("nephos.fabric.ord.check_ord")
-    def test_ord_upgrade(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
+    def test_ord_upgrade(self, mock_check_ord, mock_helm_check, mock_helm_install, mock_helm_upgrade):
         setup_ord(self.OPTS, upgrade=True)
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
@@ -144,3 +154,6 @@ class TestSetupOrd:
             verbose=False,
         )
         mock_check_ord.assert_called_once_with("ord-namespace", "ord0", verbose=False)
+        mock_helm_check.assert_has_calls([
+            call("hlf-ord", "ord0", "ord-namespace"),
+        ])

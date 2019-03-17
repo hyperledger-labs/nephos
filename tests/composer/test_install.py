@@ -112,10 +112,12 @@ class TestDeployComposer:
     @patch("nephos.composer.install.secret_from_file")
     @patch("nephos.composer.install.helm_upgrade")
     @patch("nephos.composer.install.helm_install")
+    @patch("nephos.composer.install.helm_check")
     @patch("nephos.composer.install.composer_connection")
     def test_deploy_composer(
         self,
         mock_composer_connection,
+        mock_helm_check,
         mock_helm_install,
         mock_helm_upgrade,
         mock_secret_from_file,
@@ -130,19 +132,22 @@ class TestDeployComposer:
             "hl-composer",
             "hlc",
             "peer-namespace",
-            pod_num=3,
             config_yaml="./a_dir/hl-composer/hlc.yaml",
             verbose=False,
         )
         mock_helm_upgrade.assert_not_called()
+        mock_helm_check.assert_called_once_with(
+            "hl-composer", "hlc", "peer-namespace", pod_num=3)
 
     @patch("nephos.composer.install.secret_from_file")
     @patch("nephos.composer.install.helm_upgrade")
     @patch("nephos.composer.install.helm_install")
+    @patch("nephos.composer.install.helm_check")
     @patch("nephos.composer.install.composer_connection")
     def test_deploy_composer_upgrade(
         self,
         mock_composer_connection,
+        mock_helm_check,
         mock_helm_install,
         mock_helm_upgrade,
         mock_secret_from_file,
@@ -158,7 +163,6 @@ class TestDeployComposer:
             "hl-composer",
             "hlc",
             "peer-namespace",
-            pod_num=3,
             config_yaml="./a_dir/hl-composer/hlc.yaml",
             preserve=(
                 HelmPreserve(
@@ -167,6 +171,8 @@ class TestDeployComposer:
             ),
             verbose=True,
         )
+        mock_helm_check.assert_called_once_with(
+            "hl-composer", "hlc", "peer-namespace", pod_num=3)
 
 
 class TestSetupAdmin:

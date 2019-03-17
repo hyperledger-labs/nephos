@@ -133,7 +133,6 @@ def helm_preserve(namespace, preserve, verbose=False):
 
 # TODO: Too many parameters - SQ Code Smell
 # TODO: Cleanest way of fixing parameter issues is via a Helm class
-# TODO: We should ideally auto-detect number of pods
 def helm_install(
     repo,
     app,
@@ -143,7 +142,6 @@ def helm_install(
     env_vars=None,
     version=None,
     verbose=False,
-    pod_num=1,
 ):
     """Install Helm chart.
 
@@ -156,7 +154,6 @@ def helm_install(
         env_vars (tuple): List of env vars we want to set.
         version (str): Which Chart version do we wish to install?
         verbose (bool): Verbosity. False by default.
-        pod_num (int): Number of pods we wish to have.
     """
     ls_res, _ = execute("helm status {release}".format(release=release))
 
@@ -174,11 +171,9 @@ def helm_install(
         command += env_vars_string
         # Execute
         execute(command, verbose=verbose)
-    helm_check(app, release, namespace, pod_num)
 
 
 # TODO: Too many parameters - SQ Code Smell
-# TODO: We should ideally auto-detect number of pods
 def helm_upgrade(
     repo,
     app,
@@ -189,7 +184,6 @@ def helm_upgrade(
     preserve=None,
     version=None,
     verbose=False,
-    pod_num=1,
 ):
     """Upgrade Helm chart.
 
@@ -203,7 +197,6 @@ def helm_upgrade(
         preserve (tuple): Set of secrets we wish to get data from to assign to the Helm Chart.
         version (str): Which Chart version do we wish to install?
         verbose (bool): Verbosity. False by default.
-        pod_num (int): Number of pods we wish to have.
     """
     ls_res, _ = execute("helm status {release}".format(release=release))
 
@@ -224,4 +217,3 @@ def helm_upgrade(
         execute(command, verbose=verbose)
     else:
         raise Exception("Cannot update a Helm release that is not running")
-    helm_check(app, release, namespace, pod_num)
