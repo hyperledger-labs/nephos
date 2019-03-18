@@ -11,7 +11,9 @@ from nephos.helpers.misc import execute
 
 TERM = Terminal()
 
-HelmPreserve = namedtuple("HelmPreserve", ("secret_namespace", "secret_name", "data_item", "values_path"))
+HelmPreserve = namedtuple(
+    "HelmPreserve", ("secret_namespace", "secret_name", "data_item", "values_path")
+)
 # noinspection PyArgumentList
 HelmSet = namedtuple("HelmSet", ("key", "value", "set_string"), defaults=(False,))
 
@@ -28,9 +30,7 @@ def helm_check(app, release, namespace, pod_num=None):
         namespace (str): Namespace where Helm deployment is located.
         pod_num (int): Number of pods expected to exist in the release.
     """
-    identifier = '-l "app={app},release={name}"'.format(
-        app=app, name=release
-    )
+    identifier = '-l "app={app},release={name}"'.format(app=app, name=release)
     pod_check(namespace, identifier, pod_num=pod_num)
 
 
@@ -109,7 +109,9 @@ def helm_preserve(preserve, verbose=False):
             item = HelmPreserve(*item)
         elif not isinstance(item, HelmPreserve):
             raise TypeError("Items in preserve array must be HelmPerserve named tuples")
-        secret_data = secret_read(item.secret_name, item.secret_namespace, verbose=verbose)
+        secret_data = secret_read(
+            item.secret_name, item.secret_namespace, verbose=verbose
+        )
         env_vars.append(HelmSet(item.values_path, secret_data[item.data_item]))
     # Environmental variables
     # TODO: This may well be its own subfunction
@@ -124,7 +126,9 @@ def helm_preserve(preserve, verbose=False):
     return env_vars_string
 
 
-def helm_extra_vars(version=None, config_yaml=None, env_vars=None, preserve=None, verbose=False):
+def helm_extra_vars(
+    version=None, config_yaml=None, env_vars=None, preserve=None, verbose=False
+):
     """Centralise obtaining extra variables for our helm_install and/or helm_upgrade
 
     Args:
@@ -155,14 +159,7 @@ def helm_extra_vars(version=None, config_yaml=None, env_vars=None, preserve=None
     return extra_vars_string
 
 
-def helm_install(
-    repo,
-    app,
-    release,
-    namespace,
-    extra_vars="",
-    verbose=False,
-):
+def helm_install(repo, app, release, namespace, extra_vars="", verbose=False):
     """Install Helm chart.
 
     Args:
@@ -184,13 +181,7 @@ def helm_install(
         execute(command, verbose=verbose)
 
 
-def helm_upgrade(
-    repo,
-    app,
-    release,
-    extra_vars="",
-    verbose=False,
-):
+def helm_upgrade(repo, app, release, extra_vars="", verbose=False):
     """Upgrade Helm chart.
 
     Args:

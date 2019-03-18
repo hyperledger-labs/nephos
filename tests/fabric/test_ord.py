@@ -70,29 +70,29 @@ class TestSetupOrd:
     @patch("nephos.fabric.ord.helm_check")
     @patch("nephos.fabric.ord.get_version")
     @patch("nephos.fabric.ord.check_ord")
-    def test_ord(self, mock_check_ord, mock_get_version, mock_helm_check,
-                 mock_helm_extra_vars, mock_helm_install, mock_helm_upgrade):
+    def test_ord(
+        self,
+        mock_check_ord,
+        mock_get_version,
+        mock_helm_check,
+        mock_helm_extra_vars,
+        mock_helm_install,
+        mock_helm_upgrade,
+    ):
         OPTS = deepcopy(self.OPTS)
         OPTS["orderers"]["names"] = ["ord0", "ord1"]
-        mock_get_version.side_effect = [
-            "ord-version",
-            "ord-version",
-        ]
-        mock_helm_extra_vars.side_effect = [
-            "extra-vars-ord0",
-            "extra-vars-ord1"
-        ]
+        mock_get_version.side_effect = ["ord-version", "ord-version"]
+        mock_helm_extra_vars.side_effect = ["extra-vars-ord0", "extra-vars-ord1"]
         setup_ord(OPTS)
-        mock_get_version.assert_has_calls([
-            call(OPTS, "hlf-ord"),
-            call(OPTS, "hlf-ord")
-        ])
-        mock_helm_extra_vars.assert_has_calls([
-            call(version="ord-version",
-                 config_yaml="./a_dir/hlf-ord/ord0.yaml"),
-            call(version="ord-version",
-                 config_yaml="./a_dir/hlf-ord/ord1.yaml")
-        ])
+        mock_get_version.assert_has_calls(
+            [call(OPTS, "hlf-ord"), call(OPTS, "hlf-ord")]
+        )
+        mock_helm_extra_vars.assert_has_calls(
+            [
+                call(version="ord-version", config_yaml="./a_dir/hlf-ord/ord0.yaml"),
+                call(version="ord-version", config_yaml="./a_dir/hlf-ord/ord1.yaml"),
+            ]
+        )
         mock_helm_install.assert_has_calls(
             [
                 call(
@@ -114,10 +114,12 @@ class TestSetupOrd:
             ]
         )
         mock_helm_upgrade.assert_not_called()
-        mock_helm_check.assert_has_calls([
-            call("hlf-ord", "ord0", "ord-namespace"),
-            call("hlf-ord", "ord1", "ord-namespace"),
-        ])
+        mock_helm_check.assert_has_calls(
+            [
+                call("hlf-ord", "ord0", "ord-namespace"),
+                call("hlf-ord", "ord1", "ord-namespace"),
+            ]
+        )
         mock_check_ord.assert_has_calls(
             [
                 call("ord-namespace", "ord0", verbose=False),
@@ -131,29 +133,29 @@ class TestSetupOrd:
     @patch("nephos.fabric.ord.helm_check")
     @patch("nephos.fabric.ord.get_version")
     @patch("nephos.fabric.ord.check_ord")
-    def test_ord_kafka(self, mock_check_ord, mock_get_version, mock_helm_check,
-                       mock_helm_extra_vars, mock_helm_install, mock_helm_upgrade):
+    def test_ord_kafka(
+        self,
+        mock_check_ord,
+        mock_get_version,
+        mock_helm_check,
+        mock_helm_extra_vars,
+        mock_helm_install,
+        mock_helm_upgrade,
+    ):
         OPTS = deepcopy(self.OPTS)
         OPTS["orderers"]["kafka"] = {"pod_num": 42}
-        mock_get_version.side_effect = [
-            "kafka-version",
-            "ord-version",
-        ]
-        mock_helm_extra_vars.side_effect = [
-            "extra-vars-kafka",
-            "extra-vars-ord0",
-        ]
+        mock_get_version.side_effect = ["kafka-version", "ord-version"]
+        mock_helm_extra_vars.side_effect = ["extra-vars-kafka", "extra-vars-ord0"]
         setup_ord(OPTS, verbose=True)
-        mock_get_version.assert_has_calls([
-            call(OPTS, "kafka"),
-            call(OPTS, "hlf-ord")
-        ])
-        mock_helm_extra_vars.assert_has_calls([
-            call(version="kafka-version",
-                 config_yaml="./a_dir/kafka/kafka-hlf.yaml"),
-            call(version="ord-version",
-                 config_yaml="./a_dir/hlf-ord/ord0.yaml")
-        ])
+        mock_get_version.assert_has_calls([call(OPTS, "kafka"), call(OPTS, "hlf-ord")])
+        mock_helm_extra_vars.assert_has_calls(
+            [
+                call(
+                    version="kafka-version", config_yaml="./a_dir/kafka/kafka-hlf.yaml"
+                ),
+                call(version="ord-version", config_yaml="./a_dir/hlf-ord/ord0.yaml"),
+            ]
+        )
         mock_helm_install.assert_has_calls(
             [
                 call(
@@ -175,10 +177,12 @@ class TestSetupOrd:
             ]
         )
         mock_helm_upgrade.assert_not_called()
-        mock_helm_check.assert_has_calls([
-            call("kafka", "kafka-hlf", "ord-namespace", pod_num=42),
-            call("hlf-ord", "ord0", "ord-namespace"),
-        ])
+        mock_helm_check.assert_has_calls(
+            [
+                call("kafka", "kafka-hlf", "ord-namespace", pod_num=42),
+                call("hlf-ord", "ord0", "ord-namespace"),
+            ]
+        )
         mock_check_ord.assert_called_once_with("ord-namespace", "ord0", verbose=True)
 
     @patch("nephos.fabric.ord.helm_upgrade")
@@ -187,31 +191,25 @@ class TestSetupOrd:
     @patch("nephos.fabric.ord.helm_check")
     @patch("nephos.fabric.ord.get_version")
     @patch("nephos.fabric.ord.check_ord")
-    def test_ord_upgrade(self, mock_check_ord, mock_get_version, mock_helm_check,
-                         mock_helm_extra_vars, mock_helm_install, mock_helm_upgrade):
-        mock_get_version.side_effect = [
-            "ord-version",
-        ]
-        mock_helm_extra_vars.side_effect = [
-            "extra-vars-ord0",
-        ]
+    def test_ord_upgrade(
+        self,
+        mock_check_ord,
+        mock_get_version,
+        mock_helm_check,
+        mock_helm_extra_vars,
+        mock_helm_install,
+        mock_helm_upgrade,
+    ):
+        mock_get_version.side_effect = ["ord-version"]
+        mock_helm_extra_vars.side_effect = ["extra-vars-ord0"]
         setup_ord(self.OPTS, upgrade=True)
-        mock_get_version.assert_has_calls([
-            call(self.OPTS, "hlf-ord")
-        ])
-        mock_helm_extra_vars.assert_has_calls([
-            call(version="ord-version",
-                 config_yaml="./a_dir/hlf-ord/ord0.yaml")
-        ])
+        mock_get_version.assert_has_calls([call(self.OPTS, "hlf-ord")])
+        mock_helm_extra_vars.assert_has_calls(
+            [call(version="ord-version", config_yaml="./a_dir/hlf-ord/ord0.yaml")]
+        )
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
-            "a-repo",
-            "hlf-ord",
-            "ord0",
-            extra_vars="extra-vars-ord0",
-            verbose=False,
+            "a-repo", "hlf-ord", "ord0", extra_vars="extra-vars-ord0", verbose=False
         )
         mock_check_ord.assert_called_once_with("ord-namespace", "ord0", verbose=False)
-        mock_helm_check.assert_has_calls([
-            call("hlf-ord", "ord0", "ord-namespace"),
-        ])
+        mock_helm_check.assert_has_calls([call("hlf-ord", "ord0", "ord-namespace")])

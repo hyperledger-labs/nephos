@@ -18,7 +18,13 @@ from nephos.composer.connection_template import json_ct
 from nephos.fabric.crypto import admin_creds
 from nephos.fabric.utils import get_pod
 from nephos.fabric.settings import get_namespace, get_version
-from nephos.helpers.helm import HelmPreserve, helm_check, helm_extra_vars, helm_install, helm_upgrade
+from nephos.helpers.helm import (
+    HelmPreserve,
+    helm_check,
+    helm_extra_vars,
+    helm_install,
+    helm_upgrade,
+)
 from nephos.helpers.k8s import (
     get_app_info,
     cm_create,
@@ -114,8 +120,8 @@ def deploy_composer(opts, upgrade=False, verbose=False):
     # Start Composer
     version = get_version(opts, "hl-composer")
     config_yaml = "{dir}/hl-composer/{release}.yaml".format(
-                dir=opts["core"]["dir_values"], release=opts["composer"]["name"]
-            )
+        dir=opts["core"]["dir_values"], release=opts["composer"]["name"]
+    )
     if not upgrade:
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
@@ -135,7 +141,9 @@ def deploy_composer(opts, upgrade=False, verbose=False):
                 "rest.config.apiKey",
             ),
         )
-        extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml, preserve=preserve)
+        extra_vars = helm_extra_vars(
+            version=version, config_yaml=config_yaml, preserve=preserve
+        )
         helm_upgrade(
             opts["core"]["chart_repo"],
             "hl-composer",

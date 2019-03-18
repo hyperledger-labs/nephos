@@ -18,7 +18,13 @@ from time import sleep
 from nephos.fabric.ord import check_ord_tls
 from nephos.fabric.settings import get_namespace, get_version
 from nephos.fabric.utils import get_pod
-from nephos.helpers.helm import HelmPreserve, helm_check, helm_extra_vars, helm_install, helm_upgrade
+from nephos.helpers.helm import (
+    HelmPreserve,
+    helm_check,
+    helm_extra_vars,
+    helm_install,
+    helm_upgrade,
+)
 
 
 def check_peer(namespace, release, verbose=False):
@@ -87,7 +93,9 @@ def setup_peer(opts, upgrade=False, verbose=False):
                     "couchdbPassword",
                 ),
             )
-            extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml, preserve=preserve)
+            extra_vars = helm_extra_vars(
+                version=version, config_yaml=config_yaml, preserve=preserve
+            )
             helm_upgrade(
                 opts["core"]["chart_repo"],
                 "hlf-couchdb",

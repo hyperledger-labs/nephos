@@ -81,8 +81,8 @@ def setup_ord(opts, upgrade=False, verbose=False):
         # Kafka upgrade is risky, so we disallow it by default
         version = get_version(opts, "kafka")
         config_yaml = "{dir}/kafka/kafka-hlf.yaml".format(
-                dir=opts["core"]["dir_values"]
-            )
+            dir=opts["core"]["dir_values"]
+        )
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
             "incubator",
@@ -92,14 +92,19 @@ def setup_ord(opts, upgrade=False, verbose=False):
             extra_vars=extra_vars,
             verbose=verbose,
         )
-        helm_check("kafka", "kafka-hlf", ord_namespace, pod_num=opts["orderers"]["kafka"]["pod_num"])
+        helm_check(
+            "kafka",
+            "kafka-hlf",
+            ord_namespace,
+            pod_num=opts["orderers"]["kafka"]["pod_num"],
+        )
 
     for release in opts["orderers"]["names"]:
         # HL-Ord
         version = get_version(opts, "hlf-ord")
         config_yaml = "{dir}/hlf-ord/{name}.yaml".format(
-                dir=opts["core"]["dir_values"], name=release
-            )
+            dir=opts["core"]["dir_values"], name=release
+        )
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         if not upgrade:
             helm_install(

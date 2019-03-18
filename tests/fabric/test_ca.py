@@ -18,29 +18,35 @@ class TestCaChart:
     @patch("nephos.fabric.ca.helm_extra_vars")
     @patch("nephos.fabric.ca.helm_check")
     @patch("nephos.fabric.ca.get_version")
-    def test_ca_chart(self, mock_get_version, mock_helm_check, mock_helm_extra_vars,
-                      mock_helm_install, mock_helm_upgrade, mock_secret_read):
+    def test_ca_chart(
+        self,
+        mock_get_version,
+        mock_helm_check,
+        mock_helm_extra_vars,
+        mock_helm_install,
+        mock_helm_upgrade,
+        mock_secret_read,
+    ):
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
-        mock_get_version.side_effect = [
-            "pg-version",
-            "ca-version"
-        ]
-        mock_helm_extra_vars.side_effect = [
-            "extra-vars-pg",
-            "extra-vars-ca"
-        ]
+        mock_get_version.side_effect = ["pg-version", "ca-version"]
+        mock_helm_extra_vars.side_effect = ["extra-vars-pg", "extra-vars-ca"]
         ca_chart(self.OPTS, "a-release", verbose=True)
-        mock_get_version.assert_has_calls([
-            call(self.OPTS, "postgresql"),
-            call(self.OPTS, "hlf-ca")
-        ])
-        mock_helm_extra_vars.assert_has_calls([
-            call(version="pg-version",
-                 config_yaml="./some_dir/postgres-ca/a-release-pg.yaml",),
-            call(version="ca-version",
-                 config_yaml="./some_dir/hlf-ca/a-release.yaml",
-                 env_vars=[("externalDatabase.password", "a_password")])
-        ])
+        mock_get_version.assert_has_calls(
+            [call(self.OPTS, "postgresql"), call(self.OPTS, "hlf-ca")]
+        )
+        mock_helm_extra_vars.assert_has_calls(
+            [
+                call(
+                    version="pg-version",
+                    config_yaml="./some_dir/postgres-ca/a-release-pg.yaml",
+                ),
+                call(
+                    version="ca-version",
+                    config_yaml="./some_dir/hlf-ca/a-release.yaml",
+                    env_vars=[("externalDatabase.password", "a_password")],
+                ),
+            ]
+        )
         mock_helm_install.assert_has_calls(
             [
                 call(
@@ -65,10 +71,12 @@ class TestCaChart:
         mock_secret_read.assert_called_once_with(
             "a-release-pg-postgresql", "ca-namespace", verbose=True
         )
-        mock_helm_check.assert_has_calls([
-            call("postgresql", "a-release-pg", "ca-namespace"),
-            call("hlf-ca", "a-release", "ca-namespace"),
-        ])
+        mock_helm_check.assert_has_calls(
+            [
+                call("postgresql", "a-release-pg", "ca-namespace"),
+                call("hlf-ca", "a-release", "ca-namespace"),
+            ]
+        )
 
     @patch("nephos.fabric.ca.secret_read")
     @patch("nephos.fabric.ca.helm_upgrade")
@@ -77,43 +85,43 @@ class TestCaChart:
     @patch("nephos.fabric.ca.helm_check")
     @patch("nephos.fabric.ca.get_version")
     def test_ca_chart_upgrade(
-        self, mock_get_version, mock_helm_check, mock_helm_extra_vars,
-            mock_helm_install, mock_helm_upgrade, mock_secret_read
+        self,
+        mock_get_version,
+        mock_helm_check,
+        mock_helm_extra_vars,
+        mock_helm_install,
+        mock_helm_upgrade,
+        mock_secret_read,
     ):
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
-        mock_get_version.side_effect = [
-            "ca-version"
-        ]
-        mock_helm_extra_vars.side_effect = [
-            "extra-vars-ca"
-        ]
+        mock_get_version.side_effect = ["ca-version"]
+        mock_helm_extra_vars.side_effect = ["extra-vars-ca"]
         ca_chart(self.OPTS, "a-release", upgrade=True)
-        mock_get_version.assert_has_calls([
-            call(self.OPTS, "hlf-ca")
-        ])
+        mock_get_version.assert_has_calls([call(self.OPTS, "hlf-ca")])
         mock_helm_extra_vars.assert_called_once_with(
             version="ca-version",
             config_yaml="./some_dir/hlf-ca/a-release.yaml",
             env_vars=[("externalDatabase.password", "a_password")],
             preserve=(
-                HelmPreserve("ca-namespace", "a-release-hlf-ca--ca", "CA_ADMIN", "adminUsername"),
-                HelmPreserve("ca-namespace", "a-release-hlf-ca--ca", "CA_PASSWORD", "adminPassword"),
-            )
+                HelmPreserve(
+                    "ca-namespace", "a-release-hlf-ca--ca", "CA_ADMIN", "adminUsername"
+                ),
+                HelmPreserve(
+                    "ca-namespace",
+                    "a-release-hlf-ca--ca",
+                    "CA_PASSWORD",
+                    "adminPassword",
+                ),
+            ),
         )
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
-            "a_repo",
-            "hlf-ca",
-            "a-release",
-            extra_vars="extra-vars-ca",
-            verbose=False,
+            "a_repo", "hlf-ca", "a-release", extra_vars="extra-vars-ca", verbose=False
         )
         mock_secret_read.assert_called_once_with(
             "a-release-pg-postgresql", "ca-namespace", verbose=False
         )
-        mock_helm_check.assert_has_calls([
-            call("hlf-ca", "a-release", "ca-namespace"),
-        ])
+        mock_helm_check.assert_has_calls([call("hlf-ca", "a-release", "ca-namespace")])
 
 
 class TestCaEnroll:

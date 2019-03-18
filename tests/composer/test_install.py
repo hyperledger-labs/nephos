@@ -133,9 +133,7 @@ class TestDeployComposer:
             secret="bna-secret", namespace="peer-namespace", verbose=False
         )
         mock_composer_connection.assert_called_once_with(self.OPTS, verbose=False)
-        mock_get_version.assert_has_calls([
-            call(self.OPTS, "hl-composer")
-        ])
+        mock_get_version.assert_has_calls([call(self.OPTS, "hl-composer")])
         mock_helm_extra_vars.assert_called_once_with(
             version="hlc-version", config_yaml="./a_dir/hl-composer/hlc.yaml"
         )
@@ -149,7 +147,8 @@ class TestDeployComposer:
         )
         mock_helm_upgrade.assert_not_called()
         mock_helm_check.assert_called_once_with(
-            "hl-composer", "hlc", "peer-namespace", pod_num=3)
+            "hl-composer", "hlc", "peer-namespace", pod_num=3
+        )
 
     @patch("nephos.composer.install.secret_from_file")
     @patch("nephos.composer.install.helm_upgrade")
@@ -175,26 +174,26 @@ class TestDeployComposer:
             secret="bna-secret", namespace="peer-namespace", verbose=True
         )
         mock_composer_connection.assert_called_once_with(self.OPTS, verbose=True)
-        mock_get_version.assert_has_calls([
-            call(self.OPTS, "hl-composer")
-        ])
+        mock_get_version.assert_has_calls([call(self.OPTS, "hl-composer")])
         mock_helm_extra_vars.assert_called_once_with(
             version="hlc-version",
             config_yaml="./a_dir/hl-composer/hlc.yaml",
-            preserve=(HelmPreserve(
-                    "peer-namespace", "hlc-hl-composer-rest", "COMPOSER_APIKEY", "rest.config.apiKey"
-                ),)
+            preserve=(
+                HelmPreserve(
+                    "peer-namespace",
+                    "hlc-hl-composer-rest",
+                    "COMPOSER_APIKEY",
+                    "rest.config.apiKey",
+                ),
+            ),
         )
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
-            "a-repo",
-            "hl-composer",
-            "hlc",
-            extra_vars="extra-vars",
-            verbose=True,
+            "a-repo", "hl-composer", "hlc", extra_vars="extra-vars", verbose=True
         )
         mock_helm_check.assert_called_once_with(
-            "hl-composer", "hlc", "peer-namespace", pod_num=3)
+            "hl-composer", "hlc", "peer-namespace", pod_num=3
+        )
 
 
 class TestSetupAdmin:
