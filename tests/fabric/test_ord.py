@@ -103,7 +103,7 @@ class TestSetupOrd:
     @patch("nephos.fabric.ord.check_ord")
     def test_ord_kafka(self, mock_check_ord, mock_helm_install, mock_helm_upgrade):
         OPTS = deepcopy(self.OPTS)
-        OPTS["orderers"]["kafka"] = {"pod_num": 42}
+        OPTS["orderers"]["kafka"] = {"name": "kafka-hlf", "pod_num": 42}
         setup_ord(OPTS, verbose=True)
         mock_helm_install.assert_has_calls(
             [
