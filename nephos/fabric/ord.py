@@ -87,7 +87,7 @@ def setup_ord(opts, upgrade=False, verbose=False):
         helm_install(
             "incubator",
             "kafka",
-            "kafka-hlf",
+            opts["orderers"]["kafka"]["name"],
             ord_namespace,
             extra_vars=extra_vars,
             verbose=verbose,

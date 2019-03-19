@@ -143,7 +143,7 @@ class TestSetupOrd:
         mock_helm_upgrade,
     ):
         OPTS = deepcopy(self.OPTS)
-        OPTS["orderers"]["kafka"] = {"pod_num": 42}
+        OPTS["orderers"]["kafka"] = {"name": "kafka-hlf", "pod_num": 42}
         mock_get_version.side_effect = ["kafka-version", "ord-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars-kafka", "extra-vars-ord0"]
         setup_ord(OPTS, verbose=True)
