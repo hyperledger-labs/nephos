@@ -52,7 +52,7 @@ You can install nephos from [PyPI](https://pypi.org/project/nephos/) by running:
 
 You can also download the git repository with:
 
-    git clone https://github.com/aidtechnology/nephos.git
+    git clone https://github.com/hyperledger-labs/nephos.git
 
 And work locally by installing the following:
 
