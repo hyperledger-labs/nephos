@@ -25,9 +25,9 @@ copyright = "2019, Alejandro (Sasha) Vicente Grabovetsky"
 author = "Alejandro (Sasha) Vicente Grabovetsky"
 
 # The short X.Y version
-version = "0.2"
+version = "0.3"
 # The full version, including alpha/beta/rc tags
-release = "0.2.11"
+release = "0.3.0"
 
 
 # -- General configuration ---------------------------------------------------

@@ -15,8 +15,8 @@
 from time import sleep
 
 from nephos.fabric.utils import get_pod
-from nephos.fabric.settings import get_namespace
-from nephos.helpers.helm import helm_install, helm_upgrade
+from nephos.fabric.settings import get_namespace, get_version
+from nephos.helpers.helm import helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
 
 
@@ -79,29 +79,40 @@ def setup_ord(opts, upgrade=False, verbose=False):
     # Kafka
     if "kafka" in opts["orderers"]:
         # Kafka upgrade is risky, so we disallow it by default
+        version = get_version(opts, "kafka")
+        config_yaml = "{dir}/kafka/kafka-hlf.yaml".format(
+            dir=opts["core"]["dir_values"]
+        )
+        extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
             "incubator",
             "kafka",
             opts["orderers"]["kafka"]["name"],
             ord_namespace,
-            config_yaml="{dir}/kafka/{release}.yaml".format(
-                dir=opts["core"]["dir_values"], release=opts["orderers"]["kafka"]["name"]
-            ),
-            pod_num=opts["orderers"]["kafka"]["pod_num"],
+            extra_vars=extra_vars,
             verbose=verbose,
+        )
+        helm_check(
+            "kafka",
+            "kafka-hlf",
+            ord_namespace,
+            pod_num=opts["orderers"]["kafka"]["pod_num"],
         )
 
     for release in opts["orderers"]["names"]:
         # HL-Ord
+        version = get_version(opts, "hlf-ord")
+        config_yaml = "{dir}/hlf-ord/{name}.yaml".format(
+            dir=opts["core"]["dir_values"], name=release
+        )
+        extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         if not upgrade:
             helm_install(
                 opts["core"]["chart_repo"],
                 "hlf-ord",
                 release,
                 ord_namespace,
-                config_yaml="{dir}/hlf-ord/{name}.yaml".format(
-                    dir=opts["core"]["dir_values"], name=release
-                ),
+                extra_vars=extra_vars,
                 verbose=verbose,
             )
         else:
@@ -109,11 +120,9 @@ def setup_ord(opts, upgrade=False, verbose=False):
                 opts["core"]["chart_repo"],
                 "hlf-ord",
                 release,
-                ord_namespace,
-                config_yaml="{dir}/hlf-ord/{name}.yaml".format(
-                    dir=opts["core"]["dir_values"], name=release
-                ),
+                extra_vars=extra_vars,
                 verbose=verbose,
             )
+        helm_check("hlf-ord", release, ord_namespace)
         # Check that Orderer is running
         check_ord(ord_namespace, release, verbose=verbose)

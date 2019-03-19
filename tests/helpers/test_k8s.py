@@ -216,10 +216,7 @@ class TestPodCheck:
     @patch("nephos.helpers.k8s.print")
     @patch("nephos.helpers.k8s.execute")
     def test_helm_check(self, mock_execute, mock_print, mock_sleep):
-        mock_execute.side_effect = [
-            ("Pending", None),  # Get states
-            ("Running", None),
-        ]
+        mock_execute.side_effect = [("Pending", None), ("Running", None)]  # Get states
         pod_check("a-namespace", "an-identifier", sleep_interval=15)
         assert mock_execute.call_count == 2
         mock_print.assert_has_calls(
