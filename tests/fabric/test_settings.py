@@ -7,6 +7,7 @@ from nephos.fabric.settings import (
     dict_representer,
     check_cluster,
     get_namespace,
+    get_version,
     load_config,
 )
 
@@ -80,6 +81,22 @@ class TestGetNamespace:
     def test_get_namespace_ca_error(self):
         with pytest.raises(KeyError):
             get_namespace(self.OPTS, ca="nonexistent-ca")
+
+
+class TestGetVersion:
+    OPTS = {"versions": {"versioned-app": "a-version", "unversioned-app": None}}
+
+    def test_get_version(self):
+        result = get_version(self.OPTS, "versioned-app")
+        assert result == "a-version"
+
+    def test_get_version_none(self):
+        result = get_version(self.OPTS, "unversioned-app")
+        assert result is None
+
+    def test_get_version_unknown(self):
+        result = get_version(self.OPTS, "unknown-app")
+        assert result is None
 
 
 class TestLoadHlfConfig:

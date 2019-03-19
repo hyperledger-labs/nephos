@@ -59,10 +59,47 @@ class TestSetupPeer:
 
     @patch("nephos.fabric.peer.helm_upgrade")
     @patch("nephos.fabric.peer.helm_install")
+    @patch("nephos.fabric.peer.helm_extra_vars")
+    @patch("nephos.fabric.peer.helm_check")
+    @patch("nephos.fabric.peer.get_version")
     @patch("nephos.fabric.peer.check_peer")
-    def test_peer(self, mock_check_peer, mock_helm_install, mock_helm_upgrade):
+    def test_peer(
+        self,
+        mock_check_peer,
+        mock_get_version,
+        mock_helm_check,
+        mock_helm_extra_vars,
+        mock_helm_install,
+        mock_helm_upgrade,
+    ):
         OPTS = deepcopy(self.OPTS)
+        mock_get_version.side_effect = [
+            "cdb-version",
+            "peer-version",
+            "cdb-version",
+            "peer-version",
+        ]
+        mock_helm_extra_vars.side_effect = [
+            "extra-vars-cdb-peer0",
+            "extra-vars-peer0",
+            "extra-vars-cdb-peer1",
+            "extra-vars-peer1",
+        ]
         setup_peer(OPTS)
+        mock_helm_extra_vars.assert_has_calls(
+            [
+                call(
+                    version="cdb-version",
+                    config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
+                ),
+                call(version="peer-version", config_yaml="./a_dir/hlf-peer/peer0.yaml"),
+                call(
+                    version="cdb-version",
+                    config_yaml="./a_dir/hlf-couchdb/cdb-peer1.yaml",
+                ),
+                call(version="peer-version", config_yaml="./a_dir/hlf-peer/peer1.yaml"),
+            ]
+        )
         mock_helm_install.assert_has_calls(
             [
                 call(
@@ -70,7 +107,7 @@ class TestSetupPeer:
                     "hlf-couchdb",
                     "cdb-peer0",
                     "peer-namespace",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
+                    extra_vars="extra-vars-cdb-peer0",
                     verbose=False,
                 ),
                 call(
@@ -78,7 +115,7 @@ class TestSetupPeer:
                     "hlf-peer",
                     "peer0",
                     "peer-namespace",
-                    config_yaml="./a_dir/hlf-peer/peer0.yaml",
+                    extra_vars="extra-vars-peer0",
                     verbose=False,
                 ),
                 call(
@@ -86,7 +123,7 @@ class TestSetupPeer:
                     "hlf-couchdb",
                     "cdb-peer1",
                     "peer-namespace",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer1.yaml",
+                    extra_vars="extra-vars-cdb-peer1",
                     verbose=False,
                 ),
                 call(
@@ -94,12 +131,20 @@ class TestSetupPeer:
                     "hlf-peer",
                     "peer1",
                     "peer-namespace",
-                    config_yaml="./a_dir/hlf-peer/peer1.yaml",
+                    extra_vars="extra-vars-peer1",
                     verbose=False,
                 ),
             ]
         )
         mock_helm_upgrade.assert_not_called()
+        mock_helm_check.assert_has_calls(
+            [
+                call("hlf-couchdb", "cdb-peer0", "peer-namespace"),
+                call("hlf-peer", "peer0", "peer-namespace"),
+                call("hlf-couchdb", "cdb-peer1", "peer-namespace"),
+                call("hlf-peer", "peer1", "peer-namespace"),
+            ]
+        )
         mock_check_peer.assert_has_calls(
             [
                 call("peer-namespace", "peer0", verbose=False),
@@ -109,11 +154,47 @@ class TestSetupPeer:
 
     @patch("nephos.fabric.peer.helm_upgrade")
     @patch("nephos.fabric.peer.helm_install")
+    @patch("nephos.fabric.peer.helm_extra_vars")
+    @patch("nephos.fabric.peer.helm_check")
+    @patch("nephos.fabric.peer.get_version")
     @patch("nephos.fabric.peer.check_peer")
-    def test_peer_upgrade(self, mock_check_peer, mock_helm_install, mock_helm_upgrade):
+    def test_peer_upgrade(
+        self,
+        mock_check_peer,
+        mock_get_version,
+        mock_helm_check,
+        mock_helm_extra_vars,
+        mock_helm_install,
+        mock_helm_upgrade,
+    ):
         OPTS = deepcopy(self.OPTS)
         OPTS["peers"]["names"] = ["peer0"]
+        mock_get_version.side_effect = ["cdb-version", "peer-version"]
+        mock_helm_extra_vars.side_effect = ["extra-vars-cdb-peer0", "extra-vars-peer0"]
         setup_peer(OPTS, upgrade=True)
+        mock_helm_extra_vars.assert_has_calls(
+            [
+                call(
+                    version="cdb-version",
+                    config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
+                    preserve=(
+                        HelmPreserve(
+                            "peer-namespace",
+                            "cdb-peer0-hlf-couchdb",
+                            "COUCHDB_USERNAME",
+                            "couchdbUsername",
+                        ),
+                        HelmPreserve(
+                            "peer-namespace",
+                            "cdb-peer0-hlf-couchdb",
+                            "COUCHDB_PASSWORD",
+                            "couchdbPassword",
+                        ),
+                    ),
+                ),
+                call(version="peer-version", config_yaml="./a_dir/hlf-peer/peer0.yaml"),
+            ]
+        )
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_has_calls(
             [
@@ -121,30 +202,22 @@ class TestSetupPeer:
                     "a-repo",
                     "hlf-couchdb",
                     "cdb-peer0",
-                    "peer-namespace",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
-                    preserve=(
-                        HelmPreserve(
-                            "cdb-peer0-hlf-couchdb",
-                            "COUCHDB_USERNAME",
-                            "couchdbUsername",
-                        ),
-                        HelmPreserve(
-                            "cdb-peer0-hlf-couchdb",
-                            "COUCHDB_PASSWORD",
-                            "couchdbPassword",
-                        ),
-                    ),
+                    extra_vars="extra-vars-cdb-peer0",
                     verbose=False,
                 ),
                 call(
                     "a-repo",
                     "hlf-peer",
                     "peer0",
-                    "peer-namespace",
-                    config_yaml="./a_dir/hlf-peer/peer0.yaml",
+                    extra_vars="extra-vars-peer0",
                     verbose=False,
                 ),
+            ]
+        )
+        mock_helm_check.assert_has_calls(
+            [
+                call("hlf-couchdb", "cdb-peer0", "peer-namespace"),
+                call("hlf-peer", "peer0", "peer-namespace"),
             ]
         )
         mock_check_peer.assert_called_once_with(

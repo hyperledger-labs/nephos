@@ -11,7 +11,9 @@ from nephos.helpers.misc import execute
 
 TERM = Terminal()
 
-HelmPreserve = namedtuple("HelmPreserve", ("secret_name", "data_item", "values_path"))
+HelmPreserve = namedtuple(
+    "HelmPreserve", ("secret_namespace", "secret_name", "data_item", "values_path")
+)
 # noinspection PyArgumentList
 HelmSet = namedtuple("HelmSet", ("key", "value", "set_string"), defaults=(False,))
 
@@ -28,9 +30,7 @@ def helm_check(app, release, namespace, pod_num=None):
         namespace (str): Namespace where Helm deployment is located.
         pod_num (int): Number of pods expected to exist in the release.
     """
-    identifier = '-l "app={app},release={name}"'.format(
-        app=app, name=release
-    )
+    identifier = '-l "app={app},release={name}"'.format(app=app, name=release)
     pod_check(namespace, identifier, pod_num=pod_num)
 
 
@@ -67,21 +67,18 @@ def helm_env_vars(env_vars):
     """Convert environmental variables to a "--set" string for Helm deployments.
 
     Args:
-        env_vars (tuple): Environmental variables we wish to store in Helm.
+        env_vars (Iterable): Environmental variables we wish to store in Helm.
 
     Returns:
         str: String containing variables to be set with Helm release.
     """
-    if not env_vars:
-        env_vars = []
-    else:
-        env_vars = list(env_vars)
-        for i, item in enumerate(env_vars):
-            if isinstance(item, tuple):
-                item = HelmSet(*item)
-            elif not isinstance(item, HelmSet):
-                raise TypeError("Items in env_vars array must be HelmSet named tuples")
-            env_vars[i] = item
+    env_vars = list(env_vars)
+    for i, item in enumerate(env_vars):
+        if isinstance(item, tuple):
+            item = HelmSet(*item)
+        elif not isinstance(item, HelmSet):
+            raise TypeError("Items in env_vars array must be HelmSet named tuples")
+        env_vars[i] = item
     # Environmental variables
     # TODO: This may well be its own subfunction
     env_vars_string = "".join(
@@ -95,28 +92,26 @@ def helm_env_vars(env_vars):
     return env_vars_string
 
 
-def helm_preserve(namespace, preserve, verbose=False):
+def helm_preserve(preserve, verbose=False):
     """Convert secret data to a "--set" string for Helm deployments.
 
     Args:
-        namespace (str): Namespace where preserved secrets are located.
-        preserve (tuple): Set of secrets we wish to get data from to assign to the Helm Chart.
+        preserve (Iterable): Set of secrets we wish to get data from to assign to the Helm Chart.
         verbose (bool): Verbosity. False by default.
 
     Returns:
         str: String containing variables to be set with Helm release.
     """
 
-    # Any data we need to preserve during upgrade?
-    if not preserve:
-        return ""
     env_vars = []
     for item in preserve:
         if isinstance(item, tuple):
             item = HelmPreserve(*item)
         elif not isinstance(item, HelmPreserve):
             raise TypeError("Items in preserve array must be HelmPerserve named tuples")
-        secret_data = secret_read(item.secret_name, namespace, verbose=verbose)
+        secret_data = secret_read(
+            item.secret_name, item.secret_namespace, verbose=verbose
+        )
         env_vars.append(HelmSet(item.values_path, secret_data[item.data_item]))
     # Environmental variables
     # TODO: This may well be its own subfunction
@@ -131,19 +126,40 @@ def helm_preserve(namespace, preserve, verbose=False):
     return env_vars_string
 
 
-# TODO: Too many parameters - SQ Code Smell
-# TODO: Cleanest way of fixing parameter issues is via a Helm class
-# TODO: We should ideally auto-detect number of pods
-def helm_install(
-    repo,
-    app,
-    release,
-    namespace,
-    config_yaml=None,
-    env_vars=None,
-    verbose=False,
-    pod_num=1,
+def helm_extra_vars(
+    version=None, config_yaml=None, env_vars=None, preserve=None, verbose=False
 ):
+    """Centralise obtaining extra variables for our helm_install and/or helm_upgrade
+
+    Args:
+        version (str): Which Chart version do we wish to install?
+        config_yaml (str, Iterable): Values file(s) to override defaults.
+        env_vars (Iterable): Environmental variables we wish to store in Helm.
+        preserve (Iterable): Set of secrets we wish to get data from to assign to the Helm Chart.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        str: String of Chart version, values files, environmental variables,
+    """
+    # Get Helm Env-Vars
+    extra_vars_string = ""
+    if version:
+        extra_vars_string += " --version {}".format(version)
+    if config_yaml:
+        if isinstance(config_yaml, (str, bytes)):
+            config_yaml = (config_yaml,)
+        if isinstance(config_yaml, (list, tuple)):
+            extra_vars_string += " -f " + " -f ".join(config_yaml)
+        else:
+            raise ValueError("'config_yaml' variable should be a string, tuple or list")
+    if env_vars:
+        extra_vars_string += helm_env_vars(env_vars)
+    if preserve:
+        extra_vars_string += helm_preserve(preserve, verbose=verbose)
+    return extra_vars_string
+
+
+def helm_install(repo, app, release, namespace, extra_vars="", verbose=False):
     """Install Helm chart.
 
     Args:
@@ -151,69 +167,39 @@ def helm_install(
         app (str): Helm application name.
         release (str): Release name on K8S.
         namespace (str): Namespace where to deploy Helm Chart.
-        config_yaml (str): Values file to ovverride defaults.
-        env_vars (tuple): List of env vars we want to set.
+        extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
         verbose (bool): Verbosity. False by default.
-        pod_num (int): Number of pods we wish to have.
     """
     ls_res, _ = execute("helm status {release}".format(release=release))
-
-    # Get Helm Env-Vars
-    env_vars_string = helm_env_vars(env_vars)
 
     if not ls_res:
         command = "helm install {repo}/{app} -n {name} --namespace {ns}".format(
             app=app, name=release, ns=namespace, repo=repo
         )
-        if config_yaml:
-            command += " -f {}".format(config_yaml)
-        command += env_vars_string
+        command += extra_vars
         # Execute
         execute(command, verbose=verbose)
-    helm_check(app, release, namespace, pod_num)
 
 
-# TODO: Too many parameters - SQ Code Smell
-# TODO: We should ideally auto-detect number of pods
-def helm_upgrade(
-    repo,
-    app,
-    release,
-    namespace,
-    config_yaml=None,
-    env_vars=None,
-    preserve=None,
-    verbose=False,
-    pod_num=1,
-):
+def helm_upgrade(repo, app, release, extra_vars="", verbose=False):
     """Upgrade Helm chart.
 
     Args:
         repo (str): Repository or folder from which to install Helm chart.
         app (str): Helm application name.
         release (str): Release name on K8S.
-        namespace (str): Namespace where to deploy Helm Chart.
-        config_yaml (str): Values file to ovverride defaults.
-        env_vars (tuple): Environmental variables we wish to store in Helm.
-        preserve (tuple): Set of secrets we wish to get data from to assign to the Helm Chart.
+        extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
         verbose (bool): Verbosity. False by default.
-        pod_num (int): Number of pods we wish to have.
     """
     ls_res, _ = execute("helm status {release}".format(release=release))
-
-    # Get Helm Env-Vars
-    env_vars_string = helm_env_vars(env_vars)
-    env_vars_string += helm_preserve(namespace, preserve, verbose=verbose)
 
     if ls_res:
         command = "helm upgrade {name} {repo}/{app}".format(
             app=app, name=release, repo=repo
         )
-        if config_yaml:
-            command += " -f {}".format(config_yaml)
-        command += env_vars_string
+
+        command += extra_vars or ""
         # Execute
         execute(command, verbose=verbose)
     else:
         raise Exception("Cannot update a Helm release that is not running")
-    helm_check(app, release, namespace, pod_num)

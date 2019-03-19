@@ -82,7 +82,7 @@ def input_files(keys, clean_key=False):
     """Read a set of filenames and return data from them.
 
     Args:
-        keys (tuple): Tuple of keys
+        keys (Iterable): Tuple of keys
         clean_key (bool): Do we clean the key to replace non-alphanumeric symbols with an underscore? False by default.
 
     Returns:

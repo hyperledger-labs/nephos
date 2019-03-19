@@ -49,3 +49,12 @@ composer:
   name: hlc
   secret_bna: hlc--bna
   secret_connection: hlc--connection
+# You can specify a particular version of a chart for each chart used, or use the latest by default
+versions:
+  postgresql:
+  hlf-ca:
+  kafka:
+  hlf-ord:
+  hlf-couchdb:
+  hlf-peer:
+  hl-composer:
