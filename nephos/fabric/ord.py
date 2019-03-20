@@ -80,8 +80,8 @@ def setup_ord(opts, upgrade=False, verbose=False):
     if "kafka" in opts["orderers"]:
         # Kafka upgrade is risky, so we disallow it by default
         version = get_version(opts, "kafka")
-        config_yaml = "{dir}/kafka/kafka-hlf.yaml".format(
-            dir=opts["core"]["dir_values"]
+        config_yaml="{dir}/kafka/{release}.yaml".format(
+            dir=opts["core"]["dir_values"], release=opts["orderers"]["kafka"]["name"]
         )
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
@@ -94,7 +94,7 @@ def setup_ord(opts, upgrade=False, verbose=False):
         )
         helm_check(
             "kafka",
-            "kafka-hlf",
+            opts["orderers"]["kafka"]["name"],
             ord_namespace,
             pod_num=opts["orderers"]["kafka"]["pod_num"],
         )
