@@ -80,7 +80,7 @@ def setup_ord(opts, upgrade=False, verbose=False):
     if "kafka" in opts["orderers"]:
         # Kafka upgrade is risky, so we disallow it by default
         version = get_version(opts, "kafka")
-        config_yaml="{dir}/kafka/{release}.yaml".format(
+        config_yaml = "{dir}/kafka/{release}.yaml".format(
             dir=opts["core"]["dir_values"], release=opts["orderers"]["kafka"]["name"]
         )
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
