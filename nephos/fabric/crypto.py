@@ -42,7 +42,9 @@ def check_id(ca_namespace, ca, username, verbose=False):
         bool: Does the ID exist?
     """
     # Get CA
-    ca_exec = get_helm_pod(namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose)
+    ca_exec = get_helm_pod(
+        namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose
+    )
     # Check if Orderer is registered with the relevant CA
     got_id = False
     while not got_id:
@@ -78,7 +80,9 @@ def register_id(
     # Get CA
     ord_id = check_id(ca_namespace, ca, username, verbose=verbose)
     # Registered if needed
-    ca_exec = get_helm_pod(namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose)
+    ca_exec = get_helm_pod(
+        namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose
+    )
     if not ord_id:
         command = (
             "fabric-ca-client register --id.name {id} --id.secret {pw} --id.type {type}"

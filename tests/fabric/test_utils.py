@@ -105,7 +105,7 @@ class TestGetPod:
         mock_execute.side_effect = [("a-pod", None)]
         get_pod("a-namespace", "an-identifier")
         mock_execute.assert_called_once_with(
-            'kubectl get pods -n a-namespace an-identifier '
+            "kubectl get pods -n a-namespace an-identifier "
             + '-o jsonpath="{.items[0].metadata.name}"',
             verbose=False,
         )
@@ -120,7 +120,7 @@ class TestGetPod:
         with pytest.raises(ValueError):
             get_pod("a-namespace", "an-identifier", verbose=True)
         mock_execute.assert_called_once_with(
-            'kubectl get pods -n a-namespace an-identifier '
+            "kubectl get pods -n a-namespace an-identifier "
             + '-o jsonpath="{.items[0].metadata.name}"',
             verbose=True,
         )
@@ -131,4 +131,6 @@ class TestGetHelmPod:
     @patch("nephos.fabric.utils.get_pod")
     def test_get_helm_pod(self, mock_get_pod):
         get_helm_pod("a-namespace", "a-release", "an-app")
-        mock_get_pod.assert_called_once_with("a-namespace", '-l "app=an-app,release=a-release"', verbose=False)
+        mock_get_pod.assert_called_once_with(
+            "a-namespace", '-l "app=an-app,release=a-release"', verbose=False
+        )

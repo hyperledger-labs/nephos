@@ -215,7 +215,13 @@ class TestSetupCard:
             ("a-network_a-version.bna", None),  # ls BNA
         ]
         mock_get_pod.side_effect = [mock_pod]
-        setup_card(self.OPTS, msp_path="./a_dir", user_name="a-user", network="a-network", roles=("a-role", "another-role"))
+        setup_card(
+            self.OPTS,
+            msp_path="./a_dir",
+            user_name="a-user",
+            network="a-network",
+            roles=("a-role", "another-role"),
+        )
         mock_get_pod.assert_called_once_with(
             "peer-namespace", "hlc", "hl-composer", verbose=False
         )
@@ -223,8 +229,8 @@ class TestSetupCard:
             [
                 call("composer card list --card a-user@a-network"),
                 call(
-                    "composer card create " +
-                    "-n a-network "
+                    "composer card create "
+                    + "-n a-network "
                     + "-p /hl_config/hlc-connection/connection.json "
                     + "-u a-user -c ./a_dir/signcerts/cert.pem "
                     + "-k ./a_dir/keystore/key.pem "
@@ -248,8 +254,13 @@ class TestSetupCard:
             ("a-network_a-version.bna", None),  # ls BNA
         ]
         mock_get_pod.side_effect = [mock_pod]
-        setup_card(self.OPTS, msp_path="./a_dir", user_name="a-user", network="a-network",
-                   roles="")
+        setup_card(
+            self.OPTS,
+            msp_path="./a_dir",
+            user_name="a-user",
+            network="a-network",
+            roles="",
+        )
         mock_get_pod.assert_called_once_with(
             "peer-namespace", "hlc", "hl-composer", verbose=False
         )
@@ -278,8 +289,14 @@ class TestSetupCard:
             ("an-admin.card", None)  # composer card list admin
         ]
         mock_get_pod.side_effect = [mock_pod]
-        setup_card(self.OPTS, msp_path="./a_dir", user_name="a-user", network="a-network",
-                   roles=None, verbose=True)
+        setup_card(
+            self.OPTS,
+            msp_path="./a_dir",
+            user_name="a-user",
+            network="a-network",
+            roles=None,
+            verbose=True,
+        )
         mock_get_pod.assert_called_once_with(
             "peer-namespace", "hlc", "hl-composer", verbose=True
         )
@@ -289,12 +306,16 @@ class TestSetupCard:
 
 
 class TestSetupAdmin:
-
     @patch("nephos.composer.install.setup_card")
     def test_setup_admin(self, mock_setup_card):
         setup_admin("some-opts", verbose=True)
         mock_setup_card.assert_called_once_with(
-            "some-opts", msp_path="/hl_config/admin", user_name="PeerAdmin", network="hlfv1", roles=("PeerAdmin", "ChannelAdmin"), verbose=True
+            "some-opts",
+            msp_path="/hl_config/admin",
+            user_name="PeerAdmin",
+            network="hlfv1",
+            roles=("PeerAdmin", "ChannelAdmin"),
+            verbose=True,
         )
 
 

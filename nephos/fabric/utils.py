@@ -86,8 +86,8 @@ def get_pod(namespace, identifier, verbose=False):
     """
     node_pod, _ = execute(
         (
-            'kubectl get pods -n {ns} {identifier} ' +
-            '-o jsonpath="{{.items[0].metadata.name}}"'
+            "kubectl get pods -n {ns} {identifier} "
+            + '-o jsonpath="{{.items[0].metadata.name}}"'
         ).format(ns=namespace, identifier=identifier),
         verbose=verbose,
     )

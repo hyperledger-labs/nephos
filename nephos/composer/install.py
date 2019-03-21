@@ -171,9 +171,11 @@ def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
     )
 
     # Set up the PeerAdmin card
-    ls_res, _ = hlc_cli_ex.execute("composer card list --card {admin_name}@{network}".format(
-        admin_name=user_name, network=network
-    ))
+    ls_res, _ = hlc_cli_ex.execute(
+        "composer card list --card {admin_name}@{network}".format(
+            admin_name=user_name, network=network
+        )
+    )
 
     if roles:
         roles_string = "-r " + " -r ".join(roles) + " "
@@ -183,19 +185,23 @@ def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
     if not ls_res:
         hlc_cli_ex.execute(
             (
-                    "composer card create "
-                    + "-n {network} "
-                    + "-p /hl_config/hlc-connection/connection.json "
-                    + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
-                    + "-k {msp_path}/keystore/key.pem "
-                    + "{roles_string}"
-                    + "--file /home/composer/{admin_name}@{network}"
+                "composer card create "
+                + "-n {network} "
+                + "-p /hl_config/hlc-connection/connection.json "
+                + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
+                + "-k {msp_path}/keystore/key.pem "
+                + "{roles_string}"
+                + "--file /home/composer/{admin_name}@{network}"
             ).format(
-                msp_path=msp_path, admin_name=user_name, roles_string=roles_string, network=network
+                msp_path=msp_path,
+                admin_name=user_name,
+                roles_string=roles_string,
+                network=network,
             )
         )
         hlc_cli_ex.execute(
-            "composer card import " + "--file /home/composer/{admin_name}@{network}.card".format(
+            "composer card import "
+            + "--file /home/composer/{admin_name}@{network}.card".format(
                 admin_name=user_name, network=network
             )
         )
@@ -208,8 +214,14 @@ def setup_admin(opts, verbose=False):
         opts (dict): Nephos options dict.
         verbose (bool): Verbosity. False by default.
     """
-    setup_card(opts, msp_path="/hl_config/admin", user_name="PeerAdmin",
-               network="hlfv1", roles=("PeerAdmin", "ChannelAdmin"), verbose=verbose)
+    setup_card(
+        opts,
+        msp_path="/hl_config/admin",
+        user_name="PeerAdmin",
+        network="hlfv1",
+        roles=("PeerAdmin", "ChannelAdmin"),
+        verbose=verbose,
+    )
 
 
 def install_network(opts, verbose=False):
