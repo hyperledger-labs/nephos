@@ -7,7 +7,7 @@
 
 Library to deploy [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io) projects to [Kubernetes](https://kubernetes.io/)
 
-Source resides at https://github.com/hyperledger-labs/nephos, originally developed at [**AID:Tech**](https://github.com/aidtechnology/nephos)
+Source resides at https://github.com/hyperledger-labs/nephos, originally developed at **[AID:Tech](https://github.com/aidtechnology/nephos)**
 
 Documentation resides at https://nephos.readthedocs.io
 

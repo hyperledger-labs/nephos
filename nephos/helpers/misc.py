@@ -62,14 +62,14 @@ def execute_until_success(command, verbose=False, delay=15):
     res = None
     first_pass = True
     while not res:
-        res, _ = execute(
+        res, err = execute(
             command,
             show_command=first_pass,
             verbose=verbose and first_pass,
             show_errors=first_pass,
         )
         first_pass = False
-        if not res:
+        if err:
             print(t.red("."), end="", flush=True)
             time.sleep(delay)
         else:
