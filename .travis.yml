@@ -52,7 +52,7 @@ script:
   - PYTHONPATH=. pytest --ignore=./integration --cov=. --cov-report xml:coverage.xml --cov-report term-missing
   - PYTHONPATH=. pytest -x -s ./integration
   # Run SonarQube only on non-PRs and when "SONAR_TOKEN" is defined
-  - 'if [ "$TRAVIS_PULL_REQUEST" == "false" && $SONAR_TOKEN ]; then sonar-scanner; fi'
+  - 'if [[ "$TRAVIS_PULL_REQUEST" == "false" && $SONAR_TOKEN ]]; then sonar-scanner; fi'
 after_success:
   # Code coverage, deploy to PyPI and, when uploading new version, do mutation testing
   - ./travis_success.sh
