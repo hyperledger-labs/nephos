@@ -154,17 +154,6 @@ def deploy_composer(opts, upgrade=False, verbose=False):
     helm_check("hl-composer", opts["composer"]["name"], peer_namespace, pod_num=3)
 
 
-def setup_admin(opts, verbose=False):
-    """Setup Network admin
-
-    Args:
-        opts (dict): Nephos options dict.
-        verbose (bool): Verbosity. False by default.
-    """
-    setup_card(opts, msp_path="/hl_config/admin", user_name="PeerAdmin",
-               network="hlfv1", roles=("PeerAdmin", "ChannelAdmin"), verbose=verbose)
-
-
 def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
     """Setup the Card for Hyperledger Composer.
 
@@ -187,7 +176,7 @@ def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
     ))
 
     if roles:
-        roles_string = "-r " + " -r ".join(roles)
+        roles_string = "-r " + " -r ".join(roles) + " "
     else:
         roles_string = ""
 
@@ -195,11 +184,11 @@ def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
         hlc_cli_ex.execute(
             (
                     "composer card create "
-                    + "-n {network}"
+                    + "-n {network} "
                     + "-p /hl_config/hlc-connection/connection.json "
                     + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
                     + "-k {msp_path}/keystore/key.pem "
-                    + "{roles_string} "
+                    + "{roles_string}"
                     + "--file /home/composer/{admin_name}@{network}"
             ).format(
                 msp_path=msp_path, admin_name=user_name, roles_string=roles_string, network=network
@@ -210,6 +199,17 @@ def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
                 admin_name=user_name, network=network
             )
         )
+
+
+def setup_admin(opts, verbose=False):
+    """Setup Network admin
+
+    Args:
+        opts (dict): Nephos options dict.
+        verbose (bool): Verbosity. False by default.
+    """
+    setup_card(opts, msp_path="/hl_config/admin", user_name="PeerAdmin",
+               network="hlfv1", roles=("PeerAdmin", "ChannelAdmin"), verbose=verbose)
 
 
 def install_network(opts, verbose=False):
