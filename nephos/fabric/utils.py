@@ -73,7 +73,7 @@ def crypto_secret(secret_name, namespace, file_path, key, verbose=False):
 
 
 # TODO: Move this to K8S helpers
-def get_pod(namespace, identifier, verbose=False):
+def get_pod(namespace, identifier, item=0, verbose=False):
     """Get a pod object from K8S.
 
     Args:
@@ -87,8 +87,8 @@ def get_pod(namespace, identifier, verbose=False):
     node_pod, _ = execute(
         (
             "kubectl get pods -n {ns} {identifier} "
-            + '-o jsonpath="{{.items[0].metadata.name}}"'
-        ).format(ns=namespace, identifier=identifier),
+            + '-o jsonpath="{{.items[{item}].metadata.name}}"'
+        ).format(ns=namespace, identifier=identifier, item=item),
         verbose=verbose,
     )
     if not node_pod:
@@ -98,7 +98,7 @@ def get_pod(namespace, identifier, verbose=False):
 
 
 # TODO: Move this to Helm helpers
-def get_helm_pod(namespace, release, app, verbose=False):
+def get_helm_pod(namespace, release, app, item=0, verbose=False):
     """Get a pod object from K8S.
 
     Args:
@@ -111,4 +111,4 @@ def get_helm_pod(namespace, release, app, verbose=False):
         Executer: A pod object able to execute commands and return logs.
     """
     identifier = '-l "app={app},release={name}"'.format(app=app, name=release)
-    return get_pod(namespace, identifier, verbose=verbose)
+    return get_pod(namespace, identifier, item=item, verbose=verbose)
