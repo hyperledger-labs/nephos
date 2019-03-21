@@ -6,7 +6,7 @@ from nephos.fabric.ord import check_ord, check_ord_tls, setup_ord
 
 class TestCheckOrd:
     @patch("nephos.fabric.ord.sleep")
-    @patch("nephos.fabric.ord.get_pod")
+    @patch("nephos.fabric.ord.get_helm_pod")
     def test_check_ord(self, mock_get_pod, mock_sleep):
         mock_pod_ex = Mock()
         mock_pod_ex.logs.side_effect = [
@@ -19,7 +19,7 @@ class TestCheckOrd:
         mock_sleep.assert_called_once_with(15)
 
     @patch("nephos.fabric.ord.sleep")
-    @patch("nephos.fabric.ord.get_pod")
+    @patch("nephos.fabric.ord.get_helm_pod")
     def test_check_ord_again(self, mock_get_pod, mock_sleep):
         mock_pod_ex = Mock()
         mock_pod_ex.logs.side_effect = [

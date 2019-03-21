@@ -17,7 +17,7 @@
 import os
 
 from nephos.fabric.settings import get_namespace
-from nephos.fabric.utils import get_pod
+from nephos.fabric.utils import get_helm_pod
 from nephos.helpers.k8s import secret_from_file
 
 CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
@@ -35,7 +35,7 @@ def upgrade_network(opts, verbose=False):
         secret=opts["composer"]["secret_bna"], namespace=peer_namespace, verbose=verbose
     )
     # Set up the PeerAdmin card
-    hlc_cli_ex = get_pod(peer_namespace, "hlc", "hl-composer", verbose=verbose)
+    hlc_cli_ex = get_helm_pod(peer_namespace, "hlc", "hl-composer", verbose=verbose)
 
     bna, _ = hlc_cli_ex.execute("ls /hl_config/blockchain_network")
     bna_name, bna_rem = bna.split("_")

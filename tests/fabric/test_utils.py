@@ -3,7 +3,7 @@ from unittest.mock import patch
 from kubernetes.client.rest import ApiException
 import pytest
 
-from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
+from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod, get_helm_pod
 
 
 class TestCredentialsSecret:
@@ -119,6 +119,35 @@ class TestGetPod:
         mock_execute.side_effect = [(None, "error")]
         with pytest.raises(ValueError):
             get_pod("a-namespace", "a-release", "an-app", verbose=True)
+        mock_execute.assert_called_once_with(
+            'kubectl get pods -n a-namespace -l "app=an-app,release=a-release" '
+            + '-o jsonpath="{.items[0].metadata.name}"',
+            verbose=True,
+        )
+        mock_Executer.assert_not_called()
+
+
+class TestGetHelmPod:
+    @patch("nephos.fabric.utils.Executer")
+    @patch("nephos.fabric.utils.execute")
+    def test_get_helm_pod(self, mock_execute, mock_Executer):
+        mock_execute.side_effect = [("a-pod", None)]
+        get_helm_pod("a-namespace", "a-release", "an-app")
+        mock_execute.assert_called_once_with(
+            'kubectl get pods -n a-namespace -l "app=an-app,release=a-release" '
+            + '-o jsonpath="{.items[0].metadata.name}"',
+            verbose=False,
+        )
+        mock_Executer.assert_called_once_with(
+            "a-pod", namespace="a-namespace", verbose=False
+        )
+
+    @patch("nephos.fabric.utils.Executer")
+    @patch("nephos.fabric.utils.execute")
+    def test_get_helm_pod_fail(self, mock_execute, mock_Executer):
+        mock_execute.side_effect = [(None, "error")]
+        with pytest.raises(ValueError):
+            get_helm_pod("a-namespace", "a-release", "an-app", verbose=True)
         mock_execute.assert_called_once_with(
             'kubectl get pods -n a-namespace -l "app=an-app,release=a-release" '
             + '-o jsonpath="{.items[0].metadata.name}"',

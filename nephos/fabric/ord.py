@@ -14,7 +14,7 @@
 
 from time import sleep
 
-from nephos.fabric.utils import get_pod
+from nephos.fabric.utils import get_helm_pod
 from nephos.fabric.settings import get_namespace, get_version
 from nephos.helpers.helm import helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
@@ -31,7 +31,7 @@ def check_ord(namespace, release, verbose=False):
     Returns:
         bool: True once Orderer is correctly running.
     """
-    pod_exec = get_pod(
+    pod_exec = get_helm_pod(
         namespace=namespace, release=release, app="hlf-ord", verbose=verbose
     )
     res = pod_exec.logs(1000)

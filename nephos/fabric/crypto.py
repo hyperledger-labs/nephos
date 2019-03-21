@@ -20,7 +20,7 @@ from os.path import abspath, exists, isfile, isdir, join, split
 from time import sleep
 
 from nephos.fabric.settings import get_namespace
-from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod
+from nephos.fabric.utils import credentials_secret, crypto_secret, get_helm_pod
 from nephos.helpers.k8s import ns_create, ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
 
@@ -42,7 +42,7 @@ def check_id(ca_namespace, ca, username, verbose=False):
         bool: Does the ID exist?
     """
     # Get CA
-    ca_exec = get_pod(namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose)
+    ca_exec = get_helm_pod(namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose)
     # Check if Orderer is registered with the relevant CA
     got_id = False
     while not got_id:
@@ -78,7 +78,7 @@ def register_id(
     # Get CA
     ord_id = check_id(ca_namespace, ca, username, verbose=verbose)
     # Registered if needed
-    ca_exec = get_pod(namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose)
+    ca_exec = get_helm_pod(namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose)
     if not ord_id:
         command = (
             "fabric-ca-client register --id.name {id} --id.secret {pw} --id.type {type}"
@@ -233,7 +233,7 @@ def copy_secret(from_dir, to_dir):
 
 
 def msp_secrets(opts, msp_name, verbose=False):
-    """Process MSP and convert it to as set of secrets.
+    """Process MSP and convert it to a set of secrets.
 
     Args:
         opts (dict): Nephos options dict.

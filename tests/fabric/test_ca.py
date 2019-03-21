@@ -220,7 +220,7 @@ class TestSetupCa:
     int_executer.pod = "int-pod"
 
     @patch("nephos.fabric.ca.ingress_read")
-    @patch("nephos.fabric.ca.get_pod")
+    @patch("nephos.fabric.ca.get_helm_pod")
     @patch("nephos.fabric.ca.check_ca")
     @patch("nephos.fabric.ca.ca_enroll")
     @patch("nephos.fabric.ca.ca_chart")
@@ -272,7 +272,7 @@ class TestSetupCa:
         )
 
     @patch("nephos.fabric.ca.ingress_read")
-    @patch("nephos.fabric.ca.get_pod")
+    @patch("nephos.fabric.ca.get_helm_pod")
     @patch("nephos.fabric.ca.check_ca")
     @patch("nephos.fabric.ca.ca_enroll")
     @patch("nephos.fabric.ca.ca_chart")

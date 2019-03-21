@@ -16,7 +16,7 @@ from kubernetes.client.rest import ApiException
 
 from nephos.composer.connection_template import json_ct
 from nephos.fabric.crypto import admin_creds
-from nephos.fabric.utils import get_pod
+from nephos.fabric.utils import get_helm_pod
 from nephos.fabric.settings import get_namespace, get_version
 from nephos.helpers.helm import (
     HelmPreserve,
@@ -63,7 +63,7 @@ def composer_connection(opts, verbose=False):
 
     Args:
         opts (dict): Nephos options dict.
-        verbose (bool): Verbosity. Verbosity. False by default.
+        verbose (bool): Verbosity. False by default.
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     # TODO: This could be a single function
@@ -155,33 +155,60 @@ def deploy_composer(opts, upgrade=False, verbose=False):
 
 
 def setup_admin(opts, verbose=False):
-    """Setup the Peer Admin for Hyperledger Composer.
+    """Setup Network admin
 
     Args:
         opts (dict): Nephos options dict.
         verbose (bool): Verbosity. False by default.
     """
+    setup_card(opts, msp_path="/hl_config/admin", user_name="PeerAdmin",
+               network="hlfv1", roles=("PeerAdmin", "ChannelAdmin"), verbose=verbose)
+
+
+def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
+    """Setup the Card for Hyperledger Composer.
+
+    Args:
+        opts (dict): Nephos options dict.
+        msp_path (str): Path to the MSP on the Composer CLI.
+        user_name (str): Name of user for identity card.
+        network (str): Name of network for identity card.
+        roles (Iterable): Roles to assign to identity card.
+        verbose (bool): Verbosity. False by default.
+    """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    hlc_cli_ex = get_pod(
+    hlc_cli_ex = get_helm_pod(
         peer_namespace, opts["composer"]["name"], "hl-composer", verbose=verbose
     )
 
     # Set up the PeerAdmin card
-    ls_res, _ = hlc_cli_ex.execute("composer card list --card PeerAdmin@hlfv1")
+    ls_res, _ = hlc_cli_ex.execute("composer card list --card {admin_name}@{network}".format(
+        admin_name=user_name, network=network
+    ))
+
+    if roles:
+        roles_string = "-r " + " -r ".join(roles)
+    else:
+        roles_string = ""
 
     if not ls_res:
         hlc_cli_ex.execute(
             (
-                "composer card create "
-                + "-p /hl_config/hlc-connection/connection.json "
-                + "-u PeerAdmin -c /hl_config/admin/signcerts/cert.pem "
-                + "-k /hl_config/admin/keystore/key.pem "
-                + " -r PeerAdmin -r ChannelAdmin "
-                + "--file /home/composer/PeerAdmin@hlfv1"
+                    "composer card create "
+                    + "-n {network}"
+                    + "-p /hl_config/hlc-connection/connection.json "
+                    + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
+                    + "-k {msp_path}/keystore/key.pem "
+                    + "{roles_string} "
+                    + "--file /home/composer/{admin_name}@{network}"
+            ).format(
+                msp_path=msp_path, admin_name=user_name, roles_string=roles_string, network=network
             )
         )
         hlc_cli_ex.execute(
-            "composer card import " + "--file /home/composer/PeerAdmin@hlfv1.card"
+            "composer card import " + "--file /home/composer/{admin_name}@{network}.card".format(
+                admin_name=user_name, network=network
+            )
         )
 
 
@@ -193,7 +220,7 @@ def install_network(opts, verbose=False):
         verbose (bool): Verbosity. False by default.
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    hlc_cli_ex = get_pod(
+    hlc_cli_ex = get_helm_pod(
         peer_namespace, opts["composer"]["name"], "hl-composer", verbose=verbose
     )
 
