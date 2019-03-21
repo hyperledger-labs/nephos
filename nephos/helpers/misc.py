@@ -102,7 +102,7 @@ def input_files(keys, clean_key=False):
             key = split(filename)[1]
             if clean_key:
                 dirty_key = key
-                key = re.sub("[^0-9a-zA-Z_.\-]+", "_", dirty_key)
+                key = re.sub(r"[^0-9a-zA-Z_.\-]+", "_", dirty_key)
                 if key != dirty_key:
                     print(t.yellow("Replaced ") + dirty_key + t.yellow(" with ") + key)
         with open(filename, "rb") as f:
