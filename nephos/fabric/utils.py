@@ -72,7 +72,33 @@ def crypto_secret(secret_name, namespace, file_path, key, verbose=False):
     )
 
 
-def get_pod(namespace, release, app, verbose=False):
+# TODO: Move this to K8S helpers
+def get_pod(namespace, identifier, item=0, verbose=False):
+    """Get a pod object from K8S.
+
+    Args:
+        namespace (str): Namespace where pod is located.
+        identifier (str): Name of pod, or a label descriptor.
+        verbose (bool): Verbosity. False by default.
+
+    Returns:
+        Executer: A pod object able to execute commands and return logs.
+    """
+    node_pod, _ = execute(
+        (
+            "kubectl get pods -n {ns} {identifier} "
+            + '-o jsonpath="{{.items[{item}].metadata.name}}"'
+        ).format(ns=namespace, identifier=identifier, item=item),
+        verbose=verbose,
+    )
+    if not node_pod:
+        raise ValueError('"node_pod" should contain a value')
+    pod_ex = Executer(node_pod, namespace=namespace, verbose=verbose)
+    return pod_ex
+
+
+# TODO: Move this to Helm helpers
+def get_helm_pod(namespace, release, app, item=0, verbose=False):
     """Get a pod object from K8S.
 
     Args:
@@ -84,14 +110,5 @@ def get_pod(namespace, release, app, verbose=False):
     Returns:
         Executer: A pod object able to execute commands and return logs.
     """
-    node_pod, _ = execute(
-        (
-            'kubectl get pods -n {ns} -l "app={app},release={release}" '
-            + '-o jsonpath="{{.items[0].metadata.name}}"'
-        ).format(ns=namespace, app=app, release=release),
-        verbose=verbose,
-    )
-    if not node_pod:
-        raise ValueError('"node_pod" should contain a value')
-    pod_ex = Executer(node_pod, namespace=namespace, verbose=verbose)
-    return pod_ex
+    identifier = '-l "app={app},release={name}"'.format(app=app, name=release)
+    return get_pod(namespace, identifier, item=item, verbose=verbose)

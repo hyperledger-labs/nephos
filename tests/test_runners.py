@@ -40,7 +40,7 @@ class TestRunnerCa:
 class TestRunnerComposer:
     OPTS = "some-self.OPTS"
 
-    @patch("nephos.runners.setup_admin")
+    @patch("nephos.runners.setup_card")
     @patch("nephos.runners.install_network")
     @patch("nephos.runners.deploy_composer")
     def test_runner_composer(

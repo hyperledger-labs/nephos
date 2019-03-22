@@ -26,7 +26,7 @@ from nephos.fabric.crypto import (
 
 class TestChechId:
     @patch("nephos.fabric.crypto.sleep")
-    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.get_helm_pod")
     def test_check_id(self, mock_get_pod, mock_sleep):
         mock_executor = Mock()
         mock_get_pod.side_effect = [mock_executor]
@@ -43,7 +43,7 @@ class TestChechId:
         mock_sleep.assert_not_called()
 
     @patch("nephos.fabric.crypto.sleep")
-    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.get_helm_pod")
     def test_check_id_again(self, mock_get_pod, mock_sleep):
         mock_executor = Mock()
         mock_get_pod.side_effect = [mock_executor]
@@ -58,7 +58,7 @@ class TestChechId:
         mock_sleep.assert_not_called()
 
     @patch("nephos.fabric.crypto.sleep")
-    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.get_helm_pod")
     def test_check_id_serverconnection(self, mock_get_pod, mock_sleep):
         mock_executor = Mock()
         mock_get_pod.side_effect = [mock_executor]
@@ -79,7 +79,7 @@ class TestChechId:
         mock_sleep.assert_called_once_with(15)
 
     @patch("nephos.fabric.crypto.sleep")
-    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.get_helm_pod")
     def test_check_id_admin(self, mock_get_pod, mock_sleep):
         mock_executor = Mock()
         mock_get_pod.side_effect = [mock_executor]
@@ -98,7 +98,7 @@ class TestChechId:
 
 class TestRegisterId:
     @patch("nephos.fabric.crypto.sleep")
-    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.get_helm_pod")
     @patch("nephos.fabric.crypto.check_id")
     def test_register_id(self, mock_check_id, mock_get_pod, mock_sleep):
         mock_executor = Mock()
@@ -119,7 +119,7 @@ class TestRegisterId:
         mock_sleep.assert_not_called()
 
     @patch("nephos.fabric.crypto.sleep")
-    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.get_helm_pod")
     @patch("nephos.fabric.crypto.check_id")
     def test_register_id_again(self, mock_check_id, mock_get_pod, mock_sleep):
         mock_executor = Mock()
@@ -135,7 +135,7 @@ class TestRegisterId:
         mock_sleep.assert_not_called()
 
     @patch("nephos.fabric.crypto.sleep")
-    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.get_helm_pod")
     @patch("nephos.fabric.crypto.check_id")
     def test_register_id_error(self, mock_check_id, mock_get_pod, mock_sleep):
         mock_executor = Mock()
@@ -162,7 +162,7 @@ class TestRegisterId:
         mock_sleep.assert_called_once_with(15)
 
     @patch("nephos.fabric.crypto.sleep")
-    @patch("nephos.fabric.crypto.get_pod")
+    @patch("nephos.fabric.crypto.get_helm_pod")
     @patch("nephos.fabric.crypto.check_id")
     def test_register_id_admin(self, mock_check_id, mock_get_pod, mock_sleep):
         mock_executor = Mock()

@@ -17,7 +17,7 @@ from time import sleep
 
 from kubernetes.client.rest import ApiException
 from nephos.fabric.settings import get_namespace, get_version
-from nephos.fabric.utils import get_pod
+from nephos.fabric.utils import get_helm_pod
 from nephos.helpers.helm import (
     HelmPreserve,
     helm_check,
@@ -176,7 +176,7 @@ def setup_ca(opts, upgrade=False, verbose=False):
         ca_chart(opts=opts, release=ca_name, upgrade=upgrade, verbose=verbose)
 
         # Obtain CA pod and Enroll
-        pod_exec = get_pod(
+        pod_exec = get_helm_pod(
             namespace=ca_namespace, release=ca_name, app="hlf-ca", verbose=verbose
         )
         ca_enroll(pod_exec)

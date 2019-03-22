@@ -15,7 +15,7 @@ class TestCheckPeer:
     OPTS = "opt-values"
 
     @patch("nephos.fabric.peer.sleep")
-    @patch("nephos.fabric.peer.get_pod")
+    @patch("nephos.fabric.peer.get_helm_pod")
     def test_check_peer(self, mock_get_pod, mock_sleep):
         mock_pod_ex = Mock()
         mock_pod_ex.logs.side_effect = [
@@ -28,7 +28,7 @@ class TestCheckPeer:
         mock_sleep.assert_called_once_with(15)
 
     @patch("nephos.fabric.peer.sleep")
-    @patch("nephos.fabric.peer.get_pod")
+    @patch("nephos.fabric.peer.get_helm_pod")
     def test_check_peer_again(self, mock_get_pod, mock_sleep):
         mock_pod_ex = Mock()
         mock_pod_ex.logs.side_effect = [
@@ -40,7 +40,7 @@ class TestCheckPeer:
         mock_sleep.assert_not_called()
 
     @patch("nephos.fabric.peer.sleep")
-    @patch("nephos.fabric.peer.get_pod")
+    @patch("nephos.fabric.peer.get_helm_pod")
     def test_check_peer_noblocks(self, mock_get_pod, mock_sleep):
         mock_pod_ex = Mock()
         mock_pod_ex.logs.side_effect = ["Not yet started\nStarting peer\nSleeping 5s"]
@@ -319,7 +319,7 @@ class TestSetupChannel:
 
     @patch("nephos.fabric.peer.random")
     @patch("nephos.fabric.peer.peer_channel_suffix")
-    @patch("nephos.fabric.peer.get_pod")
+    @patch("nephos.fabric.peer.get_helm_pod")
     @patch("nephos.fabric.peer.get_channel_block")
     def test_create_channel(
         self,
@@ -398,7 +398,7 @@ class TestSetupChannel:
 
     @patch("nephos.fabric.peer.random")
     @patch("nephos.fabric.peer.peer_channel_suffix")
-    @patch("nephos.fabric.peer.get_pod")
+    @patch("nephos.fabric.peer.get_helm_pod")
     @patch("nephos.fabric.peer.get_channel_block")
     def test_create_channel_again(
         self,
@@ -445,7 +445,7 @@ class TestSetupChannel:
 
     @patch("nephos.fabric.peer.random")
     @patch("nephos.fabric.peer.peer_channel_suffix")
-    @patch("nephos.fabric.peer.get_pod")
+    @patch("nephos.fabric.peer.get_helm_pod")
     @patch("nephos.fabric.peer.get_channel_block")
     def test_create_channel_notls(
         self,

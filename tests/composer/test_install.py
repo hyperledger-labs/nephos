@@ -8,6 +8,7 @@ from nephos.composer.install import (
     get_composer_data,
     composer_connection,
     deploy_composer,
+    setup_card,
     setup_admin,
     install_network,
 )
@@ -196,7 +197,7 @@ class TestDeployComposer:
         )
 
 
-class TestSetupAdmin:
+class TestSetupCard:
     OPTS = {
         "cas": {"peer-ca": {"org_admin": "an-admin", "org_adminpw": "a-password"}},
         "composer": {"name": "hlc"},
@@ -204,8 +205,8 @@ class TestSetupAdmin:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @patch("nephos.composer.install.get_pod")
-    def test_setup_admin(self, mock_get_pod):
+    @patch("nephos.composer.install.get_helm_pod")
+    def test_setup_card(self, mock_get_pod):
         mock_pod = Mock()
         mock_pod.execute.side_effect = [
             (None, "error"),  # composer card list admin
@@ -214,41 +215,107 @@ class TestSetupAdmin:
             ("a-network_a-version.bna", None),  # ls BNA
         ]
         mock_get_pod.side_effect = [mock_pod]
-        setup_admin(self.OPTS)
+        setup_card(
+            self.OPTS,
+            msp_path="./a_dir",
+            user_name="a-user",
+            network="a-network",
+            roles=("a-role", "another-role"),
+        )
         mock_get_pod.assert_called_once_with(
             "peer-namespace", "hlc", "hl-composer", verbose=False
         )
         mock_pod.execute.assert_has_calls(
             [
-                call("composer card list --card PeerAdmin@hlfv1"),
+                call("composer card list --card a-user@a-network"),
                 call(
                     "composer card create "
+                    + "-n a-network "
                     + "-p /hl_config/hlc-connection/connection.json "
-                    + "-u PeerAdmin -c /hl_config/admin/signcerts/cert.pem "
-                    + "-k /hl_config/admin/keystore/key.pem "
-                    + " -r PeerAdmin -r ChannelAdmin "
-                    + "--file /home/composer/PeerAdmin@hlfv1"
+                    + "-u a-user -c ./a_dir/signcerts/cert.pem "
+                    + "-k ./a_dir/keystore/key.pem "
+                    + "-r a-role -r another-role "
+                    + "--file /home/composer/a-user@a-network"
                 ),
                 call(
                     "composer card import "
-                    + "--file /home/composer/PeerAdmin@hlfv1.card"
+                    + "--file /home/composer/a-user@a-network.card"
                 ),
             ]
         )
 
-    @patch("nephos.composer.install.get_pod")
-    def test_setup_admin_again(self, mock_get_pod):
+    @patch("nephos.composer.install.get_helm_pod")
+    def test_setup_card_noroles(self, mock_get_pod):
+        mock_pod = Mock()
+        mock_pod.execute.side_effect = [
+            (None, "error"),  # composer card list admin
+            ("Create card", None),  # composer card create
+            ("Import card", None),  # composer card import admin
+            ("a-network_a-version.bna", None),  # ls BNA
+        ]
+        mock_get_pod.side_effect = [mock_pod]
+        setup_card(
+            self.OPTS,
+            msp_path="./a_dir",
+            user_name="a-user",
+            network="a-network",
+            roles="",
+        )
+        mock_get_pod.assert_called_once_with(
+            "peer-namespace", "hlc", "hl-composer", verbose=False
+        )
+        mock_pod.execute.assert_has_calls(
+            [
+                call("composer card list --card a-user@a-network"),
+                call(
+                    "composer card create "
+                    "-n a-network "
+                    + "-p /hl_config/hlc-connection/connection.json "
+                    + "-u a-user -c ./a_dir/signcerts/cert.pem "
+                    + "-k ./a_dir/keystore/key.pem "
+                    + "--file /home/composer/a-user@a-network"
+                ),
+                call(
+                    "composer card import "
+                    + "--file /home/composer/a-user@a-network.card"
+                ),
+            ]
+        )
+
+    @patch("nephos.composer.install.get_helm_pod")
+    def test_setup_card_again(self, mock_get_pod):
         mock_pod = Mock()
         mock_pod.execute.side_effect = [
             ("an-admin.card", None)  # composer card list admin
         ]
         mock_get_pod.side_effect = [mock_pod]
-        setup_admin(self.OPTS, verbose=True)
+        setup_card(
+            self.OPTS,
+            msp_path="./a_dir",
+            user_name="a-user",
+            network="a-network",
+            roles=None,
+            verbose=True,
+        )
         mock_get_pod.assert_called_once_with(
             "peer-namespace", "hlc", "hl-composer", verbose=True
         )
         mock_pod.execute.assert_has_calls(
-            [call("composer card list --card PeerAdmin@hlfv1")]
+            [call("composer card list --card a-user@a-network")]
+        )
+
+
+class TestSetupAdmin:
+    @patch("nephos.composer.install.setup_card")
+    def test_setup_admin(self, mock_setup_card):
+        setup_admin("some-opts", verbose=True)
+        mock_setup_card.assert_called_once_with(
+            "some-opts",
+            msp_path="/hl_config/admin",
+            user_name="PeerAdmin",
+            network="hlfv1",
+            roles=("PeerAdmin", "ChannelAdmin"),
+            verbose=True,
         )
 
 
@@ -267,7 +334,7 @@ class TestInstallNetwork:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @patch("nephos.composer.install.get_pod")
+    @patch("nephos.composer.install.get_helm_pod")
     @patch("nephos.composer.install.admin_creds")
     def test_install_network(self, mock_admin_creds, mock_get_pod):
         mock_pod = Mock()
@@ -304,7 +371,7 @@ class TestInstallNetwork:
         )
         mock_admin_creds.assert_called_once_with(self.OPTS, "peer_MSP", verbose=False)
 
-    @patch("nephos.composer.install.get_pod")
+    @patch("nephos.composer.install.get_helm_pod")
     @patch("nephos.composer.install.admin_creds")
     def test_install_network_again(self, mock_ca_creds, mock_get_pod):
 

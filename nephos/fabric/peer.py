@@ -17,7 +17,7 @@ from time import sleep
 
 from nephos.fabric.ord import check_ord_tls
 from nephos.fabric.settings import get_namespace, get_version
-from nephos.fabric.utils import get_pod
+from nephos.fabric.utils import get_helm_pod
 from nephos.helpers.helm import (
     HelmPreserve,
     helm_check,
@@ -38,7 +38,7 @@ def check_peer(namespace, release, verbose=False):
     Returns:
         bool: True once Peer is correctly running.
     """
-    pod_exec = get_pod(
+    pod_exec = get_helm_pod(
         namespace=namespace, release=release, app="hlf-peer", verbose=verbose
     )
     res = pod_exec.logs(1000)
@@ -208,7 +208,7 @@ def create_channel(opts, verbose=False):
 
     for index, release in enumerate(opts["peers"]["names"]):
         # Get peer pod
-        pod_ex = get_pod(peer_namespace, release, "hlf-peer", verbose=verbose)
+        pod_ex = get_helm_pod(peer_namespace, release, "hlf-peer", verbose=verbose)
 
         # Check if the file exists
         has_channel = False
