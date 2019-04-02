@@ -153,18 +153,18 @@ def deploy_composer(opts, upgrade=False, verbose=False):
         )
     helm_check("hl-composer", opts["composer"]["name"], peer_namespace, pod_num=3)
 
-    def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
 
-        """Setup the Card for Hyperledger Composer.
+def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
+    """Setup the Card for Hyperledger Composer.
 
-        Args:
-            opts (dict): Nephos options dict.
-            msp_path (str): Path to the MSP on the Composer CLI.
-            user_name (str): Name of user for identity card.
-            network (str): Name of network for identity card.
-            roles (Iterable): Roles to assign to identity card.
-            verbose (bool): Verbosity. False by default.
-        """
+    Args:
+        opts (dict): Nephos options dict.
+        msp_path (str): Path to the MSP on the Composer CLI.
+        user_name (str): Name of user for identity card.
+        network (str): Name of network for identity card.
+        roles (Iterable): Roles to assign to identity card.
+        verbose (bool): Verbosity. False by default.
+    """
 
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     hlc_cli_ex = get_helm_pod(
@@ -186,13 +186,13 @@ def deploy_composer(opts, upgrade=False, verbose=False):
     if not ls_res:
         hlc_cli_ex.execute(
             (
-                "composer card create "
-                + "-n {network} "
-                + "-p /hl_config/hlc-connection/connection.json "
-                + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
-                + "-k {msp_path}/keystore/key.pem "
-                + "{roles_string}"
-                + "--file /home/composer/{admin_name}@{network}"
+                    "composer card create "
+                    + "-n {network} "
+                    + "-p /hl_config/hlc-connection/connection.json "
+                    + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
+                    + "-k {msp_path}/keystore/key.pem "
+                    + "{roles_string}"
+                    + "--file /home/composer/{admin_name}@{network}"
             ).format(
                 msp_path=msp_path,
                 admin_name=user_name,
@@ -257,16 +257,16 @@ def install_network(opts, verbose=False):
     if not ls_res:
         hlc_cli_ex.execute(
             (
-                "composer network install --card PeerAdmin@hlfv1 "
-                + "--archiveFile /hl_config/blockchain_network/{bna}"
+                    "composer network install --card PeerAdmin@hlfv1 "
+                    + "--archiveFile /hl_config/blockchain_network/{bna}"
             ).format(bna=bna)
         )
         hlc_cli_ex.execute(
             (
-                "composer network start "
-                + "--card PeerAdmin@hlfv1 "
-                + "--networkName {bna_name} --networkVersion {bna_version} "
-                + "--networkAdmin {bna_admin} --networkAdminEnrollSecret {bna_pw}"
+                    "composer network start "
+                    + "--card PeerAdmin@hlfv1 "
+                    + "--networkName {bna_name} --networkVersion {bna_version} "
+                    + "--networkAdmin {bna_admin} --networkAdminEnrollSecret {bna_pw}"
             ).format(
                 bna_name=bna_name,
                 bna_version=bna_version,
