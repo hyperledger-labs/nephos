@@ -8,7 +8,6 @@ from nephos.composer.install import (
     get_composer_data,
     composer_connection,
     deploy_composer,
-    setup_card,
     setup_admin,
     install_network,
 )
