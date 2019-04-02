@@ -153,18 +153,19 @@ def deploy_composer(opts, upgrade=False, verbose=False):
         )
     helm_check("hl-composer", opts["composer"]["name"], peer_namespace, pod_num=3)
 
+    def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
 
-def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
-    """Setup the Card for Hyperledger Composer.
+        """Setup the Card for Hyperledger Composer.
 
-    Args:
-        opts (dict): Nephos options dict.
-        msp_path (str): Path to the MSP on the Composer CLI.
-        user_name (str): Name of user for identity card.
-        network (str): Name of network for identity card.
-        roles (Iterable): Roles to assign to identity card.
-        verbose (bool): Verbosity. False by default.
-    """
+        Args:
+            opts (dict): Nephos options dict.
+            msp_path (str): Path to the MSP on the Composer CLI.
+            user_name (str): Name of user for identity card.
+            network (str): Name of network for identity card.
+            roles (Iterable): Roles to assign to identity card.
+            verbose (bool): Verbosity. False by default.
+        """
+
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     hlc_cli_ex = get_helm_pod(
         peer_namespace, opts["composer"]["name"], "hl-composer", verbose=verbose
