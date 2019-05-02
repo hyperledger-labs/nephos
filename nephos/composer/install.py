@@ -186,13 +186,12 @@ def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
     if not ls_res:
         hlc_cli_ex.execute(
             (
-                    "composer card create "
-                    + "-n {network} "
-                    + "-p /hl_config/hlc-connection/connection.json "
-                    + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
-                    + "-k {msp_path}/keystore/key.pem "
-                    + "{roles_string}"
-                    + "--file /home/composer/{admin_name}@{network}"
+                "composer card create "
+                + "-p /hl_config/hlc-connection/connection.json "
+                + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
+                + "-k {msp_path}/keystore/key.pem "
+                + "{roles_string}"
+                + "--file /home/composer/{admin_name}@{network}"
             ).format(
                 msp_path=msp_path,
                 admin_name=user_name,
@@ -257,16 +256,16 @@ def install_network(opts, verbose=False):
     if not ls_res:
         hlc_cli_ex.execute(
             (
-                    "composer network install --card PeerAdmin@hlfv1 "
-                    + "--archiveFile /hl_config/blockchain_network/{bna}"
+                "composer network install --card PeerAdmin@hlfv1 "
+                + "--archiveFile /hl_config/blockchain_network/{bna}"
             ).format(bna=bna)
         )
         hlc_cli_ex.execute(
             (
-                    "composer network start "
-                    + "--card PeerAdmin@hlfv1 "
-                    + "--networkName {bna_name} --networkVersion {bna_version} "
-                    + "--networkAdmin {bna_admin} --networkAdminEnrollSecret {bna_pw}"
+                "composer network start "
+                + "--card PeerAdmin@hlfv1 "
+                + "--networkName {bna_name} --networkVersion {bna_version} "
+                + "--networkAdmin {bna_admin} --networkAdminEnrollSecret {bna_pw}"
             ).format(
                 bna_name=bna_name,
                 bna_version=bna_version,
