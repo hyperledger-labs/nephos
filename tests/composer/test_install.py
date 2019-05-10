@@ -258,8 +258,8 @@ class TestSetupCard:
             self.OPTS,
             msp_path="./a_dir",
             user_name="a-user",
-            network="a-network",
             roles="",
+            network="a-network",
         )
         mock_get_pod.assert_called_once_with(
             "peer-namespace", "hlc", "hl-composer", verbose=False
@@ -269,7 +269,7 @@ class TestSetupCard:
                 call("composer card list --card a-user@a-network"),
                 call(
                     "composer card create "
-                    "-n a-network "
+                    + "-n a-network "
                     + "-p /hl_config/hlc-connection/connection.json "
                     + "-u a-user -c ./a_dir/signcerts/cert.pem "
                     + "-k ./a_dir/keystore/key.pem "
@@ -313,7 +313,6 @@ class TestSetupAdmin:
             "some-opts",
             msp_path="/hl_config/admin",
             user_name="PeerAdmin",
-            network="hlfv1",
             roles=("PeerAdmin", "ChannelAdmin"),
             verbose=True,
         )

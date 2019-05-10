@@ -154,7 +154,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
     helm_check("hl-composer", opts["composer"]["name"], peer_namespace, pod_num=3)
 
 
-def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
+def setup_card(opts, msp_path, user_name, roles, network=None, verbose=False):
     """Setup the Card for Hyperledger Composer.
 
     Args:
@@ -165,6 +165,7 @@ def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
         roles (Iterable): Roles to assign to identity card.
         verbose (bool): Verbosity. False by default.
     """
+
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     hlc_cli_ex = get_helm_pod(
         peer_namespace, opts["composer"]["name"], "hl-composer", verbose=verbose
@@ -186,7 +187,7 @@ def setup_card(opts, msp_path, user_name, network, roles, verbose=False):
         hlc_cli_ex.execute(
             (
                 "composer card create "
-                + "-n {network} "
+                + ("-n {network} " if network else "")
                 + "-p /hl_config/hlc-connection/connection.json "
                 + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
                 + "-k {msp_path}/keystore/key.pem "
@@ -218,7 +219,6 @@ def setup_admin(opts, verbose=False):
         opts,
         msp_path="/hl_config/admin",
         user_name="PeerAdmin",
-        network="hlfv1",
         roles=("PeerAdmin", "ChannelAdmin"),
         verbose=verbose,
     )
