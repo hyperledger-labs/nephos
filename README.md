@@ -27,6 +27,7 @@ Documentation resides at https://nephos.readthedocs.io
    * [Further information](#further-information)
       * [Helm charts](#helm-charts)
       * [Educational material](#educational-material)
+   * [Contributing to Nephos](#contributing-to-nephos)
 
 ## Prerequisites
 
@@ -178,3 +179,16 @@ A(n older) [webinar](https://www.hyperledger.org/blog/2018/11/08/deploying-hyper
 We have also contributed the Composer chapter on the EdX course [Blockchain for Business](https://www.edx.org/course/blockchain-business-introduction-linuxfoundationx-lfs171x-0).
 
 And we have also released a course on [Packt](https://www.packtpub.com/application-development/hyperledger-blockchain-applications-video), [Udemy](https://www.udemy.com/hyperledger-for-blockchain-applications/) and [O’Reilly](https://www.oreilly.com/library/view/hyperledger-for-blockchain/9781789131963/) called Hyperledger for Blockchain Applications.
+
+## Contributing to Nephos
+
+We welcome all PRs, especially those addressing issues mentioned in the GitHub Project.
+
+To submit a PR, please make sure that:
+
+1. Fork the repository to your own GitHub account.
+2. All tests are passing, and there is 100% coverage on the unit tests.
+3. All new/changed functions should be correctly documented with *docstrings* using the Google format.
+4. Update the version number by editing the following files: `setup.py` (to update **VERSION**) and `docs/conf.py` (to update the **version** and **release**)
+
+The documentation and pip package are auto-generated after approval and merging of the PR.
