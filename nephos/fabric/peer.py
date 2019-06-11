@@ -65,15 +65,13 @@ def setup_peer(opts, upgrade=False, verbose=False):
     for release in opts["peers"]["names"]:
         # Deploy the CouchDB instances
         version = get_version(opts, "hlf-couchdb")
-        config_yaml = "{dir}/hlf-couchdb/cdb-{name}.yaml".format(
-            dir=opts["core"]["dir_values"], name=release
-        )
+        config_yaml = f'{opts["core"]["dir_values"]}/hlf-couchdb/cdb-{release}.yaml'
         if not upgrade:
             extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
             helm_install(
                 opts["core"]["chart_repo"],
                 "hlf-couchdb",
-                "cdb-{}".format(release),
+                f"cdb-{release}",
                 peer_namespace,
                 extra_vars=extra_vars,
                 verbose=verbose,
@@ -82,13 +80,13 @@ def setup_peer(opts, upgrade=False, verbose=False):
             preserve = (
                 HelmPreserve(
                     peer_namespace,
-                    "cdb-{}-hlf-couchdb".format(release),
+                    f"cdb-{release}-hlf-couchdb",
                     "COUCHDB_USERNAME",
                     "couchdbUsername",
                 ),
                 HelmPreserve(
                     peer_namespace,
-                    "cdb-{}-hlf-couchdb".format(release),
+                    f"cdb-{release}-hlf-couchdb",
                     "COUCHDB_PASSWORD",
                     "couchdbPassword",
                 ),
@@ -99,17 +97,15 @@ def setup_peer(opts, upgrade=False, verbose=False):
             helm_upgrade(
                 opts["core"]["chart_repo"],
                 "hlf-couchdb",
-                "cdb-{}".format(release),
+                f"cdb-{release}",
                 extra_vars=extra_vars,
                 verbose=verbose,
             )
-        helm_check("hlf-couchdb", "cdb-{}".format(release), peer_namespace)
+        helm_check("hlf-couchdb", f"cdb-{release}", peer_namespace)
 
         # Deploy the HL-Peer charts
         version = get_version(opts, "hlf-peer")
-        config_yaml = "{dir}/hlf-peer/{name}.yaml".format(
-            dir=opts["core"]["dir_values"], name=release
-        )
+        config_yaml = f"{opts['core']['dir_values']}/hlf-peer/{release}.yaml"
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         if not upgrade:
             helm_install(
@@ -148,9 +144,9 @@ def peer_channel_suffix(opts, ord_name, verbose=False):
     if ord_tls:
         cmd_suffix = (
             "--tls "
-            + "--ordererTLSHostnameOverride {orderer}-hlf-ord "
-            + "--cafile $(ls ${{ORD_TLS_PATH}}/*.pem)"
-        ).format(orderer=ord_name)
+            + f"--ordererTLSHostnameOverride {ord_name}-hlf-ord "
+            + f"--cafile $(ls ${{ORD_TLS_PATH}}/*.pem)"
+        )
     else:
         cmd_suffix = ""
     return cmd_suffix
@@ -169,20 +165,14 @@ def get_channel_block(peer_ex, ord_name, ord_namespace, channel, cmd_suffix):
     Returns:
         bool: Were we able to fetch the channel?
     """
-    channel_file = "/var/hyperledger/{channel}.block".format(channel=channel)
-    channel_block, _ = peer_ex.execute("ls {}".format(channel_file))
+    channel_file = f"/var/hyperledger/{channel}.block"
+    channel_block, _ = peer_ex.execute(f"ls {channel_file}")
     if not channel_block:
         res, err = peer_ex.execute(
             (
-                "bash -c 'peer channel fetch 0 {channel_file} "
-                + "-c {channel} "
-                + "-o {orderer}-hlf-ord.{ord_ns}.svc.cluster.local:7050 {cmd_suffix}'"
-            ).format(
-                channel_file=channel_file,
-                channel=channel,
-                orderer=ord_name,
-                ord_ns=ord_namespace,
-                cmd_suffix=cmd_suffix,
+                f"bash -c 'peer channel fetch 0 {channel_file} "
+                + f"-c {channel} "
+                + f"-o {ord_name}-hlf-ord.{ord_namespace}.svc.cluster.local:7050 {cmd_suffix}'"
             )
         )
         if err:
@@ -220,13 +210,8 @@ def create_channel(opts, verbose=False):
                 pod_ex.execute(
                     (
                         "bash -c 'peer channel create "
-                        + "-o {orderer}-hlf-ord.{ns}.svc.cluster.local:7050 "
-                        + "-c {channel} -f /hl_config/channel/{channel}.tx {cmd_suffix}'"
-                    ).format(
-                        orderer=ord_name,
-                        ns=ord_namespace,
-                        channel=opts["peers"]["channel_name"],
-                        cmd_suffix=cmd_suffix,
+                        + f"-o {ord_name}-hlf-ord.{ord_namespace}.svc.cluster.local:7050 "
+                        + f"-c {opts['peers']['channel_name']} -f /hl_config/channel/{channel}.tx {cmd_suffix}'"
                     )
                 )
         res, _ = pod_ex.execute("peer channel list")
@@ -236,6 +221,6 @@ def create_channel(opts, verbose=False):
                 (
                     "bash -c "
                     + "'CORE_PEER_MSPCONFIGPATH=$ADMIN_MSP_PATH "
-                    + "peer channel join -b /var/hyperledger/{channel}.block {cmd_suffix}'"
-                ).format(channel=opts["peers"]["channel_name"], cmd_suffix=cmd_suffix)
+                    + f"peer channel join -b /var/hyperledger/{opts['peers']['channel_name']}.block {cmd_suffix}'"
+                )
             )

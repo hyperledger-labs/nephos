@@ -41,9 +41,7 @@ def check_cluster(cluster_name):
     """
     context = context_get()
     if context["context"]["cluster"] != cluster_name:
-        message = "We expect to use cluster {}, but are instead using cluster {}".format(
-            cluster_name, context["context"]["cluster"]
-        )
+        message = f"We expect to use cluster {cluster_name}, but are instead using cluster {context['context']['cluster']}",
         raise ValueError(message)
 
 
@@ -62,7 +60,7 @@ def get_namespace(opts, msp=None, ca=None):
         if "msps" in opts and msp in opts["msps"]:
             msp_values = opts["msps"][msp]
         else:
-            raise KeyError('Settings dict does not contain MSP "{}"'.format(msp))
+            raise KeyError(f'Settings dict does not contain MSP "{msp}"')
         if "namespace" in msp_values:
             # Specific MSP-based namespace
             return msp_values["namespace"]
@@ -70,7 +68,7 @@ def get_namespace(opts, msp=None, ca=None):
         if "cas" in opts and ca in opts["cas"]:
             ca_values = opts["cas"][ca]
         else:
-            raise KeyError('Settings dict does not contain CA "{}"'.format(ca))
+            raise KeyError(f'Settings dict does not contain CA "{ca}"')
         if "namespace" in ca_values:
             # Specific MSP-based namespace
             return ca_values["namespace"]

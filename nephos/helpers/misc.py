@@ -97,7 +97,7 @@ def input_files(keys, clean_key=False):
             filename = get_response(input_text.format(key=key))
             is_file = isfile(filename)
             if not is_file:
-                print("{} is not a file".format(filename))
+                print(f"{filename} is not a file")
         if key is None:
             key = split(filename)[1]
             if clean_key:

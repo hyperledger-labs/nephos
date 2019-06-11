@@ -86,9 +86,9 @@ def get_pod(namespace, identifier, item=0, verbose=False):
     """
     node_pod, _ = execute(
         (
-            "kubectl get pods -n {ns} {identifier} "
-            + '-o jsonpath="{{.items[{item}].metadata.name}}"'
-        ).format(ns=namespace, identifier=identifier, item=item),
+            f"kubectl get pods -n {namespace} {identifier} "
+            + f'-o jsonpath="{{.items[{item}].metadata.name}}"'
+        ),
         verbose=verbose,
     )
     if not node_pod:
@@ -110,5 +110,5 @@ def get_helm_pod(namespace, release, app, item=0, verbose=False):
     Returns:
         Executer: A pod object able to execute commands and return logs.
     """
-    identifier = '-l "app={app},release={name}"'.format(app=app, name=release)
+    identifier = f'-l "app={app},release={release}"'
     return get_pod(namespace, identifier, item=item, verbose=verbose)

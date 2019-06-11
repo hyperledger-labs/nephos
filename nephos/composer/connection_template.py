@@ -41,7 +41,7 @@ def define_orderers(orderer_names, orderer_hosts, domain=None):
     orderer_connections = {}
     for name, host in zip(orderer_names, orderer_hosts):
         if domain:
-            key = "{name}.{domain}".format(name=name, domain=domain)
+            key = f"{name}.{domain}"
         else:
             key = name
         orderer_connections[key] = {"url": ("grpc://" + host + ":7050")}
@@ -64,9 +64,7 @@ def define_peers(peer_names, peer_hosts, organisation, domain=None):
     peer_connections = {}
     for name, host in zip(peer_names, peer_hosts):
         if domain:
-            key = "{name}.{organisation}.{domain}".format(
-                name=name, organisation=organisation, domain=domain
-            )
+            key = f"{name}.{organisation}.{domain}"
         else:
             key = name
         peer_options[key] = {
@@ -102,11 +100,11 @@ def json_ct(opts, ca_name, ca_host, organisation, domain, msp_id, channel):
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     # TODO: Currently specific to intra-cluster communication (Service)
     peer_hosts = [
-        peer + "-hlf-peer.{ns}.svc.cluster.local".format(ns=peer_namespace)
+        peer + f"-hlf-peer.{peer_namespace}.svc.cluster.local"
         for peer in opts["peers"]["names"]
     ]
     orderer_hosts = [
-        orderer + "-hlf-ord.{ns}.svc.cluster.local".format(ns=ord_namespace)
+        orderer + f"-hlf-ord.{ord_namespace}.svc.cluster.local"
         for orderer in opts["orderers"]["names"]
     ]
     # Get peers

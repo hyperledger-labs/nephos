@@ -35,7 +35,7 @@ class TestIntegrationDev:
         check_cluster(
             self.CONTEXT
         )  # Dangerous operation, recheck we have not shifted context
-        execute("helm delete --purge {}".format(" ".join(releases)))
+        execute(f"helm delete --purge {' '.join(releases)}")
 
         # Delete the namespaces
         check_cluster(

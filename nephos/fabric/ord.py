@@ -59,9 +59,9 @@ def check_ord_tls(opts, verbose=False):
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     ord_tls, _ = execute(
         (
-            "kubectl get cm -n {ns} "
-            + '{release}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
-        ).format(ns=ord_namespace, release=opts["orderers"]["names"][0]),
+            f"kubectl get cm -n {ord_namespace} "
+            + f'{opts["orderers"]["names"][0]}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
+        ),
         verbose=verbose,
     )
     return ord_tls == "true"
@@ -80,9 +80,7 @@ def setup_ord(opts, upgrade=False, verbose=False):
     if "kafka" in opts["orderers"]:
         # Kafka upgrade is risky, so we disallow it by default
         version = get_version(opts, "kafka")
-        config_yaml = "{dir}/kafka/{release}.yaml".format(
-            dir=opts["core"]["dir_values"], release=opts["orderers"]["kafka"]["name"]
-        )
+        config_yaml = f"{opts['core']['dir_values']}/kafka/{opts['orderers']['kafka']['name']}.yaml"
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
             "incubator",
@@ -102,9 +100,7 @@ def setup_ord(opts, upgrade=False, verbose=False):
     for release in opts["orderers"]["names"]:
         # HL-Ord
         version = get_version(opts, "hlf-ord")
-        config_yaml = "{dir}/hlf-ord/{name}.yaml".format(
-            dir=opts["core"]["dir_values"], name=release
-        )
+        config_yaml = f'{opts["core"]["dir_values"]}/hlf-ord/{release}.yaml'
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         if not upgrade:
             helm_install(
