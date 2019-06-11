@@ -190,7 +190,7 @@ class TestInputFiles:
         mock_get_response.side_effect = [self.files[0] + "OOPS", self.files[0]]
         data = input_files(("hello",))
         mock_print.assert_called_once_with(
-            "{} is not a file".format(self.files[0] + "OOPS")
+            f"{self.files[0] + 'OOPS'} is not a file"
         )
         mock_get_response.assert_has_calls([call("Input hello"), call("Input hello")])
         mock_isfile.assert_has_calls(

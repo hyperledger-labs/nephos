@@ -49,7 +49,7 @@ def check_id(ca_namespace, ca, username, verbose=False):
     got_id = False
     while not got_id:
         ord_id, err = ca_exec.execute(
-            "fabric-ca-client identity list --id {id}".format(id=username)
+            f"fabric-ca-client identity list --id {username}"
         )
         if err:
             # Expected error (identity does not exist)
@@ -118,21 +118,14 @@ def enroll_id(opts, ca, username, password, verbose=False):
     dir_crypto = opts["core"]["dir_crypto"]
     ca_namespace = get_namespace(opts, ca=ca)
     ingress_urls = ingress_read(ca + "-hlf-ca", namespace=ca_namespace, verbose=verbose)
-    msp_dir = "{}_MSP".format(username)
+    msp_dir = f"{username}_MSP"
     msp_path = join(dir_crypto, msp_dir)
     if not isdir(msp_path):
         # Enroll
         command = (
-            "FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client enroll "
-            + "-u https://{username}:{password}@{ingress} -M {msp_dir} "
-            + "--tls.certfiles {ca_server_tls}"
-        ).format(
-            dir=dir_crypto,
-            username=username,
-            password=password,
-            ingress=ingress_urls[0],
-            msp_dir=join(dir_crypto, msp_dir),
-            ca_server_tls=abspath(opts["cas"][ca]["tls_cert"]),
+            f'FABRIC_CA_CLIENT_HOME={dir_crypto} fabric-ca-client enroll '
+            + f'-u https://{username}:{password}@{ingress_urls[0]} -M {join(dir_crypto, msp_dir)} '
+            + f'--tls.certfiles {abspath(opts["cas"][ca]["tls_cert"])}'
         )
         execute_until_success(command)
     return msp_path
@@ -177,15 +170,9 @@ def create_admin(opts, msp_name, verbose=False):
     if not isdir(keystore) or not listdir(keystore):
         execute(
             (
-                "FABRIC_CA_CLIENT_HOME={dir} fabric-ca-client enroll "
-                + "-u https://{id}:{pw}@{ingress} -M {msp_dir} --tls.certfiles {ca_server_tls}"
-            ).format(
-                dir=dir_config,
-                id=msp_values["org_admin"],
-                pw=msp_values["org_adminpw"],
-                ingress=ca_ingress,
-                msp_dir=join(dir_crypto, msp_name),
-                ca_server_tls=abspath(ca_values["tls_cert"]),
+                f"FABRIC_CA_CLIENT_HOME={dir_config} fabric-ca-client enroll "
+                + f"-u https://{msp_values['org_admin']}:{msp_values['org_adminpw']}@{ca_ingress} "
+                + f"-M {join(dir_crypto, msp_name)} --tls.certfiles {abspath(ca_values['tls_cert'])}"
             ),
             verbose=verbose,
         )
@@ -202,7 +189,7 @@ def admin_creds(opts, msp_name, verbose=False):
     msp_namespace = get_namespace(opts, msp=msp_name)
     msp_values = opts["msps"][msp_name]
 
-    admin_cred_secret = "hlf--{}-admincred".format(msp_values["org_admin"])
+    admin_cred_secret = f"hlf--{msp_values['org_admin']}-admincred"
     secret_data = credentials_secret(
         admin_cred_secret,
         msp_namespace,
@@ -226,7 +213,7 @@ def copy_secret(from_dir, to_dir):
         from_file = from_list[0]
     else:
         raise ValueError(
-            "from_dir contains {} files - {}".format(len(from_list), from_list)
+            f"from_dir contains {len(from_list)} files - {from_list}"
         )
     _, from_filename = split(from_file)
     to_file = join(to_dir, from_filename)
@@ -252,17 +239,13 @@ def msp_secrets(opts, msp_name, verbose=False):
         msp_path = join(opts["core"]["dir_crypto"], msp_name)
     else:
         # Otherwise we are using Cryptogen
-        glob_target = "{dir_crypto}/crypto-config/*Organizations/{ns}*/users/Admin*/msp".format(
-            dir_crypto=opts["core"]["dir_crypto"], ns=msp_namespace
-        )
+        glob_target = f"{opts['core']['dir_crypto']}/crypto-config/*Organizations/{msp_namespace}*/users/Admin*/msp"
         msp_path_list = glob(glob_target)
         if len(msp_path_list) == 1:
             msp_path = msp_path_list[0]
         else:
             raise ValueError(
-                "MSP path list length is {} - {}".format(
-                    len(msp_path_list), msp_path_list
-                )
+                f"MSP path list length is {msp_path_list} - {msp_path_list}"
             )
 
     # Copy cert to admincerts
@@ -312,7 +295,7 @@ def item_to_secret(namespace, msp_path, username, item, verbose=False):
         verbose (bool) Verbosity. False by default.
     """
     # Item in form CryptoInfo(name, subfolder, key, required)
-    secret_name = "hlf--{user}-{type}".format(user=username, type=item.secret_type)
+    secret_name = f"hlf--{username}-{item.secret_type}"
     file_path = join(msp_path, item.subfolder)
     try:
         crypto_secret(
@@ -323,9 +306,7 @@ def item_to_secret(namespace, msp_path, username, item, verbose=False):
             raise Exception(error)
         else:
             print(
-                'No {} found, so secret "{}" was not created'.format(
-                    file_path, secret_name
-                )
+                f'No {file_path} found, so secret "{secret_name}" was not created'
             )
 
 
@@ -378,7 +359,7 @@ def setup_id(opts, msp_name, release, id_type, verbose=False):
     if opts["cas"]:
         ca_namespace = get_namespace(opts, ca=opts["msps"][msp_name]["ca"])
         # Create secret with Orderer credentials
-        secret_name = "hlf--{}-cred".format(release)
+        secret_name = f"hlf--{release}-cred"
         secret_data = credentials_secret(
             secret_name, node_namespace, username=release, verbose=verbose
         )
@@ -401,20 +382,13 @@ def setup_id(opts, msp_name, release, id_type, verbose=False):
         )
     else:
         # Otherwise we are using Cryptogen
-        glob_target = "{dir_crypto}/crypto-config/{node_type}Organizations/{ns}*/{node_type}s/{node_name}*/msp".format(
-            dir_crypto=opts["core"]["dir_crypto"],
-            node_type=id_type,
-            node_name=release,
-            ns=node_namespace,
-        )
+        glob_target = f"{opts['core']['dir_crypto']}/crypto-config/{id_type}Organizations/{node_namespace}*/{id_type}s/{release}*/msp"
         msp_path_list = glob(glob_target)
         if len(msp_path_list) == 1:
             msp_path = msp_path_list[0]
         else:
             raise ValueError(
-                "MSP path list length is {} - {}".format(
-                    len(msp_path_list), msp_path_list
-                )
+                f"MSP path list length is {msp_path_list} - {msp_path_list}"
             )
     # Secrets
     id_to_secrets(
@@ -453,13 +427,11 @@ def genesis_block(opts, verbose=False):
     if not exists(genesis_file):
         # Genesis block creation and storage
         execute(
-            "configtxgen -profile OrdererGenesis -outputBlock {genesis_file}".format(
-                genesis_file=genesis_file
-            ),
+            f"configtxgen -profile OrdererGenesis -outputBlock {genesis_file}",
             verbose=verbose,
         )
     else:
-        print("{} already exists".format(genesis_file))
+        print(f"{genesis_file} already exists")
     # Create the genesis block secret
     secret_from_file(
         secret=opts["orderers"]["secret_genesis"],
@@ -483,20 +455,16 @@ def channel_tx(opts, verbose=False):
     # Change to blockchain materials directory
     chdir(opts["core"]["dir_config"])
     # Create Channel Tx
-    channel_key = "{channel}.tx".format(channel=opts["peers"]["channel_name"])
+    channel_key = f"{opts['peers']['channel_name']}.tx"
     channel_file = join(opts["core"]["dir_crypto"], channel_key)
     if not exists(channel_file):
         # Channel transaction creation and storage
         execute(
-            "configtxgen -profile {channel_profile} -channelID {channel} -outputCreateChannelTx {channel_file}".format(
-                channel_profile=opts["peers"]["channel_profile"],
-                channel=opts["peers"]["channel_name"],
-                channel_file=channel_file,
-            ),
+            f"configtxgen -profile {opts['peers']['channel_profile']} -channelID {opts['peers']['channel_name']} -outputCreateChannelTx {channel_file}",
             verbose=verbose,
         )
     else:
-        print("{} already exists".format(channel_file))
+        print(f"{channel_file} already exists")
     # Create the channel transaction secret
     secret_from_file(
         secret=opts["peers"]["secret_channel"],

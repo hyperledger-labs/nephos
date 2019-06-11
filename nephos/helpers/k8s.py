@@ -39,14 +39,11 @@ class Executer:
         """
         extra = ""
         if container:
-            extra += "--container {} ".format(container)
+            extra += f"--container {container} "
         self.pod = pod
-        self.prefix_exec = "kubectl exec {pod} -n {namespace} {extra}-- ".format(
-            pod=pod, namespace=namespace, extra=extra
-        )
-        self.prefix_logs = "kubectl logs {pod} -n {namespace} {extra}".format(
-            pod=pod, namespace=namespace, extra=extra
-        )
+        self.prefix_exec = f"kubectl exec {pod} -n {namespace} {extra}-- "
+
+        self.prefix_logs = f"kubectl logs {pod} -n {namespace} {extra}"
         self.verbose = verbose
 
     # TODO: api.connect_get_namespaced_pod_exec (to do exec using Python API programmatically)
@@ -74,9 +71,9 @@ class Executer:
         Returns:
             str: Logs contained in pod.
         """
-        command = "--tail={}".format(tail)
+        command = f"--tail={tail}"
         if since_time:
-            command += " --since-time='{}'".format(since_time)
+            command += f" --since-time='{since_time}'"
         result, _ = execute(self.prefix_logs + command, verbose=self.verbose)
         return result
 
@@ -112,7 +109,7 @@ def ns_create(namespace, verbose=False):
         ns.metadata = client.V1ObjectMeta(name=namespace)
         api.create_namespace(ns)
         if verbose:
-            print(TERM.green('Created namespace "{}"'.format(namespace)))
+            print(TERM.green(f'Created namespace "{namespace}"'))
             pretty_print(json.dumps(ns.metadata, default=str))
 
 
@@ -169,9 +166,7 @@ def pod_check(namespace, identifier, sleep_interval=10, pod_num=None):
     first_pass = True
     while not running:
         states, _ = execute(
-            'kubectl get pods -n {ns} {identifier} -o jsonpath="{{.items[*].status.phase}}"'.format(
-                ns=namespace, identifier=identifier
-            ),
+            f'kubectl get pods -n {namespace} {identifier} -o jsonpath="{{.items[*].status.phase}}"',
             show_command=first_pass,
         )
         states_list = states.split()
@@ -208,7 +203,7 @@ def cm_create(cm_data, name, namespace="default", verbose=False):
     cm.data = cm_data
     api.create_namespaced_config_map(namespace=namespace, body=cm)
     if verbose:
-        print("Created ConfigMap {} in namespace {}".format(name, namespace))
+        print(f"Created ConfigMap {name} in namespace {namespace}")
 
 
 def cm_read(name, namespace="default", verbose=False):
@@ -250,7 +245,7 @@ def secret_create(secret_data, name, namespace="default", verbose=False):
     secret.data = secret_data
     api.create_namespaced_secret(namespace=namespace, body=secret)
     if verbose:
-        print("Created Secret {} in namespace {}".format(name, namespace))
+        print(f"Created Secret {name} in namespace {namespace}")
 
 
 def secret_read(name, namespace="default", verbose=False):
