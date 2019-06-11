@@ -119,9 +119,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
 
     # Start Composer
     version = get_version(opts, "hl-composer")
-    config_yaml = "{dir}/hl-composer/{release}.yaml".format(
-        dir=opts["core"]["dir_values"], release=opts["composer"]["name"]
-    )
+    config_yaml = f'{opts["core"]["dir_values"]}/hl-composer/{opts["composer"]["name"]}.yaml'
     if not upgrade:
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
@@ -136,7 +134,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
         preserve = (
             HelmPreserve(
                 peer_namespace,
-                "{}-hl-composer-rest".format(opts["composer"]["name"]),
+                f"{opts['composer']['name']}-hl-composer-rest",
                 "COMPOSER_APIKEY",
                 "rest.config.apiKey",
             ),
@@ -173,9 +171,7 @@ def setup_card(opts, msp_path, user_name, roles, network=None, verbose=False):
 
     # Set up the PeerAdmin card
     ls_res, _ = hlc_cli_ex.execute(
-        "composer card list --card {admin_name}@{network}".format(
-            admin_name=user_name, network=network
-        )
+        f"composer card list --card {user_name}@{network}"
     )
 
     if roles:
@@ -187,24 +183,17 @@ def setup_card(opts, msp_path, user_name, roles, network=None, verbose=False):
         hlc_cli_ex.execute(
             (
                 "composer card create "
-                + ("-n {network} " if network else "")
+                + (f"-n {network} " if network else "")
                 + "-p /hl_config/hlc-connection/connection.json "
-                + "-u {admin_name} -c {msp_path}/signcerts/cert.pem "
-                + "-k {msp_path}/keystore/key.pem "
-                + "{roles_string}"
-                + "--file /home/composer/{admin_name}@{network}"
-            ).format(
-                msp_path=msp_path,
-                admin_name=user_name,
-                roles_string=roles_string,
-                network=network,
+                + f"-u {user_name} -c {msp_path}/signcerts/cert.pem "
+                + f"-k {msp_path}/keystore/key.pem "
+                + f"{roles_string}"
+                + f"--file /home/composer/{user_name}@{network}"
             )
         )
         hlc_cli_ex.execute(
             "composer card import "
-            + "--file /home/composer/{admin_name}@{network}.card".format(
-                admin_name=user_name, network=network
-            )
+            + f"--file /home/composer/{user_name}@{network}.card"
         )
 
 
@@ -248,39 +237,28 @@ def install_network(opts, verbose=False):
     bna_pw = opts["msps"][peer_msp]["org_adminpw"]
 
     ls_res, _ = hlc_cli_ex.execute(
-        "composer card list --card {bna_admin}@{bna_name}".format(
-            bna_admin=bna_admin, bna_name=bna_name
-        )
+        f"composer card list --card {bna_admin}@{bna_name}"
     )
 
     if not ls_res:
         hlc_cli_ex.execute(
             (
                 "composer network install --card PeerAdmin@hlfv1 "
-                + "--archiveFile /hl_config/blockchain_network/{bna}"
-            ).format(bna=bna)
+                + f"--archiveFile /hl_config/blockchain_network/{bna}"
+            )
         )
         hlc_cli_ex.execute(
             (
                 "composer network start "
                 + "--card PeerAdmin@hlfv1 "
-                + "--networkName {bna_name} --networkVersion {bna_version} "
-                + "--networkAdmin {bna_admin} --networkAdminEnrollSecret {bna_pw}"
-            ).format(
-                bna_name=bna_name,
-                bna_version=bna_version,
-                bna_admin=bna_admin,
-                bna_pw=bna_pw,
+                + f"--networkName {bna_name} --networkVersion {bna_version} "
+                + f"--networkAdmin {bna_admin} --networkAdminEnrollSecret {bna_pw}"
             )
         )
         hlc_cli_ex.execute(
-            "composer card import --file {bna_admin}@{bna_name}.card".format(
-                bna_admin=bna_admin, bna_name=bna_name
-            )
+            f"composer card import --file {bna_admin}@{bna_name}.card"
         )
 
     hlc_cli_ex.execute(
-        "composer network ping --card {bna_admin}@{bna_name}".format(
-            bna_admin=bna_admin, bna_name=bna_name
-        )
+        f"composer network ping --card {bna_admin}@{bna_name}"
     )

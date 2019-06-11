@@ -48,21 +48,19 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
     # Upgrading database is risky, so we disallow it by default
     if not upgrade:
         version = get_version(opts, "postgresql")
-        config_yaml = "{dir}/postgres-ca/{name}-pg.yaml".format(
-            dir=values_dir, name=release
-        )
+        config_yaml = f"{values_dir}/postgres-ca/{release}-pg.yaml"
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
             "stable",
             "postgresql",
-            "{}-pg".format(release),
+            f"{release}-pg",
             ca_namespace,
             extra_vars=extra_vars,
             verbose=verbose,
         )
-        helm_check("postgresql", "{}-pg".format(release), ca_namespace)
+        helm_check("postgresql", f"{release}-pg", ca_namespace)
     psql_secret = secret_read(
-        "{}-pg-postgresql".format(release), ca_namespace, verbose=verbose
+        f"{release}-pg-postgresql", ca_namespace, verbose=verbose
     )
     # Different key depending of PostgreSQL version
     psql_password = (
@@ -71,7 +69,7 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
     # Fabric CA
     version = get_version(opts, "hlf-ca")
     env_vars = [("externalDatabase.password", psql_password)]
-    config_yaml = "{dir}/hlf-ca/{name}.yaml".format(dir=values_dir, name=release)
+    config_yaml = f"{values_dir}/hlf-ca/{release}.yaml"
     if not upgrade:
         extra_vars = helm_extra_vars(
             version=version, config_yaml=config_yaml, env_vars=env_vars
@@ -88,13 +86,13 @@ def ca_chart(opts, release, upgrade=False, verbose=False):
         preserve = (
             HelmPreserve(
                 ca_namespace,
-                "{}-hlf-ca--ca".format(release),
+                f"{release}-hlf-ca--ca",
                 "CA_ADMIN",
                 "adminUsername",
             ),
             HelmPreserve(
                 ca_namespace,
-                "{}-hlf-ca--ca".format(release),
+                f"{release}-hlf-ca--ca",
                 "CA_PASSWORD",
                 "adminPassword",
             ),
@@ -152,9 +150,9 @@ def check_ca(ingress_host, cacert=None, verbose=False):
         verbose (bool): Verbosity. False by default.
     """
     # Check that CA ingress is operational
-    command = "curl https://{ingress}/cainfo".format(ingress=ingress_host)
+    command = f"curl https://{ingress_host}/cainfo"
     if cacert:
-        command += " --cacert {}".format(cacert)
+        command += f" --cacert {cacert}"
     execute_until_success(command, verbose=verbose)
 
 

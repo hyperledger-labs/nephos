@@ -25,9 +25,9 @@ class TestIntegrationQa:
         execute(
             (
                 "kubectl -n cas create secret tls ca--tls "
-                + "--cert={tls_path}.crt "
-                + "--key={tls_path}.key"
-            ).format(tls_path=self.TLS_PATH)
+                + f"--cert={self.TLS_PATH}.crt "
+                + f"--key={self.TLS_PATH}.key"
+            )
         )
 
         # TODO: There should be a more elegant way of obtaining all the releases
@@ -49,7 +49,7 @@ class TestIntegrationQa:
         check_cluster(
             self.CONTEXT
         )  # Dangerous operation, recheck we have not shifted context
-        execute("helm delete --purge {}".format(" ".join(releases)))
+        execute(f"helm delete --purge {' '.join(releases)}")
 
         # Delete the namespaces
         check_cluster(

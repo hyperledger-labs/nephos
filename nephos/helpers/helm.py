@@ -30,7 +30,7 @@ def helm_check(app, release, namespace, pod_num=None):
         namespace (str): Namespace where Helm deployment is located.
         pod_num (int): Number of pods expected to exist in the release.
     """
-    identifier = '-l "app={app},release={name}"'.format(app=app, name=release)
+    identifier = f'-l "app={app},release={release}"'
     pod_check(namespace, identifier, pod_num=pod_num)
 
 
@@ -40,7 +40,7 @@ def helm_init():
     if res is not None:
         print(TERM.green("Helm is already installed!"))
     else:
-        execute("kubectl create -f {}/../extras/helm-rbac.yaml".format(CURRENT_DIR))
+        execute(f"kubectl create -f {CURRENT_DIR}/../extras/helm-rbac.yaml")
         execute("helm init --service-account tiller")
         # Fix issue with automountServiceToken
         res, _ = execute(
@@ -144,7 +144,7 @@ def helm_extra_vars(
     # Get Helm Env-Vars
     extra_vars_string = ""
     if version:
-        extra_vars_string += " --version {}".format(version)
+        extra_vars_string += f" --version {version}"
     if config_yaml:
         if isinstance(config_yaml, (str, bytes)):
             config_yaml = (config_yaml,)
@@ -170,12 +170,10 @@ def helm_install(repo, app, release, namespace, extra_vars="", verbose=False):
         extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
         verbose (bool): Verbosity. False by default.
     """
-    ls_res, _ = execute("helm status {release}".format(release=release))
+    ls_res, _ = execute(f"helm status {release}")
 
     if not ls_res:
-        command = "helm install {repo}/{app} -n {name} --namespace {ns}".format(
-            app=app, name=release, ns=namespace, repo=repo
-        )
+        command = f"helm install {repo}/{app} -n {release} --namespace {namespace}"
         command += extra_vars
         # Execute
         execute(command, verbose=verbose)
@@ -191,12 +189,10 @@ def helm_upgrade(repo, app, release, extra_vars="", verbose=False):
         extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
         verbose (bool): Verbosity. False by default.
     """
-    ls_res, _ = execute("helm status {release}".format(release=release))
+    ls_res, _ = execute(f"helm status {release}")
 
     if ls_res:
-        command = "helm upgrade {name} {repo}/{app}".format(
-            app=app, name=release, repo=repo
-        )
+        command = f"helm upgrade {release} {repo}/{app}"
 
         command += extra_vars or ""
         # Execute
