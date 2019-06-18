@@ -64,6 +64,7 @@ class TestSetupOrd:
     }
 
     # TODO: We should not be able to deploy more than one orderer without Kafka
+    @patch("nephos.fabric.ord.get_orderers")
     @patch("nephos.fabric.ord.helm_upgrade")
     @patch("nephos.fabric.ord.helm_install")
     @patch("nephos.fabric.ord.helm_extra_vars")
@@ -78,12 +79,15 @@ class TestSetupOrd:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
+        mock_get_orderers
     ):
         OPTS = deepcopy(self.OPTS)
         OPTS["orderers"]["names"] = ["ord0", "ord1"]
         mock_get_version.side_effect = ["ord-version", "ord-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars-ord0", "extra-vars-ord1"]
+        mock_get_orderers.side_effect = [["ord0", "ord1"]]
         setup_ord(OPTS)
+        mock_get_orderers.assert_called_once_with(opts=OPTS)
         mock_get_version.assert_has_calls(
             [call(OPTS, "hlf-ord"), call(OPTS, "hlf-ord")]
         )
