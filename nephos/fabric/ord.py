@@ -14,7 +14,7 @@
 
 from time import sleep
 
-from nephos.fabric.utils import get_helm_pod
+from nephos.fabric.utils import get_helm_pod, get_orderers
 from nephos.fabric.settings import get_namespace, get_version
 from nephos.helpers.helm import helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
@@ -60,7 +60,7 @@ def check_ord_tls(opts, verbose=False):
     ord_tls, _ = execute(
         (
             f"kubectl get cm -n {ord_namespace} "
-            + f'{opts["orderers"]["names"][0]}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
+            + f'{get_orderers(opts=opts)[0]}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
         ),
         verbose=verbose,
     )
@@ -97,7 +97,7 @@ def setup_ord(opts, upgrade=False, verbose=False):
             pod_num=opts["orderers"]["kafka"]["pod_num"],
         )
 
-    for release in opts["orderers"]["names"]:
+    for release in get_orderers(opts=opts):
         # HL-Ord
         version = get_version(opts, "hlf-ord")
         config_yaml = f'{opts["core"]["dir_values"]}/hlf-ord/{release}.yaml'

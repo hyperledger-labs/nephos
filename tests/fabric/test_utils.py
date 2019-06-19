@@ -3,7 +3,7 @@ from unittest.mock import patch
 from kubernetes.client.rest import ApiException
 import pytest
 
-from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod, get_helm_pod
+from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod, get_helm_pod, get_orderers
 
 
 class TestCredentialsSecret:
@@ -134,3 +134,13 @@ class TestGetHelmPod:
         mock_get_pod.assert_called_once_with(
             "a-namespace", '-l "app=an-app,release=a-release"', item=7, verbose=False
         )
+
+
+class TestGetOrderers:
+    OPTS = {
+        "msps": {"ord_MSP": {"namespace": "ord-namespace"}},
+        "orderers": {"names": ["ord0", "ord1"], "msp": "ord_MSP"},
+    }
+
+    def test_get_orderers(self):
+        assert (["ord0", "ord1"] == get_orderers(opts=self.OPTS))
