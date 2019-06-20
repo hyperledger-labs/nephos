@@ -18,9 +18,9 @@ class TestUpgradeNetwork:
     }
 
     @patch("nephos.composer.upgrade.secret_from_file")
-    @patch("nephos.composer.upgrade.print")
+    @patch("nephos.composer.upgrade.logging")
     @patch("nephos.composer.upgrade.get_helm_pod")
-    def test_upgrade_network(self, mock_get_pod, mock_print, mock_secret_from_file):
+    def test_upgrade_network(self, mock_get_pod, mock_log, mock_secret_from_file):
         mock_pod_ex = Mock()
         mock_pod_ex.execute.side_effect = [
             ("a-network_a-version.bna", None),
@@ -52,15 +52,15 @@ class TestUpgradeNetwork:
                 call("composer network ping --card an-admin@a-network"),
             ]
         )
-        mock_print.assert_has_calls(
+        mock_log.info.assert_has_calls(
             [call("another-version"), call("Upgraded to a-version")]
         )
 
     @patch("nephos.composer.upgrade.secret_from_file")
-    @patch("nephos.composer.upgrade.print")
+    @patch("nephos.composer.upgrade.logging")
     @patch("nephos.composer.upgrade.get_helm_pod")
     def test_upgrade_network_again(
-        self, mock_get_pod, mock_print, mock_secret_from_file
+        self, mock_get_pod, mock_log, mock_secret_from_file
     ):
         mock_pod_ex = Mock()
         mock_pod_ex.execute.side_effect = [
@@ -81,4 +81,4 @@ class TestUpgradeNetwork:
                 call("composer network ping --card an-admin@a-network"),
             ]
         )
-        mock_print.assert_has_calls([call("a-version")])
+        mock_log.info.assert_has_calls([call("a-version")])

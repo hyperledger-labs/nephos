@@ -21,7 +21,7 @@ from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret
 from nephos.helpers.misc import execute, rand_string
 
 
-def credentials_secret(secret_name, namespace, username, password=None, verbose=False):
+def credentials_secret(secret_name, namespace, username, password=None):
     """Create a CA credentials secret.
 
     Args:
@@ -29,13 +29,12 @@ def credentials_secret(secret_name, namespace, username, password=None, verbose=
         namespace (str): Namespace for secret to be located.
         username (str): Username for credentials secret.
         password (str): Password for credentials secret.
-        verbose (bool): Verbosity. False by default.
 
     Returns:
         dict: Secret data including "CA_USERNAME" and "CA_PASSWORD"
     """
     try:
-        secret_data = secret_read(secret_name, namespace, verbose=verbose)
+        secret_data = secret_read(secret_name, namespace)
         # Check that the ID stored is the same as Orderer name
         # TODO: Remove asserts here, instead raise error
         assert username == secret_data["CA_USERNAME"]
@@ -50,7 +49,7 @@ def credentials_secret(secret_name, namespace, username, password=None, verbose=
     return secret_data
 
 
-def crypto_secret(secret_name, namespace, file_path, key, verbose=False):
+def crypto_secret(secret_name, namespace, file_path, key):
     """Create a crypto-material secret.
 
     Args:
@@ -58,7 +57,6 @@ def crypto_secret(secret_name, namespace, file_path, key, verbose=False):
         namespace (str): Namespace for secret to be located.
         file_path (str): Path to file we want to store as a secret.
         key (str): Key (file) name of secret we want to store as a secret.
-        verbose (bool): Verbosity. False by default.
     """
     secret_files = glob(path.join(file_path, "*"))
     if len(secret_files) != 1:
@@ -68,18 +66,16 @@ def crypto_secret(secret_name, namespace, file_path, key, verbose=False):
         namespace=namespace,
         key=key,
         filename=secret_files[0],
-        verbose=verbose,
     )
 
 
 # TODO: Move this to K8S helpers
-def get_pod(namespace, identifier, item=0, verbose=False):
+def get_pod(namespace, identifier, item=0):
     """Get a pod object from K8S.
 
     Args:
         namespace (str): Namespace where pod is located.
         identifier (str): Name of pod, or a label descriptor.
-        verbose (bool): Verbosity. False by default.
 
     Returns:
         Executer: A pod object able to execute commands and return logs.
@@ -88,30 +84,28 @@ def get_pod(namespace, identifier, item=0, verbose=False):
         (
             f"kubectl get pods -n {namespace} {identifier} "
             + f'-o jsonpath="{{.items[{item}].metadata.name}}"'
-        ),
-        verbose=verbose,
+        )
     )
     if not node_pod:
         raise ValueError('"node_pod" should contain a value')
-    pod_ex = Executer(node_pod, namespace=namespace, verbose=verbose)
+    pod_ex = Executer(node_pod, namespace=namespace)
     return pod_ex
 
 
 # TODO: Move this to Helm helpers
-def get_helm_pod(namespace, release, app, item=0, verbose=False):
+def get_helm_pod(namespace, release, app, item=0):
     """Get a pod object from K8S.
 
     Args:
         namespace (str): Namespace where pod is located.
         release (str): Release name of pod.
         app (str): App type of pod.
-        verbose (bool): Verbosity. False by default.
 
     Returns:
         Executer: A pod object able to execute commands and return logs.
     """
     identifier = f'-l "app={app},release={release}"'
-    return get_pod(namespace, identifier, item=item, verbose=verbose)
+    return get_pod(namespace, identifier, item=item)
 
 
 # No real purpose in asking the msp for now, but will needed to support multi-org

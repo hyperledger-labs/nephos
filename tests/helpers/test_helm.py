@@ -39,13 +39,13 @@ class TestHelmInit:
         mock_sleep.assert_called_once()
 
     @patch("nephos.helpers.helm.sleep")
-    @patch("nephos.helpers.helm.print")
+    @patch("nephos.helpers.helm.logging")
     @patch("nephos.helpers.helm.execute")
-    def test_helm_init_repeat(self, mock_execute, mock_print, mock_sleep):
+    def test_helm_init_repeat(self, mock_execute, mock_log, mock_sleep):
         mock_execute.side_effect = [("Helm list", None)]
         helm_init()
         mock_execute.assert_called_once()
-        mock_print.assert_called_once_with("Helm is already installed!")
+        mock_log.info.assert_called_once_with("Helm is already installed!")
         mock_sleep.assert_not_called()
 
 
@@ -100,7 +100,7 @@ class TestHelmPreserve:
         )
         assert result == " --set egg=sausage"
         mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace", verbose=False
+            "a-secret", "a-namespace"
         )
 
     @patch("nephos.helpers.helm.secret_read")
@@ -129,10 +129,10 @@ class TestHelmExtraVars:
             config_yaml="some-config",
             env_vars="some-env-vars",
             preserve="some-preserve",
-            verbose=True,
+            
         )
         mock_helm_env_vars.assert_called_once_with("some-env-vars")
-        mock_helm_preserve.assert_called_once_with("some-preserve", verbose=True)
+        mock_helm_preserve.assert_called_once_with("some-preserve")
         assert (
             result
             == " --version a-version -f some-config --set foo=bar --set egg=sausage"
@@ -168,7 +168,7 @@ class TestHelmInstall:
                 call("helm status a-release"),
                 call(
                     "helm install a_repo/an_app -n a-release --namespace a-namespace",
-                    verbose=False,
+                    
                 ),
             ]
         )
@@ -194,7 +194,7 @@ class TestHelmInstall:
                 call(
                     "helm install a_repo/an_app -n a-release "
                     + "--namespace a-namespace EXTRA-VARS",
-                    verbose=False,
+                    
                 ),
             ]
         )
@@ -211,7 +211,7 @@ class TestHelmUpgrade:
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
-                call("helm upgrade a-release a_repo/an_app", verbose=False),
+                call("helm upgrade a-release a_repo/an_app"),
             ]
         )
 
@@ -232,6 +232,6 @@ class TestHelmUpgrade:
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
-                call("helm upgrade a-release a_repo/an_app EXTRA-VARS", verbose=False),
+                call("helm upgrade a-release a_repo/an_app EXTRA-VARS"),
             ]
         )

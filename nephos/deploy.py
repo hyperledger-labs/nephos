@@ -15,7 +15,7 @@
 #   limitations under the License.
 
 import json
-
+import logging
 import click
 from blessings import Terminal
 
@@ -31,16 +31,19 @@ from nephos.runners import (
 )
 
 from nephos.fabric.settings import load_config
-
+from nephos.helpers.misc import pretty_print
 
 TERM = Terminal()
-
+log_format = '%(asctime)s %(module)-10s %(levelname)-8s %(message)s'
+logging_level = logging.INFO
+log_file = "/tmp/nephos_log"
 
 class Settings(object):
-    def __init__(self, settings_file, upgrade, verbose):
+    def __init__(self, settings_file, upgrade, verbose, out):
         self.settings_file = settings_file
         self.upgrade = upgrade
         self.verbose = verbose
+        self.out = out
 
 
 pass_settings = click.make_pass_decorator(Settings, ensure=True)
@@ -68,37 +71,56 @@ pass_settings = click.make_pass_decorator(Settings, ensure=True)
     default=False,
     help=TERM.cyan("Do we want verbose output?"),
 )
+@click.option(
+    "--out",
+    "-o",
+    default=None,
+    help=TERM.cyan("Where do you want to output your logs?"),
+)
 @click.pass_context
-def cli(ctx, settings_file, upgrade, verbose):
-    ctx.obj = Settings(settings_file, upgrade, verbose)
+def cli(ctx, settings_file, upgrade, verbose, out):
+    global log_file, logging_level
+    if verbose:
+        logging_level = logging.DEBUG
+    if out is not None:
+        log_file = out
+    logging.basicConfig(
+        level=logging_level,
+        format=log_format,
+        handlers=[
+            logging.FileHandler(filename=log_file, mode='a', encoding='utf-8'),
+            logging.StreamHandler()
+        ]
+    )
+    ctx.obj = Settings(settings_file, upgrade, verbose, out)
 
 
 @cli.command(help=TERM.cyan("Install Hyperledger Fabric Certificate Authorities"))
 @pass_settings
 def cert_auth(settings):
     opts = load_config(settings.settings_file)
-    runner_ca(opts, upgrade=settings.upgrade, verbose=settings.verbose)
+    runner_ca(opts, upgrade=settings.upgrade)
 
 
 @cli.command(help=TERM.cyan("Install Hyperledger Composer"))
 @pass_settings
 def composer(settings):
     opts = load_config(settings.settings_file)
-    runner_composer(opts, upgrade=settings.upgrade, verbose=settings.verbose)
+    runner_composer(opts, upgrade=settings.upgrade)
 
 
 @cli.command(help=TERM.cyan("Upgrade Hyperledger Composer"))
 @pass_settings
 def composer_up(settings):
     opts = load_config(settings.settings_file)
-    runner_composer_up(opts, verbose=settings.verbose)
+    runner_composer_up(opts)
 
 
 @cli.command(help=TERM.cyan("Obtain cryptographic materials from CAs"))
 @pass_settings
 def crypto(settings):
     opts = load_config(settings.settings_file)
-    runner_crypto(opts, verbose=settings.verbose)
+    runner_crypto(opts)
 
 
 # TODO: Can we compose several CLI commands here to avoid copied code?
@@ -106,38 +128,36 @@ def crypto(settings):
 @pass_settings
 def deploy(settings):
     opts = load_config(settings.settings_file)
-    runner_deploy(opts, upgrade=settings.upgrade, verbose=settings.verbose)
+    runner_deploy(opts, upgrade=settings.upgrade)
 
 
 @cli.command(help=TERM.cyan("Install end-to-end Hyperledger Fabric network"))
 @pass_settings
 def fabric(settings):
     opts = load_config(settings.settings_file)
-    runner_fabric(opts, upgrade=settings.upgrade, verbose=settings.verbose)
+    runner_fabric(opts, upgrade=settings.upgrade)
 
 
 @cli.command(help=TERM.cyan("Install Hyperledger Fabric Orderers"))
 @pass_settings
 def orderer(settings):
     opts = load_config(settings.settings_file)
-    runner_orderer(opts, upgrade=settings.upgrade, verbose=settings.verbose)
+    runner_orderer(opts, upgrade=settings.upgrade)
 
 
 @cli.command(help=TERM.cyan("Install Hyperledger Fabric Peers"))
 @pass_settings
 def peer(settings):
     opts = load_config(settings.settings_file)
-    runner_peer(opts, upgrade=settings.upgrade, verbose=settings.verbose)
+    runner_peer(opts, upgrade=settings.upgrade)
 
 
 @cli.command(help=TERM.cyan('Load "nephos" settings YAML file'))
 @pass_settings
 def settings(settings):
     data = load_config(settings.settings_file)
-    print("Settings successfully loaded...\n")
-    if settings.verbose:
-        # TODO: Pretty print & colorise output
-        print(json.dumps(data, indent=4))
+    logging.info("Settings successfully loaded...\n")
+    logging.debug(pretty_print(json.dumps(data, indent=4)))
 
 
 if __name__ == "__main__":  # pragma: no cover

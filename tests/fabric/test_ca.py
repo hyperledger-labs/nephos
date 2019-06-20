@@ -30,7 +30,7 @@ class TestCaChart:
         mock_secret_read.side_effect = [{"postgresql-password": "a_password"}]
         mock_get_version.side_effect = ["pg-version", "ca-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars-pg", "extra-vars-ca"]
-        ca_chart(self.OPTS, "a-release", verbose=True)
+        ca_chart(self.OPTS, "a-release")
         mock_get_version.assert_has_calls(
             [call(self.OPTS, "postgresql"), call(self.OPTS, "hlf-ca")]
         )
@@ -55,7 +55,6 @@ class TestCaChart:
                     "a-release-pg",
                     "ca-namespace",
                     extra_vars="extra-vars-pg",
-                    verbose=True,
                 ),
                 call(
                     "a_repo",
@@ -63,13 +62,12 @@ class TestCaChart:
                     "a-release",
                     "ca-namespace",
                     extra_vars="extra-vars-ca",
-                    verbose=True,
                 ),
             ]
         )
         mock_helm_upgrade.assert_not_called()
         mock_secret_read.assert_called_once_with(
-            "a-release-pg-postgresql", "ca-namespace", verbose=True
+            "a-release-pg-postgresql", "ca-namespace"
         )
         mock_helm_check.assert_has_calls(
             [
@@ -116,10 +114,10 @@ class TestCaChart:
         )
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
-            "a_repo", "hlf-ca", "a-release", extra_vars="extra-vars-ca", verbose=False
+            "a_repo", "hlf-ca", "a-release", extra_vars="extra-vars-ca"
         )
         mock_secret_read.assert_called_once_with(
-            "a-release-pg-postgresql", "ca-namespace", verbose=False
+            "a-release-pg-postgresql", "ca-namespace"
         )
         mock_helm_check.assert_has_calls([call("hlf-ca", "a-release", "ca-namespace")])
 
@@ -192,16 +190,16 @@ class TestCaEnroll:
 class TestCheckCa:
     @patch("nephos.fabric.ca.execute_until_success")
     def test_check_ca(self, mock_execute_until_success):
-        check_ca("an-ingress", verbose=False)
+        check_ca("an-ingress")
         mock_execute_until_success.assert_called_once_with(
-            "curl https://an-ingress/cainfo", verbose=False
+            "curl https://an-ingress/cainfo"
         )
 
     @patch("nephos.fabric.ca.execute_until_success")
     def test_check_ca_cert(self, mock_execute_until_success):
-        check_ca("an-ingress", cacert="./tls_cert.pem", verbose=True)
+        check_ca("an-ingress", cacert="./tls_cert.pem")
         mock_execute_until_success.assert_called_once_with(
-            "curl https://an-ingress/cainfo --cacert ./tls_cert.pem", verbose=True
+            "curl https://an-ingress/cainfo --cacert ./tls_cert.pem"
         )
 
 
@@ -238,8 +236,8 @@ class TestSetupCa:
         setup_ca(self.OPTS)
         mock_ca_chart.assert_has_calls(
             [
-                call(opts=self.OPTS, release="root-ca", upgrade=False, verbose=False),
-                call(opts=self.OPTS, release="int-ca", upgrade=False, verbose=False),
+                call(opts=self.OPTS, release="root-ca", upgrade=False),
+                call(opts=self.OPTS, release="int-ca", upgrade=False),
             ]
         )
         mock_get_pod.assert_has_calls(
@@ -248,13 +246,13 @@ class TestSetupCa:
                     namespace="root-namespace",
                     release="root-ca",
                     app="hlf-ca",
-                    verbose=False,
+                    
                 ),
                 call(
                     namespace="int-namespace",
                     release="int-ca",
                     app="hlf-ca",
-                    verbose=False,
+                    
                 ),
             ]
         )
@@ -263,12 +261,12 @@ class TestSetupCa:
         )
         mock_ingress_read.assert_has_calls(
             [
-                call("root-ca-hlf-ca", namespace="root-namespace", verbose=False),
-                call("int-ca-hlf-ca", namespace="int-namespace", verbose=False),
+                call("root-ca-hlf-ca", namespace="root-namespace"),
+                call("int-ca-hlf-ca", namespace="int-namespace"),
             ]
         )
         mock_check_ca.assert_called_once_with(
-            ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=False
+            ingress_host="an-ingress", cacert="./ca_cert.pem"
         )
 
     @patch("nephos.fabric.ca.ingress_read")
@@ -286,11 +284,11 @@ class TestSetupCa:
     ):
         mock_get_pod.side_effect = [self.root_executer, self.int_executer]
         mock_ingress_read.side_effect = [ApiException, ["an-ingress"]]
-        setup_ca(self.OPTS, upgrade=True, verbose=True)
+        setup_ca(self.OPTS, upgrade=True)
         mock_ca_chart.assert_has_calls(
             [
-                call(opts=self.OPTS, release="root-ca", upgrade=True, verbose=True),
-                call(opts=self.OPTS, release="int-ca", upgrade=True, verbose=True),
+                call(opts=self.OPTS, release="root-ca", upgrade=True),
+                call(opts=self.OPTS, release="int-ca", upgrade=True),
             ]
         )
         mock_get_pod.assert_has_calls(
@@ -299,13 +297,13 @@ class TestSetupCa:
                     namespace="root-namespace",
                     release="root-ca",
                     app="hlf-ca",
-                    verbose=True,
+                    
                 ),
                 call(
                     namespace="int-namespace",
                     release="int-ca",
                     app="hlf-ca",
-                    verbose=True,
+                    
                 ),
             ]
         )
@@ -314,10 +312,10 @@ class TestSetupCa:
         )
         mock_ingress_read.assert_has_calls(
             [
-                call("root-ca-hlf-ca", namespace="root-namespace", verbose=True),
-                call("int-ca-hlf-ca", namespace="int-namespace", verbose=True),
+                call("root-ca-hlf-ca", namespace="root-namespace"),
+                call("int-ca-hlf-ca", namespace="int-namespace"),
             ]
         )
         mock_check_ca.assert_called_once_with(
-            ingress_host="an-ingress", cacert="./ca_cert.pem", verbose=True
+            ingress_host="an-ingress", cacert="./ca_cert.pem"
         )

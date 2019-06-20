@@ -27,19 +27,19 @@ from nephos.helpers.helm import (
 )
 
 
-def check_peer(namespace, release, verbose=False):
+def check_peer(namespace, release):
     """Check if Peer is running.
 
     Args:
         namespace: Namespace where Peer is located.
         release: Name of Peer Helm release.
-        verbose (bool): Verbosity. False by default.
+        
 
     Returns:
         bool: True once Peer is correctly running.
     """
     pod_exec = get_helm_pod(
-        namespace=namespace, release=release, app="hlf-peer", verbose=verbose
+        namespace=namespace, release=release, app="hlf-peer"
     )
     res = pod_exec.logs(1000)
     if "Received block" in res:
@@ -53,13 +53,13 @@ def check_peer(namespace, release, verbose=False):
 
 
 # TODO: Split CouchDB creation from Peer creation
-def setup_peer(opts, upgrade=False, verbose=False):
+def setup_peer(opts, upgrade=False):
     """Setup Peer on K8S.
 
     Args:
         opts (dict): Nephos options dict.
         upgrade (bool): Do we upgrade the deployment? False by default.
-        verbose (bool): Verbosity. False by default.
+        
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     for release in opts["peers"]["names"]:
@@ -74,7 +74,7 @@ def setup_peer(opts, upgrade=False, verbose=False):
                 f"cdb-{release}",
                 peer_namespace,
                 extra_vars=extra_vars,
-                verbose=verbose,
+                
             )
         else:
             preserve = (
@@ -99,7 +99,7 @@ def setup_peer(opts, upgrade=False, verbose=False):
                 "hlf-couchdb",
                 f"cdb-{release}",
                 extra_vars=extra_vars,
-                verbose=verbose,
+                
             )
         helm_check("hlf-couchdb", f"cdb-{release}", peer_namespace)
 
@@ -114,7 +114,7 @@ def setup_peer(opts, upgrade=False, verbose=False):
                 release,
                 peer_namespace,
                 extra_vars=extra_vars,
-                verbose=verbose,
+                
             )
         else:
             helm_upgrade(
@@ -122,25 +122,25 @@ def setup_peer(opts, upgrade=False, verbose=False):
                 "hlf-peer",
                 release,
                 extra_vars=extra_vars,
-                verbose=verbose,
+                
             )
         helm_check("hlf-peer", release, peer_namespace)
         # Check that peer is running
-        check_peer(peer_namespace, release, verbose=verbose)
+        check_peer(peer_namespace, release)
 
 
-def peer_channel_suffix(opts, ord_name, verbose=False):
+def peer_channel_suffix(opts, ord_name):
     """Get command suffix for "peer channel" commands, as they involve speaking with Orderer.
 
     Args:
         opts (dict): Nephos options dict.
         ord_name (str): Orderer we wish to speak to.
-        verbose (bool): Verbosity. False by default.
+        
 
     Returns:
         str: Command suffix we need to use in "peer channel" commands.
     """
-    ord_tls = check_ord_tls(opts, verbose=verbose)
+    ord_tls = check_ord_tls(opts)
     if ord_tls:
         cmd_suffix = (
             "--tls "
@@ -181,12 +181,12 @@ def get_channel_block(peer_ex, ord_name, ord_namespace, channel, cmd_suffix):
 
 
 # TODO: Split channel creation from channel joining
-def create_channel(opts, verbose=False):
+def create_channel(opts):
     """Create Channel for Peer.
 
     Args:
         opts (dict): Nephos options dict.
-        verbose (bool): Verbosity. False by default.
+        
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
@@ -194,11 +194,11 @@ def create_channel(opts, verbose=False):
     # Get orderer TLS status
     ord_name = random.choice(opts["orderers"]["names"])
     # TODO: This should be a function
-    cmd_suffix = peer_channel_suffix(opts, ord_name, verbose=verbose)
+    cmd_suffix = peer_channel_suffix(opts, ord_name)
 
     for index, release in enumerate(opts["peers"]["names"]):
         # Get peer pod
-        pod_ex = get_helm_pod(peer_namespace, release, "hlf-peer", verbose=verbose)
+        pod_ex = get_helm_pod(peer_namespace, release, "hlf-peer")
 
         # Check if the file exists
         has_channel = False

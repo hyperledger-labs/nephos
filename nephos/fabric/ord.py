@@ -20,19 +20,18 @@ from nephos.helpers.helm import helm_check, helm_extra_vars, helm_install, helm_
 from nephos.helpers.misc import execute
 
 
-def check_ord(namespace, release, verbose=False):
+def check_ord(namespace, release):
     """Check if Orderer is running.
 
     Args:
         namespace (str): Namespace where Orderer is located.
         release (str): Name of Orderer Helm release.
-        verbose (bool): Verbosity. False by default.
 
     Returns:
         bool: True once Orderer is correctly running.
     """
     pod_exec = get_helm_pod(
-        namespace=namespace, release=release, app="hlf-ord", verbose=verbose
+        namespace=namespace, release=release, app="hlf-ord"
     )
     res = pod_exec.logs(1000)
     if "fetching metadata for all topics from broker" in res:
@@ -46,12 +45,11 @@ def check_ord(namespace, release, verbose=False):
 
 
 # TODO: We need a similar check to see if Peer uses client TLS as well
-def check_ord_tls(opts, verbose=False):
+def check_ord_tls(opts):
     """Check TLS status of Orderer.
 
     Args:
         opts (dict): Nephos options dict.
-        verbose (bool): Verbosity. False by default.
 
     Returns:
         bool: True if TLS is enabled, False if TLS is disabled.
@@ -62,18 +60,16 @@ def check_ord_tls(opts, verbose=False):
             f"kubectl get cm -n {ord_namespace} "
             + f'{get_orderers(opts=opts)[0]}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
         ),
-        verbose=verbose,
     )
     return ord_tls == "true"
 
 
-def setup_ord(opts, upgrade=False, verbose=False):
+def setup_ord(opts, upgrade=False):
     """Setup Orderer on K8S.
 
     Args:
         opts (dict): Nephos options dict.
         upgrade (bool): Do we upgrade the deployment? False by default.
-        verbose (bool): Verbosity. False by default.
     """
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     # Kafka
@@ -88,7 +84,6 @@ def setup_ord(opts, upgrade=False, verbose=False):
             opts["orderers"]["kafka"]["name"],
             ord_namespace,
             extra_vars=extra_vars,
-            verbose=verbose,
         )
         helm_check(
             "kafka",
@@ -109,7 +104,6 @@ def setup_ord(opts, upgrade=False, verbose=False):
                 release,
                 ord_namespace,
                 extra_vars=extra_vars,
-                verbose=verbose,
             )
         else:
             helm_upgrade(
@@ -117,8 +111,7 @@ def setup_ord(opts, upgrade=False, verbose=False):
                 "hlf-ord",
                 release,
                 extra_vars=extra_vars,
-                verbose=verbose,
             )
         helm_check("hlf-ord", release, ord_namespace)
         # Check that Orderer is running
-        check_ord(ord_namespace, release, verbose=verbose)
+        check_ord(ord_namespace, release)
