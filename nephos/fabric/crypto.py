@@ -18,6 +18,7 @@ from glob import glob
 from os import chdir, getcwd, listdir, makedirs
 from os.path import abspath, exists, isfile, isdir, join, split
 from time import sleep
+import logging
 
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import credentials_secret, crypto_secret, get_helm_pod
@@ -29,21 +30,20 @@ CryptoInfo = namedtuple("CryptoInfo", ("secret_type", "subfolder", "key", "requi
 
 
 # CA Helpers
-def check_id(ca_namespace, ca, username, verbose=False):
+def check_id(ca_namespace, ca, username):
     """
 
     Args:
         ca_namespace (str): K8S namespace where CA is located.
         ca (str): K8S release name of CA.
         username (str): Username for identity.
-        verbose (bool) Verbosity. False by default.
 
     Returns:
         bool: Does the ID exist?
     """
     # Get CA
     ca_exec = get_helm_pod(
-        namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose
+        namespace=ca_namespace, release=ca, app="hlf-ca"
     )
     # Check if Orderer is registered with the relevant CA
     got_id = False
@@ -64,8 +64,7 @@ def check_id(ca_namespace, ca, username, verbose=False):
 
 
 def register_id(
-    ca_namespace, ca, username, password, node_type="client", admin=False, verbose=False
-):
+    ca_namespace, ca, username, password, node_type="client", admin=False):
     """Register an ID with a Fabric Certificate Authority
 
     Args:
@@ -75,14 +74,11 @@ def register_id(
         password (str): Password for identity.
         node_type (str): Node type for identity. "client" by default.
         admin (bool): Whether the identity is an admin. False by default.
-        verbose (bool): Verbosity. False by default.
     """
     # Get CA
-    ord_id = check_id(ca_namespace, ca, username, verbose=verbose)
+    ord_id = check_id(ca_namespace, ca, username)
     # Registered if needed
-    ca_exec = get_helm_pod(
-        namespace=ca_namespace, release=ca, app="hlf-ca", verbose=verbose
-    )
+    ca_exec = get_helm_pod(namespace=ca_namespace, release=ca, app="hlf-ca")
     if not ord_id:
         command = (
             "fabric-ca-client register --id.name {id} --id.secret {pw} --id.type {type}"
@@ -101,7 +97,7 @@ def register_id(
                 sleep(15)
 
 
-def enroll_id(opts, ca, username, password, verbose=False):
+def enroll_id(opts, ca, username, password):
     """Enroll an ID with a Fabric Certificate Authority
 
     Args:
@@ -109,7 +105,6 @@ def enroll_id(opts, ca, username, password, verbose=False):
         ca (str): K8S release name of CA.
         username (str): Username for identity.
         password (str): Password for identity.
-        verbose (bool) Verbosity. False by default.
 
     Returns:
         str: Path of the MSP directory where cryptographic data is saved.
@@ -117,7 +112,7 @@ def enroll_id(opts, ca, username, password, verbose=False):
     """
     dir_crypto = opts["core"]["dir_crypto"]
     ca_namespace = get_namespace(opts, ca=ca)
-    ingress_urls = ingress_read(ca + "-hlf-ca", namespace=ca_namespace, verbose=verbose)
+    ingress_urls = ingress_read(ca + "-hlf-ca", namespace=ca_namespace)
     msp_dir = f"{username}_MSP"
     msp_path = join(dir_crypto, msp_dir)
     if not isdir(msp_path):
@@ -131,13 +126,12 @@ def enroll_id(opts, ca, username, password, verbose=False):
     return msp_path
 
 
-def create_admin(opts, msp_name, verbose=False):
+def create_admin(opts, msp_name):
     """Create an admin identity.
 
     Args:
         opts (dict): Nephos options dict.
         msp_name (str): Name of Membership Service Provider.
-        verbose (bool) Verbosity. False by default.
     """
     dir_config = opts["core"]["dir_config"]
     dir_crypto = opts["core"]["dir_crypto"]
@@ -150,8 +144,7 @@ def create_admin(opts, msp_name, verbose=False):
 
     # Get CA ingress
     ingress_urls = ingress_read(
-        ca_name + "-hlf-ca", namespace=ca_namespace, verbose=verbose
-    )
+        ca_name + "-hlf-ca", namespace=ca_namespace)
     ca_ingress = ingress_urls[0]
 
     # Register the Organisation with the CAs
@@ -161,7 +154,6 @@ def create_admin(opts, msp_name, verbose=False):
         msp_values["org_admin"],
         msp_values["org_adminpw"],
         admin=True,
-        verbose=verbose,
     )
 
     # TODO: Can we reuse the Enroll function above?
@@ -174,17 +166,15 @@ def create_admin(opts, msp_name, verbose=False):
                 + f"-u https://{msp_values['org_admin']}:{msp_values['org_adminpw']}@{ca_ingress} "
                 + f"-M {join(dir_crypto, msp_name)} --tls.certfiles {abspath(ca_values['tls_cert'])}"
             ),
-            verbose=verbose,
         )
 
 
-def admin_creds(opts, msp_name, verbose=False):
+def admin_creds(opts, msp_name):
     """Get admin credentials and save them to Nephos options dict.
 
     Args:
         opts (dict): Nephos options dict.
         msp_name (str): Name of Membership Service Provider.
-        verbose (bool) Verbosity. False by default.
     """
     msp_namespace = get_namespace(opts, msp=msp_name)
     msp_values = opts["msps"][msp_name]
@@ -195,7 +185,6 @@ def admin_creds(opts, msp_name, verbose=False):
         msp_namespace,
         username=msp_values["org_admin"],
         password=msp_values.get("org_adminpw"),
-        verbose=verbose,
     )
     msp_values["org_adminpw"] = secret_data["CA_PASSWORD"]
 
@@ -223,13 +212,12 @@ def copy_secret(from_dir, to_dir):
         shutil.copy(from_file, to_file)
 
 
-def msp_secrets(opts, msp_name, verbose=False):
+def msp_secrets(opts, msp_name):
     """Process MSP and convert it to a set of secrets.
 
     Args:
         opts (dict): Nephos options dict.
         msp_name (str): Name of Membership Service Provider.
-        verbose (bool) Verbosity. False by default.
     """
     # Relevant variables
     msp_namespace = get_namespace(opts, msp=msp_name)
@@ -252,39 +240,36 @@ def msp_secrets(opts, msp_name, verbose=False):
     copy_secret(join(msp_path, "signcerts"), join(msp_path, "admincerts"))
 
     # Create ID secrets from Admin MSP
-    id_to_secrets(msp_namespace, msp_path, msp_values["org_admin"], verbose=verbose)
+    id_to_secrets(msp_namespace, msp_path, msp_values["org_admin"])
 
     # Create CA secrets from Admin MSP
-    cacerts_to_secrets(
-        msp_namespace, msp_path, msp_values["org_admin"], verbose=verbose
-    )
+    cacerts_to_secrets(msp_namespace, msp_path, msp_values["org_admin"])
 
 
-def admin_msp(opts, msp_name, verbose=False):
+def admin_msp(opts, msp_name):
     """Setup the admin MSP, by getting/setting credentials and creating/saving crypto-material.
 
     Args:
         opts (dict): Nephos options dict.
         msp_name (str): Name of Membership Service Provider.
-        verbose (bool) Verbosity. False by default.
     """
     admin_namespace = get_namespace(opts, msp_name)
-    ns_create(admin_namespace, verbose=verbose)
+    ns_create(admin_namespace)
 
     if opts["cas"]:
         # Get/set credentials (if we use a CA)
-        admin_creds(opts, msp_name, verbose=verbose)
+        admin_creds(opts, msp_name)
         # Crypto material for Admin
-        create_admin(opts, msp_name, verbose=verbose)
+        create_admin(opts, msp_name)
     else:
-        print("No CAs defined in Nephos settings, ignoring Credentials")
+        logging.info("No CAs defined in Nephos settings, ignoring Credentials")
 
     # Setup MSP secrets
-    msp_secrets(opts, msp_name, verbose=verbose)
+    msp_secrets(opts, msp_name)
 
 
 # General helpers
-def item_to_secret(namespace, msp_path, username, item, verbose=False):
+def item_to_secret(namespace, msp_path, username, item):
     """Save a single MSP crypto-material file as a K8S secret.
 
     Args:
@@ -292,59 +277,54 @@ def item_to_secret(namespace, msp_path, username, item, verbose=False):
         msp_path (str): Path to the Membership Service Provider crypto-material.
         username (str): Username for identity.
         item (CryptoInfo): Item containing cryptographic material information.
-        verbose (bool) Verbosity. False by default.
     """
     # Item in form CryptoInfo(name, subfolder, key, required)
     secret_name = f"hlf--{username}-{item.secret_type}"
     file_path = join(msp_path, item.subfolder)
     try:
-        crypto_secret(
-            secret_name, namespace, file_path=file_path, key=item.key, verbose=verbose
-        )
+        crypto_secret(secret_name, namespace, file_path=file_path, key=item.key)
     except Exception as error:
         if item.required:
             raise Exception(error)
         else:
-            print(
+            logging.warning(
                 f'No {file_path} found, so secret "{secret_name}" was not created'
             )
 
 
-def id_to_secrets(namespace, msp_path, username, verbose=False):
+def id_to_secrets(namespace, msp_path, username):
     """Convert Identity certificate and key to K8S secrets.
 
     Args:
         namespace (str): Namespace where secret will live.
         msp_path (str): Path to the Membership Service Provider crypto-material.
         username (str): Username for identity.
-        verbose (bool) Verbosity. False by default.
     """
     crypto_info = [
         CryptoInfo("idcert", "signcerts", "cert.pem", True),
         CryptoInfo("idkey", "keystore", "key.pem", True),
     ]
     for item in crypto_info:
-        item_to_secret(namespace, msp_path, username, item, verbose=verbose)
+        item_to_secret(namespace, msp_path, username, item)
 
 
-def cacerts_to_secrets(namespace, msp_path, user, verbose=False):
+def cacerts_to_secrets(namespace, msp_path, user):
     """Convert CA certificate to K8S secrets.
 
     Args:
         namespace (str): Namespace where secret will live.
         msp_path (str): Path to the Membership Service Provider crypto-material.
         username (str): Username for identity.
-        verbose (bool) Verbosity. False by default.
     """
     crypto_info = [
         CryptoInfo("cacert", "cacerts", "cacert.pem", True),
         CryptoInfo("caintcert", "intermediatecerts", "intermediatecacert.pem", False),
     ]
     for item in crypto_info:
-        item_to_secret(namespace, msp_path, user, item, verbose=verbose)
+        item_to_secret(namespace, msp_path, user, item)
 
 
-def setup_id(opts, msp_name, release, id_type, verbose=False):
+def setup_id(opts, msp_name, release, id_type):
     """Setup single ID by registering, enrolling, and saving ID to K8S secrets.
 
     Args:
@@ -352,7 +332,6 @@ def setup_id(opts, msp_name, release, id_type, verbose=False):
         msp_name (str): Name of Membership Service Provider.
         release (str): Name of release/node.
         id_type (str): Type of ID we use.
-        verbose (bool) Verbosity. False by default.
     """
     msp_values = opts["msps"][msp_name]
     node_namespace = get_namespace(opts, msp_name)
@@ -361,7 +340,7 @@ def setup_id(opts, msp_name, release, id_type, verbose=False):
         # Create secret with Orderer credentials
         secret_name = f"hlf--{release}-cred"
         secret_data = credentials_secret(
-            secret_name, node_namespace, username=release, verbose=verbose
+            secret_name, node_namespace, username=release
         )
         # Register node
         register_id(
@@ -370,7 +349,6 @@ def setup_id(opts, msp_name, release, id_type, verbose=False):
             secret_data["CA_USERNAME"],
             secret_data["CA_PASSWORD"],
             id_type,
-            verbose=verbose,
         )
         # Enroll node
         msp_path = enroll_id(
@@ -378,7 +356,6 @@ def setup_id(opts, msp_name, release, id_type, verbose=False):
             msp_values["ca"],
             secret_data["CA_USERNAME"],
             secret_data["CA_PASSWORD"],
-            verbose=verbose,
         )
     else:
         # Otherwise we are using Cryptogen
@@ -392,31 +369,29 @@ def setup_id(opts, msp_name, release, id_type, verbose=False):
             )
     # Secrets
     id_to_secrets(
-        namespace=node_namespace, msp_path=msp_path, username=release, verbose=verbose
+        namespace=node_namespace, msp_path=msp_path, username=release
     )
 
 
 # TODO: Rename to mention identities.
-def setup_nodes(opts, node_type, verbose=False):
+def setup_nodes(opts, node_type):
     """Setup identities for nodes.
 
     Args:
         opts (dict): Nephos options dict.
         node_type (str): Type of node.
-        verbose (bool) Verbosity. False by default.
     """
     nodes = opts[node_type + "s"]
     for release in nodes["names"]:
-        setup_id(opts, nodes["msp"], release, node_type, verbose=verbose)
+        setup_id(opts, nodes["msp"], release, node_type)
 
 
 # ConfigTxGen helpers
-def genesis_block(opts, verbose=False):
+def genesis_block(opts):
     """Create and save Genesis Block to K8S.
 
     Args:
         opts (dict): Nephos options dict.
-        verbose (bool) Verbosity. False by default.
     """
     ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     # Change to blockchain materials directory
@@ -428,28 +403,25 @@ def genesis_block(opts, verbose=False):
         # Genesis block creation and storage
         execute(
             f"configtxgen -profile OrdererGenesis -outputBlock {genesis_file}",
-            verbose=verbose,
         )
     else:
-        print(f"{genesis_file} already exists")
+        logging.info(f"{genesis_file} already exists")
     # Create the genesis block secret
     secret_from_file(
         secret=opts["orderers"]["secret_genesis"],
         namespace=ord_namespace,
         key=genesis_key,
         filename=genesis_file,
-        verbose=verbose,
     )
     # Return to original directory
     chdir(PWD)
 
 
-def channel_tx(opts, verbose=False):
+def channel_tx(opts):
     """Create and save Channel Transaction to K8S.
 
     Args:
         opts (dict): Nephos options dict.
-        verbose (bool) Verbosity. False by default.
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     # Change to blockchain materials directory
@@ -461,17 +433,15 @@ def channel_tx(opts, verbose=False):
         # Channel transaction creation and storage
         execute(
             f"configtxgen -profile {opts['peers']['channel_profile']} -channelID {opts['peers']['channel_name']} -outputCreateChannelTx {channel_file}",
-            verbose=verbose,
         )
     else:
-        print(f"{channel_file} already exists")
+        logging.info(f"{channel_file} already exists")
     # Create the channel transaction secret
     secret_from_file(
         secret=opts["peers"]["secret_channel"],
         namespace=peer_namespace,
         key=channel_key,
         filename=channel_file,
-        verbose=verbose,
     )
     # Return to original directory
     chdir(PWD)

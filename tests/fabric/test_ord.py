@@ -26,7 +26,7 @@ class TestCheckOrd:
             "Not yet started\nStarting orderer\nOrderer fetching metadata for all topics from broker"
         ]
         mock_get_pod.side_effect = [mock_pod_ex]
-        check_ord("a-namespace", "a-release", verbose=True)
+        check_ord("a-namespace", "a-release")
         assert mock_pod_ex.logs.call_count == 1
         mock_sleep.assert_not_called()
 
@@ -42,17 +42,7 @@ class TestCheckOrdTls:
         mock_execute.side_effect = [("value", None)]
         check_ord_tls(self.OPTS)
         mock_execute.assert_called_once_with(
-            'kubectl get cm -n orderer-namespace an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"',
-            verbose=False,
-        )
-
-    @patch("nephos.fabric.ord.execute")
-    def test_check_ord_tls_verbose(self, mock_execute):
-        mock_execute.side_effect = [("value", None)]
-        check_ord_tls(self.OPTS, verbose=True)
-        mock_execute.assert_called_once_with(
-            'kubectl get cm -n orderer-namespace an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"',
-            verbose=True,
+            'kubectl get cm -n orderer-namespace an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"'
         )
 
 
@@ -64,6 +54,7 @@ class TestSetupOrd:
     }
 
     # TODO: We should not be able to deploy more than one orderer without Kafka
+    @patch("nephos.fabric.ord.get_orderers")
     @patch("nephos.fabric.ord.helm_upgrade")
     @patch("nephos.fabric.ord.helm_install")
     @patch("nephos.fabric.ord.helm_extra_vars")
@@ -78,12 +69,15 @@ class TestSetupOrd:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
+        mock_get_orderers
     ):
         OPTS = deepcopy(self.OPTS)
         OPTS["orderers"]["names"] = ["ord0", "ord1"]
         mock_get_version.side_effect = ["ord-version", "ord-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars-ord0", "extra-vars-ord1"]
+        mock_get_orderers.side_effect = [["ord0", "ord1"]]
         setup_ord(OPTS)
+        mock_get_orderers.assert_called_once_with(opts=OPTS)
         mock_get_version.assert_has_calls(
             [call(OPTS, "hlf-ord"), call(OPTS, "hlf-ord")]
         )
@@ -101,7 +95,7 @@ class TestSetupOrd:
                     "ord0",
                     "ord-namespace",
                     extra_vars="extra-vars-ord0",
-                    verbose=False,
+                    
                 ),
                 call(
                     "a-repo",
@@ -109,7 +103,7 @@ class TestSetupOrd:
                     "ord1",
                     "ord-namespace",
                     extra_vars="extra-vars-ord1",
-                    verbose=False,
+                    
                 ),
             ]
         )
@@ -122,8 +116,8 @@ class TestSetupOrd:
         )
         mock_check_ord.assert_has_calls(
             [
-                call("ord-namespace", "ord0", verbose=False),
-                call("ord-namespace", "ord1", verbose=False),
+                call("ord-namespace", "ord0"),
+                call("ord-namespace", "ord1"),
             ]
         )
 
@@ -146,7 +140,7 @@ class TestSetupOrd:
         OPTS["orderers"]["kafka"] = {"name": "kafka-hlf", "pod_num": 42}
         mock_get_version.side_effect = ["kafka-version", "ord-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars-kafka", "extra-vars-ord0"]
-        setup_ord(OPTS, verbose=True)
+        setup_ord(OPTS)
         mock_get_version.assert_has_calls([call(OPTS, "kafka"), call(OPTS, "hlf-ord")])
         mock_helm_extra_vars.assert_has_calls(
             [
@@ -164,7 +158,7 @@ class TestSetupOrd:
                     "kafka-hlf",
                     "ord-namespace",
                     extra_vars="extra-vars-kafka",
-                    verbose=True,
+                    
                 ),
                 call(
                     "a-repo",
@@ -172,7 +166,7 @@ class TestSetupOrd:
                     "ord0",
                     "ord-namespace",
                     extra_vars="extra-vars-ord0",
-                    verbose=True,
+                    
                 ),
             ]
         )
@@ -183,7 +177,7 @@ class TestSetupOrd:
                 call("hlf-ord", "ord0", "ord-namespace"),
             ]
         )
-        mock_check_ord.assert_called_once_with("ord-namespace", "ord0", verbose=True)
+        mock_check_ord.assert_called_once_with("ord-namespace", "ord0")
 
     @patch("nephos.fabric.ord.helm_upgrade")
     @patch("nephos.fabric.ord.helm_install")
@@ -209,7 +203,7 @@ class TestSetupOrd:
         )
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
-            "a-repo", "hlf-ord", "ord0", extra_vars="extra-vars-ord0", verbose=False
+            "a-repo", "hlf-ord", "ord0", extra_vars="extra-vars-ord0"
         )
-        mock_check_ord.assert_called_once_with("ord-namespace", "ord0", verbose=False)
+        mock_check_ord.assert_called_once_with("ord-namespace", "ord0")
         mock_helm_check.assert_has_calls([call("hlf-ord", "ord0", "ord-namespace")])

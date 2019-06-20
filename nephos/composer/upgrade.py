@@ -15,6 +15,7 @@
 #   limitations under the License.
 
 import os
+import logging
 
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_helm_pod
@@ -48,7 +49,7 @@ def upgrade_network(opts, verbose=False):
     )
 
     curr_version = (res.split("Business network version: ")[1]).split()[0]
-    print(curr_version)
+    logging.info(curr_version)
 
     if curr_version != bna_version:
         hlc_cli_ex.execute(
@@ -68,4 +69,4 @@ def upgrade_network(opts, verbose=False):
             f"composer network ping --card {bna_admin}@{bna_name}"
         )
         curr_version = (res.split("Business network version: ")[1]).split()[0]
-        print(f"Upgraded to {curr_version}")
+        logging.info(f"Upgraded to {curr_version}")

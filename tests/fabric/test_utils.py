@@ -3,7 +3,7 @@ from unittest.mock import patch
 from kubernetes.client.rest import ApiException
 import pytest
 
-from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod, get_helm_pod
+from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod, get_helm_pod, get_orderers
 
 
 class TestCredentialsSecret:
@@ -19,7 +19,7 @@ class TestCredentialsSecret:
         mock_rand_string.side_effect = ["a-password"]
         credentials_secret("a-secret", "a-namespace", "a-user")
         mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace", verbose=False
+            "a-secret", "a-namespace"
         )
         mock_rand_string.assert_called_once_with(24)
         mock_secret_create.assert_called_once_with(
@@ -35,7 +35,7 @@ class TestCredentialsSecret:
         mock_secret_read.side_effect = [self.SECRET_DATA]
         credentials_secret("a-secret", "a-namespace", "a-user", "a-password")
         mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace", verbose=False
+            "a-secret", "a-namespace"
         )
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
@@ -49,10 +49,10 @@ class TestCredentialsSecret:
         mock_secret_read.side_effect = [self.SECRET_DATA]
         with pytest.raises(AssertionError):
             credentials_secret(
-                "a-secret", "a-namespace", "a-user", "another-password", verbose=True
+                "a-secret", "a-namespace", "a-user", "another-password"
             )
         mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace", verbose=True
+            "a-secret", "a-namespace"
         )
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
@@ -67,7 +67,7 @@ class TestCredentialsSecret:
         with pytest.raises(AssertionError):
             credentials_secret("a-secret", "a-namespace", "another-user", "a-password")
         mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace", verbose=False
+            "a-secret", "a-namespace"
         )
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
@@ -85,7 +85,7 @@ class TestCryptoSecret:
             namespace="a-namespace",
             key="some_file.txt",
             filename="./a_path/a_file.txt",
-            verbose=False,
+            
         )
 
     @patch("nephos.fabric.utils.secret_from_file")
@@ -107,10 +107,10 @@ class TestGetPod:
         mock_execute.assert_called_once_with(
             "kubectl get pods -n a-namespace an-identifier "
             + '-o jsonpath="{.items[0].metadata.name}"',
-            verbose=False,
+            
         )
         mock_Executer.assert_called_once_with(
-            "a-pod", namespace="a-namespace", verbose=False
+            "a-pod", namespace="a-namespace"
         )
 
     @patch("nephos.fabric.utils.Executer")
@@ -118,11 +118,11 @@ class TestGetPod:
     def test_get_pod_fail(self, mock_execute, mock_Executer):
         mock_execute.side_effect = [(None, "error")]
         with pytest.raises(ValueError):
-            get_pod("a-namespace", "an-identifier", item=3, verbose=True)
+            get_pod("a-namespace", "an-identifier", item=3)
         mock_execute.assert_called_once_with(
             "kubectl get pods -n a-namespace an-identifier "
             + '-o jsonpath="{.items[3].metadata.name}"',
-            verbose=True,
+            
         )
         mock_Executer.assert_not_called()
 
@@ -132,5 +132,15 @@ class TestGetHelmPod:
     def test_get_helm_pod(self, mock_get_pod):
         get_helm_pod("a-namespace", "a-release", "an-app", item=7)
         mock_get_pod.assert_called_once_with(
-            "a-namespace", '-l "app=an-app,release=a-release"', item=7, verbose=False
+            "a-namespace", '-l "app=an-app,release=a-release"', item=7
         )
+
+
+class TestGetOrderers:
+    OPTS = {
+        "msps": {"ord_MSP": {"namespace": "ord-namespace"}},
+        "orderers": {"names": ["ord0", "ord1"], "msp": "ord_MSP"},
+    }
+
+    def test_get_orderers(self):
+        assert (["ord0", "ord1"] == get_orderers(opts=self.OPTS))

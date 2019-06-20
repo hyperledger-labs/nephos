@@ -3,6 +3,7 @@ from __future__ import print_function
 from collections import namedtuple
 from os import path
 from time import sleep
+import logging
 
 from blessings import Terminal
 
@@ -38,7 +39,7 @@ def helm_init():
     """Initialise Helm on cluster, using RBAC."""
     res, _ = execute("helm list")
     if res is not None:
-        print(TERM.green("Helm is already installed!"))
+        logging.info(TERM.green("Helm is already installed!"))
     else:
         execute(f"kubectl create -f {CURRENT_DIR}/../extras/helm-rbac.yaml")
         execute("helm init --service-account tiller")
@@ -92,12 +93,12 @@ def helm_env_vars(env_vars):
     return env_vars_string
 
 
-def helm_preserve(preserve, verbose=False):
+def helm_preserve(preserve):
     """Convert secret data to a "--set" string for Helm deployments.
 
     Args:
         preserve (Iterable): Set of secrets we wish to get data from to assign to the Helm Chart.
-        verbose (bool): Verbosity. False by default.
+
 
     Returns:
         str: String containing variables to be set with Helm release.
@@ -110,7 +111,7 @@ def helm_preserve(preserve, verbose=False):
         elif not isinstance(item, HelmPreserve):
             raise TypeError("Items in preserve array must be HelmPerserve named tuples")
         secret_data = secret_read(
-            item.secret_name, item.secret_namespace, verbose=verbose
+            item.secret_name, item.secret_namespace
         )
         env_vars.append(HelmSet(item.values_path, secret_data[item.data_item]))
     # Environmental variables
@@ -127,7 +128,7 @@ def helm_preserve(preserve, verbose=False):
 
 
 def helm_extra_vars(
-    version=None, config_yaml=None, env_vars=None, preserve=None, verbose=False
+    version=None, config_yaml=None, env_vars=None, preserve=None
 ):
     """Centralise obtaining extra variables for our helm_install and/or helm_upgrade
 
@@ -136,7 +137,7 @@ def helm_extra_vars(
         config_yaml (str, Iterable): Values file(s) to override defaults.
         env_vars (Iterable): Environmental variables we wish to store in Helm.
         preserve (Iterable): Set of secrets we wish to get data from to assign to the Helm Chart.
-        verbose (bool): Verbosity. False by default.
+
 
     Returns:
         str: String of Chart version, values files, environmental variables,
@@ -155,11 +156,11 @@ def helm_extra_vars(
     if env_vars:
         extra_vars_string += helm_env_vars(env_vars)
     if preserve:
-        extra_vars_string += helm_preserve(preserve, verbose=verbose)
+        extra_vars_string += helm_preserve(preserve)
     return extra_vars_string
 
 
-def helm_install(repo, app, release, namespace, extra_vars="", verbose=False):
+def helm_install(repo, app, release, namespace, extra_vars=""):
     """Install Helm chart.
 
     Args:
@@ -168,7 +169,7 @@ def helm_install(repo, app, release, namespace, extra_vars="", verbose=False):
         release (str): Release name on K8S.
         namespace (str): Namespace where to deploy Helm Chart.
         extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
-        verbose (bool): Verbosity. False by default.
+
     """
     ls_res, _ = execute(f"helm status {release}")
 
@@ -176,10 +177,10 @@ def helm_install(repo, app, release, namespace, extra_vars="", verbose=False):
         command = f"helm install {repo}/{app} -n {release} --namespace {namespace}"
         command += extra_vars
         # Execute
-        execute(command, verbose=verbose)
+        execute(command)
 
 
-def helm_upgrade(repo, app, release, extra_vars="", verbose=False):
+def helm_upgrade(repo, app, release, extra_vars=""):
     """Upgrade Helm chart.
 
     Args:
@@ -187,7 +188,7 @@ def helm_upgrade(repo, app, release, extra_vars="", verbose=False):
         app (str): Helm application name.
         release (str): Release name on K8S.
         extra_vars (str): Extra variables for Helm including version, values files and environmental variables.
-        verbose (bool): Verbosity. False by default.
+
     """
     ls_res, _ = execute(f"helm status {release}")
 
@@ -196,6 +197,6 @@ def helm_upgrade(repo, app, release, extra_vars="", verbose=False):
 
         command += extra_vars or ""
         # Execute
-        execute(command, verbose=verbose)
+        execute(command)
     else:
         raise Exception("Cannot update a Helm release that is not running")

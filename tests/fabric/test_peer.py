@@ -35,7 +35,7 @@ class TestCheckPeer:
             "Not yet started\nStarting peer\nReceived block 0"
         ]
         mock_get_pod.side_effect = [mock_pod_ex]
-        check_peer(self.OPTS, "a-release", verbose=True)
+        check_peer(self.OPTS, "a-release")
         assert mock_pod_ex.logs.call_count == 1
         mock_sleep.assert_not_called()
 
@@ -45,7 +45,7 @@ class TestCheckPeer:
         mock_pod_ex = Mock()
         mock_pod_ex.logs.side_effect = ["Not yet started\nStarting peer\nSleeping 5s"]
         mock_get_pod.side_effect = [mock_pod_ex]
-        check_peer(self.OPTS, "a-release", verbose=True)
+        check_peer(self.OPTS, "a-release")
         assert mock_pod_ex.logs.call_count == 1
         mock_sleep.assert_not_called()
 
@@ -108,7 +108,7 @@ class TestSetupPeer:
                     "cdb-peer0",
                     "peer-namespace",
                     extra_vars="extra-vars-cdb-peer0",
-                    verbose=False,
+                    
                 ),
                 call(
                     "a-repo",
@@ -116,7 +116,7 @@ class TestSetupPeer:
                     "peer0",
                     "peer-namespace",
                     extra_vars="extra-vars-peer0",
-                    verbose=False,
+                    
                 ),
                 call(
                     "a-repo",
@@ -124,7 +124,7 @@ class TestSetupPeer:
                     "cdb-peer1",
                     "peer-namespace",
                     extra_vars="extra-vars-cdb-peer1",
-                    verbose=False,
+                    
                 ),
                 call(
                     "a-repo",
@@ -132,7 +132,7 @@ class TestSetupPeer:
                     "peer1",
                     "peer-namespace",
                     extra_vars="extra-vars-peer1",
-                    verbose=False,
+                    
                 ),
             ]
         )
@@ -147,8 +147,8 @@ class TestSetupPeer:
         )
         mock_check_peer.assert_has_calls(
             [
-                call("peer-namespace", "peer0", verbose=False),
-                call("peer-namespace", "peer1", verbose=False),
+                call("peer-namespace", "peer0"),
+                call("peer-namespace", "peer1"),
             ]
         )
 
@@ -203,14 +203,14 @@ class TestSetupPeer:
                     "hlf-couchdb",
                     "cdb-peer0",
                     extra_vars="extra-vars-cdb-peer0",
-                    verbose=False,
+                    
                 ),
                 call(
                     "a-repo",
                     "hlf-peer",
                     "peer0",
                     extra_vars="extra-vars-peer0",
-                    verbose=False,
+                    
                 ),
             ]
         )
@@ -221,7 +221,7 @@ class TestSetupPeer:
             ]
         )
         mock_check_peer.assert_called_once_with(
-            "peer-namespace", "peer0", verbose=False
+            "peer-namespace", "peer0"
         )
 
 
@@ -231,8 +231,8 @@ class TestPeerChannelSuffix:
     @patch("nephos.fabric.peer.check_ord_tls")
     def test_peer_channel_suffix(self, mock_check_ord_tls):
         mock_check_ord_tls.side_effect = [True]
-        result = peer_channel_suffix(self.OPTS, "ord42", verbose=False)
-        mock_check_ord_tls.assert_called_once_with(self.OPTS, verbose=False)
+        result = peer_channel_suffix(self.OPTS, "ord42")
+        mock_check_ord_tls.assert_called_once_with(self.OPTS)
         assert (
             result
             == "--tls --ordererTLSHostnameOverride ord42-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
@@ -241,8 +241,8 @@ class TestPeerChannelSuffix:
     @patch("nephos.fabric.peer.check_ord_tls")
     def test_peer_channel_suffix_notls(self, mock_check_ord_tls):
         mock_check_ord_tls.side_effect = [False]
-        result = peer_channel_suffix(self.OPTS, "ord42", verbose=True)
-        mock_check_ord_tls.assert_called_once_with(self.OPTS, verbose=True)
+        result = peer_channel_suffix(self.OPTS, "ord42")
+        mock_check_ord_tls.assert_called_once_with(self.OPTS)
         assert result == ""
 
 
@@ -346,12 +346,12 @@ class TestSetupChannel:
         create_channel(self.OPTS)
         mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
         mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "ord0", verbose=False
+            self.OPTS, "ord0"
         )
         mock_get_pod.assert_has_calls(
             [
-                call("peer-namespace", "peer0", "hlf-peer", verbose=False),
-                call("peer-namespace", "peer1", "hlf-peer", verbose=False),
+                call("peer-namespace", "peer0", "hlf-peer"),
+                call("peer-namespace", "peer1", "hlf-peer"),
             ]
         )
         mock_get_channel_block.assert_has_calls(
@@ -422,12 +422,12 @@ class TestSetupChannel:
         create_channel(self.OPTS)
         mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
         mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "ord0", verbose=False
+            self.OPTS, "ord0"
         )
         mock_get_pod.assert_has_calls(
             [
-                call("peer-namespace", "peer0", "hlf-peer", verbose=False),
-                call("peer-namespace", "peer1", "hlf-peer", verbose=False),
+                call("peer-namespace", "peer0", "hlf-peer"),
+                call("peer-namespace", "peer1", "hlf-peer"),
             ]
         )
         mock_get_channel_block.assert_has_calls(
@@ -469,15 +469,15 @@ class TestSetupChannel:
             ("Join channel", None),
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
-        create_channel(self.OPTS, verbose=True)
+        create_channel(self.OPTS)
         mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
         mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "ord1", verbose=True
+            self.OPTS, "ord1"
         )
         mock_get_pod.assert_has_calls(
             [
-                call("peer-namespace", "peer0", "hlf-peer", verbose=True),
-                call("peer-namespace", "peer1", "hlf-peer", verbose=True),
+                call("peer-namespace", "peer0", "hlf-peer"),
+                call("peer-namespace", "peer1", "hlf-peer"),
             ]
         )
         mock_get_channel_block.assert_has_calls(
