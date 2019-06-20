@@ -111,3 +111,8 @@ def get_helm_pod(namespace, release, app, item=0):
 # No real purpose in asking the msp for now, but will needed to support multi-org
 def get_orderers(opts, msp=""):
     return opts["orderers"]["names"]
+
+
+# No real purpose in asking the msp for now, but will needed to support multi-org
+def get_peers(opts, msp=""):
+    return opts["peers"]["names"]

@@ -17,7 +17,7 @@ from time import sleep
 
 from nephos.fabric.ord import check_ord_tls
 from nephos.fabric.settings import get_namespace, get_version
-from nephos.fabric.utils import get_helm_pod
+from nephos.fabric.utils import get_helm_pod, get_peers
 from nephos.helpers.helm import (
     HelmPreserve,
     helm_check,
@@ -62,7 +62,7 @@ def setup_peer(opts, upgrade=False):
         
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    for release in opts["peers"]["names"]:
+    for release in get_peers(opts=opts):
         # Deploy the CouchDB instances
         version = get_version(opts, "hlf-couchdb")
         config_yaml = f'{opts["core"]["dir_values"]}/hlf-couchdb/cdb-{release}.yaml'
@@ -196,7 +196,7 @@ def create_channel(opts):
     # TODO: This should be a function
     cmd_suffix = peer_channel_suffix(opts, ord_name)
 
-    for index, release in enumerate(opts["peers"]["names"]):
+    for index, release in enumerate(get_peers(opts=opts)):
         # Get peer pod
         pod_ex = get_helm_pod(peer_namespace, release, "hlf-peer")
 

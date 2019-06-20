@@ -57,6 +57,7 @@ class TestSetupPeer:
         "peers": {"msp": "peer_MSP", "names": ["peer0", "peer1"]},
     }
 
+    @patch("nephos.fabric.peer.get_peers")
     @patch("nephos.fabric.peer.helm_upgrade")
     @patch("nephos.fabric.peer.helm_install")
     @patch("nephos.fabric.peer.helm_extra_vars")
@@ -71,6 +72,7 @@ class TestSetupPeer:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
+        mock_get_peers
     ):
         OPTS = deepcopy(self.OPTS)
         mock_get_version.side_effect = [
@@ -79,6 +81,7 @@ class TestSetupPeer:
             "cdb-version",
             "peer-version",
         ]
+        mock_get_peers.side_effect = [["peer0", "peer1"]]
         mock_helm_extra_vars.side_effect = [
             "extra-vars-cdb-peer0",
             "extra-vars-peer0",
@@ -86,6 +89,7 @@ class TestSetupPeer:
             "extra-vars-peer1",
         ]
         setup_peer(OPTS)
+        mock_get_peers.assert_called_once_with(opts=OPTS)
         mock_helm_extra_vars.assert_has_calls(
             [
                 call(
@@ -152,6 +156,7 @@ class TestSetupPeer:
             ]
         )
 
+    @patch("nephos.fabric.peer.get_peers")
     @patch("nephos.fabric.peer.helm_upgrade")
     @patch("nephos.fabric.peer.helm_install")
     @patch("nephos.fabric.peer.helm_extra_vars")
@@ -166,12 +171,15 @@ class TestSetupPeer:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
+        mock_get_peers
     ):
         OPTS = deepcopy(self.OPTS)
         OPTS["peers"]["names"] = ["peer0"]
         mock_get_version.side_effect = ["cdb-version", "peer-version"]
+        mock_get_peers.side_effect = [["peer0"]]
         mock_helm_extra_vars.side_effect = ["extra-vars-cdb-peer0", "extra-vars-peer0"]
         setup_peer(OPTS, upgrade=True)
+        mock_get_peers.assert_called_once_with(opts=OPTS)
         mock_helm_extra_vars.assert_has_calls(
             [
                 call(
