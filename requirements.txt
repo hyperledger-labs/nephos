@@ -22,7 +22,7 @@ GitPython==2.1.11
 google-auth==1.6.1
 idna==2.8
 imagesize==1.1.0
-Jinja2==2.10
+Jinja2==2.10.1
 kubernetes==9.0.0
 m2r==0.2.1
 MarkupSafe==1.1.0
