@@ -29,8 +29,7 @@ class TestGetComposerData:
             "peer-namespace",
             "hlc-hl-composer-rest",
             "hlc-hl-composer-rest",
-            secret_key="COMPOSER_APIKEY",
-            verbose=False,
+            secret_key="COMPOSER_APIKEY"
         )
 
     @patch("nephos.composer.install.get_app_info")
@@ -42,8 +41,7 @@ class TestGetComposerData:
             "peer-namespace",
             "hlc-hl-composer-rest",
             "hlc-hl-composer-rest",
-            secret_key="COMPOSER_APIKEY",
-            verbose=True,
+            secret_key="COMPOSER_APIKEY"
         )
 
 
@@ -70,17 +68,16 @@ class TestComposerConnection:
         mock_json_ct.side_effect = ["cm-data"]
         composer_connection(self.OPTS)
         mock_ingress_read.assert_called_once_with(
-            "peer-ca-hlf-ca", namespace="ca-namespace", verbose=False
+            "peer-ca-hlf-ca", namespace="ca-namespace"
         )
         mock_cm_read.assert_called_once_with(
-            "connection-secret", "peer-namespace", verbose=False
+            "connection-secret", "peer-namespace"
         )
         mock_json_ct.assert_called_once()
         mock_cm_create.assert_called_once_with(
             {"connection.json": "cm-data"},
             "connection-secret",
-            "peer-namespace",
-            verbose=False,
+            "peer-namespace"
         )
 
     @patch("nephos.composer.install.json_ct")
@@ -93,10 +90,10 @@ class TestComposerConnection:
         mock_cm_read.side_effect = [{"connection.json": "cm-data"}]
         composer_connection(self.OPTS, verbose=True)
         mock_ingress_read.assert_called_once_with(
-            "peer-ca-hlf-ca", namespace="ca-namespace", verbose=True
+            "peer-ca-hlf-ca", namespace="ca-namespace"
         )
         mock_cm_read.assert_called_once_with(
-            "connection-secret", "peer-namespace", verbose=True
+            "connection-secret", "peer-namespace"
         )
         mock_json_ct.assert_not_called()
         mock_cm_create.assert_not_called()
@@ -131,7 +128,7 @@ class TestDeployComposer:
         mock_helm_extra_vars.side_effect = ["extra-vars"]
         deploy_composer(self.OPTS)
         mock_secret_from_file.assert_called_once_with(
-            secret="bna-secret", namespace="peer-namespace", verbose=False
+            secret="bna-secret", namespace="peer-namespace"
         )
         mock_composer_connection.assert_called_once_with(self.OPTS, verbose=False)
         mock_get_version.assert_has_calls([call(self.OPTS, "hl-composer")])
@@ -143,8 +140,7 @@ class TestDeployComposer:
             "hl-composer",
             "hlc",
             "peer-namespace",
-            extra_vars="extra-vars",
-            verbose=False,
+            extra_vars="extra-vars"
         )
         mock_helm_upgrade.assert_not_called()
         mock_helm_check.assert_called_once_with(
@@ -172,7 +168,7 @@ class TestDeployComposer:
         mock_helm_extra_vars.side_effect = ["extra-vars"]
         deploy_composer(self.OPTS, upgrade=True, verbose=True)
         mock_secret_from_file.assert_called_once_with(
-            secret="bna-secret", namespace="peer-namespace", verbose=True
+            secret="bna-secret", namespace="peer-namespace"
         )
         mock_composer_connection.assert_called_once_with(self.OPTS, verbose=True)
         mock_get_version.assert_has_calls([call(self.OPTS, "hl-composer")])
@@ -190,7 +186,7 @@ class TestDeployComposer:
         )
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(
-            "a-repo", "hl-composer", "hlc", extra_vars="extra-vars", verbose=True
+            "a-repo", "hl-composer", "hlc", extra_vars="extra-vars"
         )
         mock_helm_check.assert_called_once_with(
             "hl-composer", "hlc", "peer-namespace", pod_num=3
@@ -223,7 +219,7 @@ class TestSetupCard:
             roles=("a-role", "another-role"),
         )
         mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer", verbose=False
+            "peer-namespace", "hlc", "hl-composer"
         )
         mock_pod.execute.assert_has_calls(
             [
@@ -262,7 +258,7 @@ class TestSetupCard:
             network="a-network",
         )
         mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer", verbose=False
+            "peer-namespace", "hlc", "hl-composer"
         )
         mock_pod.execute.assert_has_calls(
             [
@@ -295,10 +291,10 @@ class TestSetupCard:
             user_name="a-user",
             network="a-network",
             roles=None,
-            verbose=True,
+            verbose=True
         )
         mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer", verbose=True
+            "peer-namespace", "hlc", "hl-composer"
         )
         mock_pod.execute.assert_has_calls(
             [call("composer card list --card a-user@a-network")]
@@ -348,7 +344,7 @@ class TestInstallNetwork:
         mock_get_pod.side_effect = [mock_pod]
         install_network(self.OPTS)
         mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer", verbose=False
+            "peer-namespace", "hlc", "hl-composer"
         )
         mock_pod.execute.assert_has_calls(
             [
@@ -368,7 +364,7 @@ class TestInstallNetwork:
                 call("composer network ping --card an-admin@a-network"),
             ]
         )
-        mock_admin_creds.assert_called_once_with(self.OPTS, "peer_MSP", verbose=False)
+        mock_admin_creds.assert_called_once_with(self.OPTS, "peer_MSP")
 
     @patch("nephos.composer.install.get_helm_pod")
     @patch("nephos.composer.install.admin_creds")
@@ -383,7 +379,7 @@ class TestInstallNetwork:
         mock_get_pod.side_effect = [mock_pod]
         install_network(self.OPTS, verbose=True)
         mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer", verbose=True
+            "peer-namespace", "hlc", "hl-composer"
         )
         mock_pod.execute.assert_has_calls(
             [
@@ -392,4 +388,4 @@ class TestInstallNetwork:
                 call("composer network ping --card an-admin@a-network"),
             ]
         )
-        mock_ca_creds.assert_called_once_with(self.OPTS, "peer_MSP", verbose=True)
+        mock_ca_creds.assert_called_once_with(self.OPTS, "peer_MSP")
