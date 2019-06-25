@@ -50,8 +50,7 @@ def get_composer_data(opts, verbose=False):
         peer_namespace,
         composer_name,
         composer_name,
-        secret_key="COMPOSER_APIKEY",
-        verbose=verbose,
+        secret_key="COMPOSER_APIKEY"
     )
     return data
 
@@ -71,11 +70,11 @@ def composer_connection(opts, verbose=False):
     peer_ca = opts["msps"][peer_msp]["ca"]
     ca_namespace = opts["cas"][peer_ca]["namespace"]
     ingress_urls = ingress_read(
-        peer_ca + "-hlf-ca", namespace=ca_namespace, verbose=verbose
+        peer_ca + "-hlf-ca", namespace=ca_namespace
     )
     peer_ca_url = ingress_urls[0]
     try:
-        cm_read(opts["composer"]["secret_connection"], peer_namespace, verbose=verbose)
+        cm_read(opts["composer"]["secret_connection"], peer_namespace)
     except ApiException:
         # Set up connection.json
         # TODO: Improve json_ct to work entirely with opts structure
@@ -94,7 +93,6 @@ def composer_connection(opts, verbose=False):
             cm_data,
             opts["composer"]["secret_connection"],
             peer_namespace,
-            verbose=verbose,
         )
 
 
@@ -113,7 +111,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     # Ensure BNA exists
     secret_from_file(
-        secret=opts["composer"]["secret_bna"], namespace=peer_namespace, verbose=verbose
+        secret=opts["composer"]["secret_bna"], namespace=peer_namespace
     )
     composer_connection(opts, verbose=verbose)
 
@@ -127,8 +125,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
             "hl-composer",
             opts["composer"]["name"],
             peer_namespace,
-            extra_vars=extra_vars,
-            verbose=verbose,
+            extra_vars=extra_vars
         )
     else:
         preserve = (
@@ -146,8 +143,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
             opts["core"]["chart_repo"],
             "hl-composer",
             opts["composer"]["name"],
-            extra_vars=extra_vars,
-            verbose=verbose,
+            extra_vars=extra_vars
         )
     helm_check("hl-composer", opts["composer"]["name"], peer_namespace, pod_num=3)
 
@@ -166,7 +162,7 @@ def setup_card(opts, msp_path, user_name, roles, network=None, verbose=False):
 
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     hlc_cli_ex = get_helm_pod(
-        peer_namespace, opts["composer"]["name"], "hl-composer", verbose=verbose
+        peer_namespace, opts["composer"]["name"], "hl-composer"
     )
 
     # Set up the PeerAdmin card
@@ -222,7 +218,7 @@ def install_network(opts, verbose=False):
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     hlc_cli_ex = get_helm_pod(
-        peer_namespace, opts["composer"]["name"], "hl-composer", verbose=verbose
+        peer_namespace, opts["composer"]["name"], "hl-composer"
     )
 
     # Install network
@@ -233,7 +229,7 @@ def install_network(opts, verbose=False):
     # TODO: This could be a single function
     peer_msp = opts["peers"]["msp"]
     bna_admin = opts["msps"][peer_msp]["org_admin"]
-    admin_creds(opts, peer_msp, verbose=verbose)
+    admin_creds(opts, peer_msp)
     bna_pw = opts["msps"][peer_msp]["org_adminpw"]
 
     ls_res, _ = hlc_cli_ex.execute(
@@ -259,6 +255,8 @@ def install_network(opts, verbose=False):
             f"composer card import --file {bna_admin}@{bna_name}.card"
         )
 
+    # TODO: This step sometimes fail, maybe needs some try logic to test it,
+    # executing it manually after a minute succeeds.
     hlc_cli_ex.execute(
         f"composer network ping --card {bna_admin}@{bna_name}"
     )
