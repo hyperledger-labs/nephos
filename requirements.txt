@@ -5,7 +5,7 @@ asn1crypto==0.24.0
 atomicwrites==1.2.1
 attrs==18.2.0
 Babel==2.6.0
-bandit==1.5.1
+bandit==1.6.1
 black==18.9b0
 bleach==3.0.2
 blessings==1.7
