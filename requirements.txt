@@ -9,7 +9,7 @@ bandit==1.6.1
 black==19.3b0
 bleach==3.1.0
 blessings==1.7
-cachetools==3.0.0
+cachetools==3.1.1
 certifi==2018.11.29
 cffi==1.11.5
 chardet==3.0.4
