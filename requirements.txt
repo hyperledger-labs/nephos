@@ -45,7 +45,7 @@ pytest==4.0.2
 pytest-cov==2.6.0
 python-dateutil==2.7.5
 pytz==2018.9
-PyYAML==5.1
+PyYAML==5.1.1
 readme-renderer==24.0
 requests==2.22.0
 requests-oauthlib==1.2.0
