@@ -25,7 +25,7 @@ imagesize==1.1.0
 Jinja2==2.10.1
 kubernetes==9.0.0
 m2r==0.2.1
-MarkupSafe==1.1.0
+MarkupSafe==1.1.1
 mistune==0.8.4
 more-itertools==7.1.0
 oauthlib==3.0.1
