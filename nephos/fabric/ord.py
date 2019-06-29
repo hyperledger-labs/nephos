@@ -14,7 +14,7 @@
 
 from time import sleep
 
-from nephos.fabric.utils import get_helm_pod, get_orderers
+from nephos.fabric.utils import get_helm_pod, get_orderers, get_kafa_configs
 from nephos.fabric.settings import get_namespace, get_version
 from nephos.helpers.helm import helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
@@ -45,7 +45,7 @@ def check_ord(namespace, release):
 
 
 # TODO: We need a similar check to see if Peer uses client TLS as well
-def check_ord_tls(opts):
+def check_ord_tls(opts, ord_name):
     """Check TLS status of Orderer.
 
     Args:
@@ -54,11 +54,11 @@ def check_ord_tls(opts):
     Returns:
         bool: True if TLS is enabled, False if TLS is disabled.
     """
-    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
+    ord_namespace = get_namespace(opts, msp="AlphaMSP")
     ord_tls, _ = execute(
         (
             f"kubectl get cm -n {ord_namespace} "
-            + f'{get_orderers(opts=opts)[0]}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
+            + f'{ord_name}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
         ),
     )
     return ord_tls == "true"
@@ -71,31 +71,32 @@ def setup_ord(opts, upgrade=False):
         opts (dict): Nephos options dict.
         upgrade (bool): Do we upgrade the deployment? False by default.
     """
-    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
+    ord_namespace = get_namespace(opts, msp="AlphaMSP")
     # Kafka
-    if "kafka" in opts["orderers"]:
+    if "kafka" in opts["msps"]["AlphaMSP"]["orderers"]:
         # Kafka upgrade is risky, so we disallow it by default
         version = get_version(opts, "kafka")
-        config_yaml = f"{opts['core']['dir_values']}/kafka/{opts['orderers']['kafka']['name']}.yaml"
+        kafka_config = get_kafa_configs(opts=opts)
+        config_yaml = f"{opts['core']['dir_values']}/AlphaMSP/kafka/{kafka_config['name']}.yaml"
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
             "incubator",
             "kafka",
-            opts["orderers"]["kafka"]["name"],
+            kafka_config['name'],
             ord_namespace,
             extra_vars=extra_vars,
         )
         helm_check(
             "kafka",
-            opts["orderers"]["kafka"]["name"],
+            kafka_config['name'],
             ord_namespace,
-            pod_num=opts["orderers"]["kafka"]["pod_num"],
+            pod_num=kafka_config["pod_num"],
         )
 
-    for release in get_orderers(opts=opts):
+    for release in get_orderers(opts=opts, msp="AlphaMSP"):
         # HL-Ord
         version = get_version(opts, "hlf-ord")
-        config_yaml = f'{opts["core"]["dir_values"]}/hlf-ord/{release}.yaml'
+        config_yaml = f'{opts["core"]["dir_values"]}/AlphaMSP/hlf-ord/{release}.yaml'
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         if not upgrade:
             helm_install(
