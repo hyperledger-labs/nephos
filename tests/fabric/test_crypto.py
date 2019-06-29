@@ -692,11 +692,22 @@ class TestSetupId:
             "ca-peer": {"namespace": "ca-namespace"},
         },
         "msps": {
-            "ord_MSP": {"ca": "ca-ord", "namespace": "ord-ns"},
-            "peer_MSP": {"ca": "ca-peer", "namespace": "peer-ns"},
+            "AlphaMSP": {
+                "ca": "ca-ord",
+                "namespace": "ord-ns",
+                "orderers": {
+                    "nodes": {"ord0":{}}
+                }
+            },
+            "BetaMSP": {
+                "ca": "ca-peer",
+                "namespace": "peer-ns",
+                "peers": {
+                    "nodes": {"peer0":{}}
+                }
+            },
         },
-        "peers": {"names": ["peer0"], "msp": "peer_MSP"},
-        "orderers": {"names": ["ord0"], "msp": "ord_MSP"},
+
     }
 
     @patch("nephos.fabric.crypto.register_id")
@@ -717,7 +728,7 @@ class TestSetupId:
             {"CA_USERNAME": "peer0", "CA_PASSWORD": "peer0-pw"}
         ]
         mock_enroll_id.side_effect = ["./peer0_MSP"]
-        setup_id(opts, "peer_MSP", "peer0", "peer")
+        setup_id(opts, "BetaMSP", "peer0", "peer")
         mock_credentials_secret.assert_called_once_with(
             "hlf--peer0-cred", "peer-ns", username="peer0"
         )
@@ -750,7 +761,7 @@ class TestSetupId:
             {"CA_USERNAME": "ord0", "CA_PASSWORD": "ord0-pw"}
         ]
         mock_enroll_id.side_effect = ["./ord0_MSP"]
-        setup_id(opts, "ord_MSP", "ord0", "orderer")
+        setup_id(opts, "AlphaMSP", "ord0", "orderer")
         mock_credentials_secret.assert_called_once_with(
             "hlf--ord0-cred", "ord-ns", username="ord0"
         )
@@ -785,7 +796,7 @@ class TestSetupId:
                 "./crypto/crypto-config/peerOrganizations/peer-ns.domain/peers/peer0.domain/msp"
             ]
         ]
-        setup_id(opts, "peer_MSP", "peer0", "peer")
+        setup_id(opts, "BetaMSP", "peer0", "peer")
         mock_credentials_secret.assert_not_called()
         mock_register_id.assert_not_called()
         mock_enroll_id.assert_not_called()
@@ -821,7 +832,7 @@ class TestSetupId:
             ]
         ]
         with pytest.raises(ValueError):
-            setup_id(opts, "peer_MSP", "peer0", "peer")
+            setup_id(opts, "BetaMSP", "peer0", "peer")
         mock_credentials_secret.assert_not_called()
         mock_register_id.assert_not_called()
         mock_enroll_id.assert_not_called()
@@ -838,36 +849,41 @@ class TestSetupNodes:
             "ca-peer": {"namespace": "ca-namespace"},
         },
         "msps": {
-            "ord_MSP": {"ca": "ca-ord", "namespace": "ord-ns"},
-            "peer_MSP": {"ca": "ca-peer", "namespace": "peer-ns"},
-        },
-        "peers": {"names": ["peer0", "peer1"], "msp": "peer_MSP"},
-        "orderers": {"names": ["ord0"], "msp": "ord_MSP"},
+            "AlphaMSP": {
+                "ca": "ca-ord",
+                "namespace": "ord-ns",
+                "orderers": {
+                    "nodes": {"ord0":{}}
+                }
+            },
+            "BetaMSP": {
+                "ca": "ca-peer",
+                "namespace": "peer-ns",
+                "peers": {
+                    "nodes": {"peer0":{}, "peer1":{}}
+                }
+            },
+        }
     }
 
     @patch("nephos.fabric.crypto.setup_id")
     def test_setup_nodes(self, mock_setup_id):
-        setup_nodes(self.OPTS, "peer")
+        setup_nodes(self.OPTS)
         mock_setup_id.assert_has_calls(
             [
-                call(self.OPTS, "peer_MSP", "peer0", "peer"),
-                call(self.OPTS, "peer_MSP", "peer1", "peer"),
-            ]
-        )
-
-    @patch("nephos.fabric.crypto.setup_id")
-    def test_setup_nodes_ord(self, mock_setup_id):
-        setup_nodes(self.OPTS, "orderer")
-        mock_setup_id.assert_has_calls(
-            [call(self.OPTS, "ord_MSP", "ord0", "orderer")]
+                call(self.OPTS, "AlphaMSP", "ord0", "orderer"),
+                call(self.OPTS, "BetaMSP", "peer0", "peer"),
+                call(self.OPTS, "BetaMSP", "peer1", "peer"),
+            ],
+            any_order=True
         )
 
 
 class TestGenesisBlock:
     OPTS = {
         "core": {"dir_config": "./config", "dir_crypto": "./crypto"},
-        "msps": {"ord_MSP": {"namespace": "ord-ns"}},
-        "orderers": {"secret_genesis": "a-genesis-secret", "msp": "ord_MSP"},
+        "msps": {"AlphaMSP": {"namespace": "ord-ns", "orderers": {"secret_genesis": "a-genesis-secret"}}}
+        ,
     }
 
     @patch("nephos.fabric.crypto.secret_from_file")
@@ -921,12 +937,18 @@ class TestGenesisBlock:
 class TestChannelTx:
     OPTS = {
         "core": {"dir_config": "./config", "dir_crypto": "./crypto"},
-        "msps": {"peer_MSP": {"namespace": "peer-ns"}},
-        "peers": {
-            "channel_name": "a-channel",
-            "channel_profile": "AProfile",
-            "msp": "peer_MSP",
-            "secret_channel": "a-channel-secret",
+        "msps": {
+            "peer_MSP": {
+                "namespace": "peer-ns"
+            }
+        },
+        "channels": {
+            "AChannel": {
+                "channel_name": "a-channel",
+                "channel_profile": "AProfile",
+                "msps": ["peer_MSP"],
+                "secret_channel": "a-channel-secret",
+            }
         },
     }
 
@@ -976,3 +998,21 @@ class TestChannelTx:
             filename="./crypto/a-channel.tx",
             
         )
+
+    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.logging")
+    @patch("nephos.fabric.crypto.exists")
+    @patch("nephos.fabric.crypto.execute")
+    @patch("nephos.fabric.crypto.chdir")
+    def test_with_no_channel_msp(
+            self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+    ):
+        opts = deepcopy(self.OPTS)
+        opts["channels"]["AChannel"]["msps"] = []
+        mock_exists.side_effect = [True, True]
+        channel_tx(opts)
+        mock_chdir.assert_has_calls([call("./config"), call(PWD)])
+        mock_exists.assert_called_once_with("./crypto/a-channel.tx")
+        mock_execute.assert_not_called()
+        mock_log.info.assert_called_once_with("./crypto/a-channel.tx already exists")
+        mock_secret_from_file.assert_not_called()
