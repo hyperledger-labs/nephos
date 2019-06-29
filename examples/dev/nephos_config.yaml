@@ -9,34 +9,45 @@ core:
   # 1) cryptographic material
   # 2) genesis block and
   # 3) channel transaction
-  # Directory where we hold crypto-material
   dir_crypto: ./examples/dev/crypto
   # Directory where the Helm Chart values reside
   dir_values: ./examples/dev/helm_values
-cas: {}  # No CAs as we are using cryptogen
+cas: {}
 msps:
-  OrdererMSP:
-    namespace: orderers
-    org_admin: ordadmin
+  AlphaMSP:
+    ca: ca
+    name: AlphaMSP
+    namespace: alpha
+    org_admin: alphaadmin
     # org_passwd:  # Set implicitly
-  PeerMSP:
-    namespace: peers
-    org_admin: peeradmin
+    orderers:
+      domain: alpha.svc.cluster.local
+      nodes:
+        ord1: {}
+      secret_genesis: hlf--genesis
+  BetaMSP:
+    ca: ca
+    name: BetaMSP
+    namespace: beta
+    org_admin: betaadmin
     # org_passwd:  # Set implicitly
-orderers:
-  domain: orderers.svc.cluster.local
-  msp: OrdererMSP
-  names:
-  - ord1
-  secret_genesis: hlf--genesis
-peers:
-  domain: peers.svc.cluster.local
-  msp: PeerMSP
-  names:
-  - peer1
-  channel_name: mychannel
-  channel_profile: MyChannel
-  secret_channel: hlf--channel
+    orderers: {}
+    peers:
+      domain: beta.svc.cluster.local
+      nodes:
+        peer1: {}
+channels:
+  foochannel:
+    msps:
+      - BetaMSP
+    channel_name: foochannel
+    channel_profile: "FooChannel"
+    secret_channel: hlf--foochannel
+# This is only used when we implement a Composer network
+composer:
+  name: hlc
+  secret_bna: hlc--bna
+  secret_connection: hlc--connection
 # You can specify a particular version of a chart for each chart used, or use the latest by default
 versions:
   postgresql:
