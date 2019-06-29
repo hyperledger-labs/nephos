@@ -53,8 +53,15 @@ class TestCheckPeer:
 class TestSetupPeer:
     OPTS = {
         "core": {"chart_repo": "a-repo", "dir_values": "./a_dir"},
-        "msps": {"peer_MSP": {"namespace": "peer-namespace"}},
-        "peers": {"msp": "peer_MSP", "names": ["peer0", "peer1"]},
+        "msps": {
+            "BetaMSP": {
+                "namespace": "peer-namespace",
+                "peers": {
+                    "nodes": {"peer0":{}, "peer1":{}}
+                }
+            }
+        }
+
     }
 
     @patch("nephos.fabric.peer.get_peers")
@@ -89,19 +96,19 @@ class TestSetupPeer:
             "extra-vars-peer1",
         ]
         setup_peer(OPTS)
-        mock_get_peers.assert_called_once_with(opts=OPTS)
+        mock_get_peers.assert_called_once_with(opts=OPTS, msp="BetaMSP")
         mock_helm_extra_vars.assert_has_calls(
             [
                 call(
                     version="cdb-version",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
+                    config_yaml="./a_dir/BetaMSP/hlf-couchdb/cdb-peer0.yaml",
                 ),
-                call(version="peer-version", config_yaml="./a_dir/hlf-peer/peer0.yaml"),
+                call(version="peer-version", config_yaml="./a_dir/BetaMSP/hlf-peer/peer0.yaml"),
                 call(
                     version="cdb-version",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer1.yaml",
+                    config_yaml="./a_dir/BetaMSP/hlf-couchdb/cdb-peer1.yaml",
                 ),
-                call(version="peer-version", config_yaml="./a_dir/hlf-peer/peer1.yaml"),
+                call(version="peer-version", config_yaml="./a_dir/BetaMSP/hlf-peer/peer1.yaml"),
             ]
         )
         mock_helm_install.assert_has_calls(
@@ -174,17 +181,17 @@ class TestSetupPeer:
         mock_get_peers
     ):
         OPTS = deepcopy(self.OPTS)
-        OPTS["peers"]["names"] = ["peer0"]
+        OPTS["msps"]["BetaMSP"]["peers"]["nodes"] = {"peer0":{}}
         mock_get_version.side_effect = ["cdb-version", "peer-version"]
         mock_get_peers.side_effect = [["peer0"]]
         mock_helm_extra_vars.side_effect = ["extra-vars-cdb-peer0", "extra-vars-peer0"]
         setup_peer(OPTS, upgrade=True)
-        mock_get_peers.assert_called_once_with(opts=OPTS)
+        mock_get_peers.assert_called_once_with(opts=OPTS, msp="BetaMSP")
         mock_helm_extra_vars.assert_has_calls(
             [
                 call(
                     version="cdb-version",
-                    config_yaml="./a_dir/hlf-couchdb/cdb-peer0.yaml",
+                    config_yaml="./a_dir/BetaMSP/hlf-couchdb/cdb-peer0.yaml",
                     preserve=(
                         HelmPreserve(
                             "peer-namespace",
@@ -200,7 +207,7 @@ class TestSetupPeer:
                         ),
                     ),
                 ),
-                call(version="peer-version", config_yaml="./a_dir/hlf-peer/peer0.yaml"),
+                call(version="peer-version", config_yaml="./a_dir/BetaMSP/hlf-peer/peer0.yaml"),
             ]
         )
         mock_helm_install.assert_not_called()
@@ -240,7 +247,7 @@ class TestPeerChannelSuffix:
     def test_peer_channel_suffix(self, mock_check_ord_tls):
         mock_check_ord_tls.side_effect = [True]
         result = peer_channel_suffix(self.OPTS, "ord42")
-        mock_check_ord_tls.assert_called_once_with(self.OPTS)
+        mock_check_ord_tls.assert_called_once_with(self.OPTS, "ord42")
         assert (
             result
             == "--tls --ordererTLSHostnameOverride ord42-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
@@ -250,7 +257,7 @@ class TestPeerChannelSuffix:
     def test_peer_channel_suffix_notls(self, mock_check_ord_tls):
         mock_check_ord_tls.side_effect = [False]
         result = peer_channel_suffix(self.OPTS, "ord42")
-        mock_check_ord_tls.assert_called_once_with(self.OPTS)
+        mock_check_ord_tls.assert_called_once_with(self.OPTS, "ord42")
         assert result == ""
 
 
@@ -313,18 +320,30 @@ class TestGetChannelBlock:
 class TestSetupChannel:
     OPTS = {
         "msps": {
-            "ord_MSP": {"namespace": "ord-namespace"},
-            "peer_MSP": {"namespace": "peer-namespace"},
+            "AlphaMSP": {
+                "namespace": "ord-namespace",
+                "orderers": {
+                    "nodes": {"ord0":{}, "ord1":{}}
+                }
+            },
+            "BetaMSP": {
+                "namespace": "peer-namespace",
+                "peers": {
+                    "nodes": {"peer0":{}, "peer1":{}}
+                }
+            },
         },
-        "orderers": {"msp": "ord_MSP", "names": ["ord0", "ord1"]},
-        "peers": {
-            "channel_name": "a-channel",
-            "msp": "peer_MSP",
-            "names": ["peer0", "peer1"],
-        },
+        "channels":{
+            "AChannel": {
+                "msps": ["BetaMSP"],
+                "channel_name" : "a-channel"
+            }
+        }
+
     }
     CMD_SUFFIX = "--tls --ordererTLSHostnameOverride ord0-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
 
+    @patch("nephos.fabric.peer.get_orderers")
     @patch("nephos.fabric.peer.random")
     @patch("nephos.fabric.peer.peer_channel_suffix")
     @patch("nephos.fabric.peer.get_helm_pod")
@@ -335,7 +354,9 @@ class TestSetupChannel:
         mock_get_pod,
         mock_peer_channel_suffix,
         mock_random,
+        mock_get_orderers
     ):
+        mock_get_orderers.side_effect = [{"ord0", "ord1"}]
         mock_random.choice.side_effect = ["ord0"]
         mock_peer_channel_suffix.side_effect = [self.CMD_SUFFIX]
         mock_get_channel_block.side_effect = [False, True, True]
@@ -352,7 +373,7 @@ class TestSetupChannel:
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
-        mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
+        mock_random.choice.assert_called()
         mock_peer_channel_suffix.assert_called_once_with(
             self.OPTS, "ord0"
         )
@@ -428,7 +449,7 @@ class TestSetupChannel:
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
-        mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
+        mock_random.choice.assert_called()
         mock_peer_channel_suffix.assert_called_once_with(
             self.OPTS, "ord0"
         )
@@ -478,7 +499,7 @@ class TestSetupChannel:
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
-        mock_random.choice.assert_called_once_with(self.OPTS["orderers"]["names"])
+        mock_random.choice.assert_called()
         mock_peer_channel_suffix.assert_called_once_with(
             self.OPTS, "ord1"
         )
