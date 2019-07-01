@@ -10,7 +10,7 @@ black==19.3b0
 bleach==3.1.0
 blessings==1.7
 cachetools==3.1.1
-certifi==2018.11.29
+certifi==2019.6.16
 cffi==1.12.3
 chardet==3.0.4
 Click==7.0
