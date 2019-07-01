@@ -1,6 +1,6 @@
 core:
   # Comment out to make it work on your cluster
-  cluster: minikube
+  # cluster: minikube
   # ChartMuseum repository or directory holding charts
   chart_repo: stable
   # Directory where we hold configtx.yaml
@@ -18,33 +18,53 @@ cas:
     # If testing locally on Minikube, replace this with your own self-signed certificate's PEM
     tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
 msps:
-  OrdererMSP:
+  AlphaMSP:
     ca: ca
-    namespace: orderers
-    org_admin: ordadmin
-  PeerMSP:
+    name: AlphaMSP
+    namespace: alpha
+    org_admin: alphaadmin
+    # org_passwd:  # Set implicitly
+    orderers:
+      domain: alpha.svc.cluster.local
+      nodes:
+        ord1: {}
+        ord2: {}
+      secret_genesis: hlf--genesis
+      kafka:
+        name: kafka-hlf
+        pod_num: 4
+  BetaMSP:
     ca: ca
-    namespace: peers
-    org_admin: peeradmin
-orderers:
-  domain: orderers.svc.cluster.local
-  msp: OrdererMSP
-  names:
-  - ord1
-  - ord2
-  secret_genesis: hlf--genesis
-  kafka:
-    name: kafka-hlf
-    pod_num: 4
-peers:
-  domain: peers.svc.cluster.local
-  msp: PeerMSP
-  names:
-  - peer1
-  - peer2
-  channel_name: mychannel
-  channel_profile: MyChannel
-  secret_channel: hlf--channel
+    name: BetaMSP
+    namespace: beta
+    org_admin: betaadmin
+    # org_passwd:  # Set implicitly
+    orderers: {}
+    peers:
+      domain: beta.svc.cluster.local
+      nodes:
+        beta-peer1: {}
+        beta-peer2: {}
+  GammaMSP:
+    ca: ca
+    name: GammaMSP
+    namespace: gamma
+    org_admin: gammaadmin
+    # org_passwd:  # Set implicitly
+    orderers: {}
+    peers:
+      domain: gamma.svc.cluster.local
+      nodes:
+        gamma-peer1: {}
+        gamma-peer2: {}
+channels:
+  foochannel:
+    msps:
+      - BetaMSP
+      - GammaMSP
+    channel_name: foochannel
+    channel_profile: "FooChannel"
+    secret_channel: hlf--foochannel
 # This is only used when we implement a Composer network
 composer:
   name: hlc
