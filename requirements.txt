@@ -14,7 +14,7 @@ certifi==2019.6.16
 cffi==1.12.3
 chardet==3.0.4
 Click==7.0
-coverage==4.5.2
+coverage==4.5.3
 cryptography==2.7
 docutils==0.14
 gitdb2==2.0.5
