@@ -135,6 +135,6 @@ def get_secret_genesis(opts):
         return opts["msps"]["AlphaMSP"]['orderers']["secret_genesis"]
 
 
-def get_kafa_configs(opts):
+def get_kafka_configs(opts):
     if "kafka" in opts["msps"]["AlphaMSP"]["orderers"]:
         return opts['msps']['AlphaMSP']['orderers']['kafka']

@@ -14,7 +14,7 @@
 
 from time import sleep
 
-from nephos.fabric.utils import get_helm_pod, get_orderers, get_kafa_configs
+from nephos.fabric.utils import get_helm_pod, get_orderers, get_kafka_configs
 from nephos.fabric.settings import get_namespace, get_version
 from nephos.helpers.helm import helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
@@ -76,7 +76,7 @@ def setup_ord(opts, upgrade=False):
     if "kafka" in opts["msps"]["AlphaMSP"]["orderers"]:
         # Kafka upgrade is risky, so we disallow it by default
         version = get_version(opts, "kafka")
-        kafka_config = get_kafa_configs(opts=opts)
+        kafka_config = get_kafka_configs(opts=opts)
         config_yaml = f"{opts['core']['dir_values']}/AlphaMSP/kafka/{kafka_config['name']}.yaml"
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(

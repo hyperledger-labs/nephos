@@ -9,6 +9,7 @@ core:
   # 1) cryptographic material
   # 2) genesis block and
   # 3) channel transaction
+  # Directory where we hold crypto-material
   dir_crypto: ./examples/dev/crypto
   # Directory where the Helm Chart values reside
   dir_values: ./examples/dev/helm_values

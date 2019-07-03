@@ -3,8 +3,18 @@ from unittest.mock import patch
 from kubernetes.client.rest import ApiException
 import pytest
 
-from nephos.fabric.utils import credentials_secret, crypto_secret, get_pod, \
-    get_helm_pod, get_orderers, get_peers, get_msps, get_channels, get_secret_genesis, get_kafa_configs
+from nephos.fabric.utils import (
+    credentials_secret,
+    crypto_secret,
+    get_pod,
+    get_helm_pod,
+    get_orderers,
+    get_peers,
+    get_msps,
+    get_channels,
+    get_secret_genesis,
+    get_kafka_configs
+)
 
 
 class TestCredentialsSecret:
@@ -186,7 +196,7 @@ class TestGetMSPS:
             }
         }
 
-    def test_get_peers(self):
+    def test_get_msps(self):
         assert ({"BetaMSP", "AlphaMSP"} == get_msps(opts=self.OPTS))
 
 
@@ -194,12 +204,12 @@ class TestGetChannels:
     OPTS = {
         "channels": {
             "AChannel": {},
-            "BChannle": {}
+            "BChannel": {}
             }
         }
 
-    def test_get_peers(self):
-        assert ({"AChannel", "BChannle"} == get_channels(opts=self.OPTS))
+    def test_get_channels(self):
+        assert ({"AChannel", "BChannel"} == get_channels(opts=self.OPTS))
 
 
 class TestGetSecretGenesis:
@@ -218,11 +228,11 @@ class TestGetSecretGenesis:
         }
     }
 
-    def test_get_peers(self):
+    def test_get_secret_genesis(self):
         assert ("secret" == get_secret_genesis(opts=self.OPTS))
 
 
-class TestGetSecretGenesis:
+class TestGetKafkaConfigs:
     OPTS = {
         "msps": {
             "AlphaMSP": {
@@ -239,5 +249,5 @@ class TestGetSecretGenesis:
         }
     }
 
-    def test_get_peers(self):
-        assert ({"name": "kafka-hlf"} == get_kafa_configs(opts=self.OPTS))
+    def test_get_kafka_configs(self):
+        assert ({"name": "kafka-hlf"} == get_kafka_configs(opts=self.OPTS))

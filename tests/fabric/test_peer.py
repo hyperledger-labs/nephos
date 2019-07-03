@@ -373,7 +373,7 @@ class TestSetupChannel:
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
-        mock_random.choice.assert_called()
+        mock_random.choice.assert_called_once()
         mock_peer_channel_suffix.assert_called_once_with(
             self.OPTS, "ord0"
         )
