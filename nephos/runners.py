@@ -19,6 +19,7 @@ from nephos.fabric.ord import setup_ord
 from nephos.fabric.peer import setup_peer, create_channel
 from nephos.composer.install import deploy_composer, install_network, setup_admin
 from nephos.composer.upgrade import upgrade_network
+from nephos.fabric.utils import get_msps
 
 
 def runner_ca(opts, upgrade=False):
@@ -65,17 +66,15 @@ def runner_crypto(opts):
         opts (dict): Nephos options dict.
         
     """
-    # TODO: Limited by the fact that we manually specify MSPs
     # Set up Admin MSPs
-    admin_msp(opts, opts["orderers"]["msp"])
-    admin_msp(opts, opts["peers"]["msp"])
+    for msp in get_msps(opts=opts):
+        admin_msp(opts, msp)
     # Genesis & Channel
     genesis_block(opts)
     # TODO: We currently only support a single channel
     channel_tx(opts)
     # Setup node MSPs
-    setup_nodes(opts, "orderer")
-    setup_nodes(opts, "peer")
+    setup_nodes(opts)
 
 
 def runner_deploy(opts, upgrade=False):

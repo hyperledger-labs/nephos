@@ -18,30 +18,38 @@ cas:
     # If testing locally on Minikube, we use our own self-signed certificate's PEM
     tls_cert: ./examples/ca-nephos-local.pem
     # Alternatively, if testing on a cluster with proper DNS and cert-manager...
-    #tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
-msps:
-  OrdererMSP:
-    ca: ca
-    namespace: orderers
-    org_admin: ordadmin
-  PeerMSP:
-    ca: ca
-    namespace: peers
-    org_admin: peeradmin
-orderers:
-  domain: orderers.svc.cluster.local
-  msp: OrdererMSP
-  names:
-  - ord1
+    # tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
+ordering:
   secret_genesis: hlf--genesis
-peers:
-  domain: peers.svc.cluster.local
-  msp: PeerMSP
-  names:
-  - peer1
-  channel_name: mychannel
-  channel_profile: MyChannel
-  secret_channel: hlf--channel
+msps:
+  AlphaMSP:
+    ca: ca
+    name: AlphaMSP
+    namespace: alpha
+    org_admin: alphaadmin
+    # org_passwd:  # Set implicitly
+    orderers:
+      domain: alpha.svc.cluster.local
+      nodes:
+        ord1: {}
+  BetaMSP:
+    ca: ca
+    name: BetaMSP
+    namespace: beta
+    org_admin: betaadmin
+    # org_passwd:  # Set implicitly
+    orderers: {}
+    peers:
+      domain: beta.svc.cluster.local
+      nodes:
+        beta-peer1: {}
+channels:
+  foochannel:
+    msps:
+      - BetaMSP
+    channel_name: foochannel
+    channel_profile: "FooChannel"
+    secret_channel: hlf--foochannel
 # This is only used when we implement a Composer network
 composer:
   name: hlc
@@ -56,3 +64,4 @@ versions:
   hlf-couchdb:
   hlf-peer:
   hl-composer:
+

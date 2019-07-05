@@ -99,7 +99,7 @@ tls:
 #
 #############################################################################
 csr:
-  cn: ord-admin
+  cn: alpha-admin
   serialnumber:
   names:
     - C: IE

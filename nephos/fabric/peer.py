@@ -17,7 +17,14 @@ from time import sleep
 
 from nephos.fabric.ord import check_ord_tls
 from nephos.fabric.settings import get_namespace, get_version
-from nephos.fabric.utils import get_helm_pod, get_peers
+from nephos.fabric.utils import (
+    get_helm_pod,
+    get_peers,
+    get_msps,
+    get_channels,
+    get_orderers,
+    get_an_orderer_msp
+)
 from nephos.helpers.helm import (
     HelmPreserve,
     helm_check,
@@ -61,86 +68,87 @@ def setup_peer(opts, upgrade=False):
         upgrade (bool): Do we upgrade the deployment? False by default.
         
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    for release in get_peers(opts=opts):
-        # Deploy the CouchDB instances
-        version = get_version(opts, "hlf-couchdb")
-        config_yaml = f'{opts["core"]["dir_values"]}/hlf-couchdb/cdb-{release}.yaml'
-        if not upgrade:
+    for msp in get_msps(opts=opts):
+        peer_namespace = get_namespace(opts, msp=msp)
+        for release in get_peers(opts=opts, msp=msp):
+            # Deploy the CouchDB instances
+            version = get_version(opts, "hlf-couchdb")
+            config_yaml = f'{opts["core"]["dir_values"]}/{msp}/hlf-couchdb/cdb-{release}.yaml'
+            if not upgrade:
+                extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
+                helm_install(
+                    opts["core"]["chart_repo"],
+                    "hlf-couchdb",
+                    f"cdb-{release}",
+                    peer_namespace,
+                    extra_vars=extra_vars,
+
+                )
+            else:
+                preserve = (
+                    HelmPreserve(
+                        peer_namespace,
+                        f"cdb-{release}-hlf-couchdb",
+                        "COUCHDB_USERNAME",
+                        "couchdbUsername",
+                    ),
+                    HelmPreserve(
+                        peer_namespace,
+                        f"cdb-{release}-hlf-couchdb",
+                        "COUCHDB_PASSWORD",
+                        "couchdbPassword",
+                    ),
+                )
+                extra_vars = helm_extra_vars(
+                    version=version, config_yaml=config_yaml, preserve=preserve
+                )
+                helm_upgrade(
+                    opts["core"]["chart_repo"],
+                    "hlf-couchdb",
+                    f"cdb-{release}",
+                    extra_vars=extra_vars,
+
+                )
+            helm_check("hlf-couchdb", f"cdb-{release}", peer_namespace)
+
+            # Deploy the HL-Peer charts
+            version = get_version(opts, "hlf-peer")
+            config_yaml = f"{opts['core']['dir_values']}/{msp}/hlf-peer/{release}.yaml"
             extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
-            helm_install(
-                opts["core"]["chart_repo"],
-                "hlf-couchdb",
-                f"cdb-{release}",
-                peer_namespace,
-                extra_vars=extra_vars,
-                
-            )
-        else:
-            preserve = (
-                HelmPreserve(
+            if not upgrade:
+                helm_install(
+                    opts["core"]["chart_repo"],
+                    "hlf-peer",
+                    release,
                     peer_namespace,
-                    f"cdb-{release}-hlf-couchdb",
-                    "COUCHDB_USERNAME",
-                    "couchdbUsername",
-                ),
-                HelmPreserve(
-                    peer_namespace,
-                    f"cdb-{release}-hlf-couchdb",
-                    "COUCHDB_PASSWORD",
-                    "couchdbPassword",
-                ),
-            )
-            extra_vars = helm_extra_vars(
-                version=version, config_yaml=config_yaml, preserve=preserve
-            )
-            helm_upgrade(
-                opts["core"]["chart_repo"],
-                "hlf-couchdb",
-                f"cdb-{release}",
-                extra_vars=extra_vars,
-                
-            )
-        helm_check("hlf-couchdb", f"cdb-{release}", peer_namespace)
+                    extra_vars=extra_vars,
 
-        # Deploy the HL-Peer charts
-        version = get_version(opts, "hlf-peer")
-        config_yaml = f"{opts['core']['dir_values']}/hlf-peer/{release}.yaml"
-        extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
-        if not upgrade:
-            helm_install(
-                opts["core"]["chart_repo"],
-                "hlf-peer",
-                release,
-                peer_namespace,
-                extra_vars=extra_vars,
-                
-            )
-        else:
-            helm_upgrade(
-                opts["core"]["chart_repo"],
-                "hlf-peer",
-                release,
-                extra_vars=extra_vars,
-                
-            )
-        helm_check("hlf-peer", release, peer_namespace)
-        # Check that peer is running
-        check_peer(peer_namespace, release)
+                )
+            else:
+                helm_upgrade(
+                    opts["core"]["chart_repo"],
+                    "hlf-peer",
+                    release,
+                    extra_vars=extra_vars,
+
+                )
+            helm_check("hlf-peer", release, peer_namespace)
+            # Check that peer is running
+            check_peer(peer_namespace, release)
 
 
-def peer_channel_suffix(opts, ord_name):
+def peer_channel_suffix(opts, ord_msp, ord_name):
     """Get command suffix for "peer channel" commands, as they involve speaking with Orderer.
 
     Args:
         opts (dict): Nephos options dict.
         ord_name (str): Orderer we wish to speak to.
-        
+        ord_msp(str): Orderer msp we wish to speark to
 
     Returns:
         str: Command suffix we need to use in "peer channel" commands.
     """
-    ord_tls = check_ord_tls(opts)
+    ord_tls = check_ord_tls(opts, ord_msp, ord_name)
     if ord_tls:
         cmd_suffix = (
             "--tls "
@@ -188,39 +196,43 @@ def create_channel(opts):
         opts (dict): Nephos options dict.
         
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
-    channel = opts["peers"]["channel_name"]
-    # Get orderer TLS status
-    ord_name = random.choice(opts["orderers"]["names"])
-    # TODO: This should be a function
-    cmd_suffix = peer_channel_suffix(opts, ord_name)
+    ord_msp = get_an_orderer_msp(opts=opts)
+    ord_namespace = get_namespace(opts, msp=ord_msp)
+    ord_name = random.choice(list(get_orderers(opts=opts, msp=ord_msp)))
+    cmd_suffix = peer_channel_suffix(opts, ord_msp, ord_name)
 
-    for index, release in enumerate(get_peers(opts=opts)):
-        # Get peer pod
-        pod_ex = get_helm_pod(peer_namespace, release, "hlf-peer")
+    for msp in get_msps(opts=opts):
+        peer_namespace = get_namespace(opts, msp=msp)
 
-        # Check if the file exists
-        has_channel = False
-        while not has_channel:
-            has_channel = get_channel_block(
-                pod_ex, ord_name, ord_namespace, channel, cmd_suffix
-            )
-            if not has_channel:
-                pod_ex.execute(
-                    (
-                        "bash -c 'peer channel create "
-                        + f"-o {ord_name}-hlf-ord.{ord_namespace}.svc.cluster.local:7050 "
-                        + f"-c {opts['peers']['channel_name']} -f /hl_config/channel/{channel}.tx {cmd_suffix}'"
+        for channel in get_channels(opts=opts):
+            channel_name = opts["channels"][channel]["channel_name"]
+            if msp not in opts["channels"][channel]["msps"]:
+                continue
+            for index, release in enumerate(get_peers(opts=opts, msp=msp)):
+                # Get peer pod
+                pod_ex = get_helm_pod(peer_namespace, release, "hlf-peer")
+
+                # Check if the file exists
+                has_channel = False
+                while not has_channel:
+                    has_channel = get_channel_block(
+                        pod_ex, ord_name, ord_namespace, channel_name, cmd_suffix
                     )
-                )
-        res, _ = pod_ex.execute("peer channel list")
-        channels = (res.split("Channels peers has joined: ")[1]).split()
-        if opts["peers"]["channel_name"] not in channels:
-            pod_ex.execute(
-                (
-                    "bash -c "
-                    + "'CORE_PEER_MSPCONFIGPATH=$ADMIN_MSP_PATH "
-                    + f"peer channel join -b /var/hyperledger/{opts['peers']['channel_name']}.block {cmd_suffix}'"
-                )
-            )
+                    if not has_channel:
+                        pod_ex.execute(
+                            (
+                                "bash -c 'peer channel create "
+                                + f"-o {ord_name}-hlf-ord.{ord_namespace}.svc.cluster.local:7050 "
+                                + f"-c {channel_name} -f /hl_config/channel/{channel_name}.tx {cmd_suffix}'"
+                            )
+                        )
+                res, _ = pod_ex.execute("peer channel list")
+                channels = (res.split("Channels peers has joined: ")[1]).split()
+                if channel_name not in channels:
+                    pod_ex.execute(
+                        (
+                            "bash -c "
+                            + "'CORE_PEER_MSPCONFIGPATH=$ADMIN_MSP_PATH "
+                            + f"peer channel join -b /var/hyperledger/{channel_name}.block {cmd_suffix}'"
+                        )
+                    )

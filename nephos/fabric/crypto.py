@@ -21,9 +21,19 @@ from time import sleep
 import logging
 
 from nephos.fabric.settings import get_namespace
-from nephos.fabric.utils import credentials_secret, crypto_secret, get_helm_pod
 from nephos.helpers.k8s import ns_create, ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
+from nephos.fabric.utils import (
+    get_msps,
+    get_channels,
+    get_peers,
+    get_orderers,
+    is_orderer_msp,
+    credentials_secret,
+    crypto_secret,
+    get_helm_pod,
+    get_secret_genesis
+)
 
 PWD = getcwd()
 CryptoInfo = namedtuple("CryptoInfo", ("secret_type", "subfolder", "key", "required"))
@@ -374,16 +384,19 @@ def setup_id(opts, msp_name, release, id_type):
 
 
 # TODO: Rename to mention identities.
-def setup_nodes(opts, node_type):
+def setup_nodes(opts):
     """Setup identities for nodes.
 
     Args:
         opts (dict): Nephos options dict.
-        node_type (str): Type of node.
     """
-    nodes = opts[node_type + "s"]
-    for release in nodes["names"]:
-        setup_id(opts, nodes["msp"], release, node_type)
+    for msp in get_msps(opts=opts):
+        for peer in get_peers(opts=opts, msp=msp):
+            setup_id(opts, msp, peer, "peer")
+
+    for msp in get_msps(opts=opts):
+        for orderer in get_orderers(opts=opts, msp=msp):
+            setup_id(opts, msp, orderer, "orderer")
 
 
 # ConfigTxGen helpers
@@ -393,7 +406,6 @@ def genesis_block(opts):
     Args:
         opts (dict): Nephos options dict.
     """
-    ord_namespace = get_namespace(opts, opts["orderers"]["msp"])
     # Change to blockchain materials directory
     chdir(opts["core"]["dir_config"])
     # Create the genesis block
@@ -406,14 +418,19 @@ def genesis_block(opts):
         )
     else:
         logging.info(f"{genesis_file} already exists")
-    # Create the genesis block secret
-    secret_from_file(
-        secret=opts["orderers"]["secret_genesis"],
-        namespace=ord_namespace,
-        key=genesis_key,
-        filename=genesis_file,
-    )
-    # Return to original directory
+
+    for msp in get_msps(opts=opts):
+        if not is_orderer_msp(opts=opts, msp=msp):
+            continue
+        ord_namespace = get_namespace(opts, msp=msp)
+        # Create the genesis block secret
+        secret_from_file(
+            secret=get_secret_genesis(opts=opts),
+            namespace=ord_namespace,
+            key=genesis_key,
+            filename=genesis_file,
+        )
+        # Return to original directory
     chdir(PWD)
 
 
@@ -423,25 +440,29 @@ def channel_tx(opts):
     Args:
         opts (dict): Nephos options dict.
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     # Change to blockchain materials directory
     chdir(opts["core"]["dir_config"])
     # Create Channel Tx
-    channel_key = f"{opts['peers']['channel_name']}.tx"
-    channel_file = join(opts["core"]["dir_crypto"], channel_key)
-    if not exists(channel_file):
-        # Channel transaction creation and storage
-        execute(
-            f"configtxgen -profile {opts['peers']['channel_profile']} -channelID {opts['peers']['channel_name']} -outputCreateChannelTx {channel_file}",
-        )
-    else:
-        logging.info(f"{channel_file} already exists")
-    # Create the channel transaction secret
-    secret_from_file(
-        secret=opts["peers"]["secret_channel"],
-        namespace=peer_namespace,
-        key=channel_key,
-        filename=channel_file,
-    )
-    # Return to original directory
+    for channel in get_channels(opts):
+        channel_key = f"{opts['channels'][channel]['channel_name']}.tx"
+        channel_file = join(opts["core"]["dir_crypto"], channel_key)
+        if not exists(channel_file):
+            # Channel transaction creation and storage
+            execute(
+                f"configtxgen -profile {opts['channels'][channel]['channel_profile']} -channelID {opts['channels'][channel]['channel_name']} -outputCreateChannelTx {channel_file}",
+            )
+        else:
+            logging.info(f"{channel_file} already exists")
+        # Create the channel transaction secret
+        for msp in get_msps(opts=opts):
+            if msp not in opts["channels"][channel]["msps"]:
+                continue
+            peer_namespace = get_namespace(opts, msp=msp)
+            secret_from_file(
+                secret=opts['channels'][channel]["secret_channel"],
+                namespace=peer_namespace,
+                key=channel_key,
+                filename=channel_file,
+            )
+            # Return to original directory
     chdir(PWD)

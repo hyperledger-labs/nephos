@@ -108,11 +108,43 @@ def get_helm_pod(namespace, release, app, item=0):
     return get_pod(namespace, identifier, item=item)
 
 
-# No real purpose in asking the msp for now, but will needed to support multi-org
-def get_orderers(opts, msp=""):
-    return opts["orderers"]["names"]
+def get_orderers(opts, msp):
+    if "orderers" in opts["msps"][msp] and "nodes" in opts["msps"][msp]["orderers"]:
+        return opts["msps"][msp]["orderers"]["nodes"].keys()
+    return []
 
 
 # No real purpose in asking the msp for now, but will needed to support multi-org
-def get_peers(opts, msp=""):
-    return opts["peers"]["names"]
+def get_peers(opts, msp):
+    if "peers" in opts["msps"][msp]:
+        return opts["msps"][msp]["peers"]["nodes"].keys()
+    return []
+
+
+def is_orderer_msp(opts, msp):
+    if "orderers" in opts["msps"][msp] and "nodes" in opts["msps"][msp]["orderers"]:
+        return True
+    return False
+
+
+def get_an_orderer_msp(opts):
+    for msp in opts["msps"]:
+        if is_orderer_msp(opts=opts, msp=msp):
+            return msp
+
+
+def get_msps(opts):
+    return opts["msps"].keys()
+
+
+def get_channels(opts):
+    return opts["channels"].keys()
+
+
+def get_secret_genesis(opts):
+    return opts["ordering"]["secret_genesis"]
+
+
+def get_kafka_configs(opts):
+    if "kafka" in opts["ordering"]:
+        return opts['ordering']['kafka']
