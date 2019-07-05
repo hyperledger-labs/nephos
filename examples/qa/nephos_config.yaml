@@ -19,6 +19,8 @@ cas:
     tls_cert: ./examples/ca-nephos-local.pem
     # Alternatively, if testing on a cluster with proper DNS and cert-manager...
     # tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
+ordering:
+  secret_genesis: hlf--genesis
 msps:
   AlphaMSP:
     ca: ca
@@ -30,7 +32,6 @@ msps:
       domain: alpha.svc.cluster.local
       nodes:
         ord1: {}
-      secret_genesis: hlf--genesis
   BetaMSP:
     ca: ca
     name: BetaMSP
