@@ -246,8 +246,8 @@ class TestPeerChannelSuffix:
     @patch("nephos.fabric.peer.check_ord_tls")
     def test_peer_channel_suffix(self, mock_check_ord_tls):
         mock_check_ord_tls.side_effect = [True]
-        result = peer_channel_suffix(self.OPTS, "ord42")
-        mock_check_ord_tls.assert_called_once_with(self.OPTS, "ord42")
+        result = peer_channel_suffix(self.OPTS, "AlphaMSP", "ord42")
+        mock_check_ord_tls.assert_called_once_with(self.OPTS, "AlphaMSP", "ord42")
         assert (
             result
             == "--tls --ordererTLSHostnameOverride ord42-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
@@ -256,8 +256,8 @@ class TestPeerChannelSuffix:
     @patch("nephos.fabric.peer.check_ord_tls")
     def test_peer_channel_suffix_notls(self, mock_check_ord_tls):
         mock_check_ord_tls.side_effect = [False]
-        result = peer_channel_suffix(self.OPTS, "ord42")
-        mock_check_ord_tls.assert_called_once_with(self.OPTS, "ord42")
+        result = peer_channel_suffix(self.OPTS, "AlphaMSP", "ord42")
+        mock_check_ord_tls.assert_called_once_with(self.OPTS, "AlphaMSP", "ord42")
         assert result == ""
 
 
@@ -348,14 +348,17 @@ class TestSetupChannel:
     @patch("nephos.fabric.peer.peer_channel_suffix")
     @patch("nephos.fabric.peer.get_helm_pod")
     @patch("nephos.fabric.peer.get_channel_block")
+    @patch("nephos.fabric.peer.get_an_orderer_msp")
     def test_create_channel(
         self,
+        mock_get_an_orderer_msp,
         mock_get_channel_block,
         mock_get_pod,
         mock_peer_channel_suffix,
         mock_random,
         mock_get_orderers
     ):
+        mock_get_an_orderer_msp.side_effect = ["AlphaMSP"]
         mock_get_orderers.side_effect = [{"ord0", "ord1"}]
         mock_random.choice.side_effect = ["ord0"]
         mock_peer_channel_suffix.side_effect = [self.CMD_SUFFIX]
@@ -373,9 +376,10 @@ class TestSetupChannel:
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
+        mock_get_an_orderer_msp.assert_called_once_with(opts=self.OPTS)
         mock_random.choice.assert_called_once()
         mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "ord0"
+            self.OPTS, "AlphaMSP", "ord0"
         )
         mock_get_pod.assert_has_calls(
             [
@@ -429,13 +433,16 @@ class TestSetupChannel:
     @patch("nephos.fabric.peer.peer_channel_suffix")
     @patch("nephos.fabric.peer.get_helm_pod")
     @patch("nephos.fabric.peer.get_channel_block")
+    @patch("nephos.fabric.peer.get_an_orderer_msp")
     def test_create_channel_again(
         self,
+        mock_get_an_orderer_msp,
         mock_get_channel_block,
         mock_get_pod,
         mock_peer_channel_suffix,
         mock_random,
     ):
+        mock_get_an_orderer_msp.side_effect = ["AlphaMSP"]
         mock_random.choice.side_effect = ["ord0"]
         mock_peer_channel_suffix.side_effect = [self.CMD_SUFFIX]
         mock_get_channel_block.side_effect = [True, True]
@@ -449,9 +456,10 @@ class TestSetupChannel:
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
-        mock_random.choice.assert_called()
+        mock_get_an_orderer_msp.assert_called_once_with(opts=self.OPTS)
+        mock_random.choice.assert_called_once()
         mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "ord0"
+            self.OPTS, "AlphaMSP", "ord0"
         )
         mock_get_pod.assert_has_calls(
             [
@@ -476,13 +484,16 @@ class TestSetupChannel:
     @patch("nephos.fabric.peer.peer_channel_suffix")
     @patch("nephos.fabric.peer.get_helm_pod")
     @patch("nephos.fabric.peer.get_channel_block")
+    @patch ("nephos.fabric.peer.get_an_orderer_msp")
     def test_create_channel_notls(
         self,
+        mock_get_an_orderer_msp,
         mock_get_channel_block,
         mock_get_pod,
         mock_peer_channel_suffix,
         mock_random,
     ):
+        mock_get_an_orderer_msp.side_effect = ["AlphaMSP"]
         mock_random.choice.side_effect = ["ord1"]
         mock_peer_channel_suffix.side_effect = [""]
         mock_get_channel_block.side_effect = [False, True, True]
@@ -499,9 +510,10 @@ class TestSetupChannel:
         ]
         mock_get_pod.side_effect = [mock_pod0_ex, mock_pod1_ex]
         create_channel(self.OPTS)
+        mock_get_an_orderer_msp.assert_called_once_with(opts=self.OPTS)
         mock_random.choice.assert_called()
         mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "ord1"
+            self.OPTS, "AlphaMSP", "ord1"
         )
         mock_get_pod.assert_has_calls(
             [

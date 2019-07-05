@@ -81,8 +81,8 @@ Orderer: &OrdererDefaults
     OrdererType: kafka
 
     Addresses:
-        - ord1-hlf-ord.alpha.svc.cluster.local:7050
-        - ord2-hlf-ord.alpha.svc.cluster.local:7050
+        - alpha-ord1-hlf-ord.alpha.svc.cluster.local:7050
+        - alpha-ord2-hlf-ord.alpha.svc.cluster.local:7050
 
     # Batch Timeout: The amount of time to wait before creating a batch
     BatchTimeout: 2s

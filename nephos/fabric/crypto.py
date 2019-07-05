@@ -21,10 +21,19 @@ from time import sleep
 import logging
 
 from nephos.fabric.settings import get_namespace
-from nephos.fabric.utils import credentials_secret, crypto_secret, get_helm_pod, get_secret_genesis
 from nephos.helpers.k8s import ns_create, ingress_read, secret_from_file
 from nephos.helpers.misc import execute, execute_until_success
-from nephos.fabric.utils import get_msps, get_channels, get_peers, get_orderers
+from nephos.fabric.utils import (
+    get_msps,
+    get_channels,
+    get_peers,
+    get_orderers,
+    is_orderer_msp,
+    credentials_secret,
+    crypto_secret,
+    get_helm_pod,
+    get_secret_genesis
+)
 
 PWD = getcwd()
 CryptoInfo = namedtuple("CryptoInfo", ("secret_type", "subfolder", "key", "required"))
@@ -385,8 +394,9 @@ def setup_nodes(opts):
         for peer in get_peers(opts=opts, msp=msp):
             setup_id(opts, msp, peer, "peer")
 
-    for orderer in get_orderers(opts=opts, msp="AlphaMSP"):
-        setup_id(opts, "AlphaMSP", orderer, "orderer")
+    for msp in get_msps(opts=opts):
+        for orderer in get_orderers(opts=opts, msp=msp):
+            setup_id(opts, msp, orderer, "orderer")
 
 
 # ConfigTxGen helpers
@@ -396,7 +406,6 @@ def genesis_block(opts):
     Args:
         opts (dict): Nephos options dict.
     """
-    ord_namespace = get_namespace(opts, msp="AlphaMSP")
     # Change to blockchain materials directory
     chdir(opts["core"]["dir_config"])
     # Create the genesis block
@@ -409,14 +418,19 @@ def genesis_block(opts):
         )
     else:
         logging.info(f"{genesis_file} already exists")
-    # Create the genesis block secret
-    secret_from_file(
-        secret=get_secret_genesis(opts=opts),
-        namespace=ord_namespace,
-        key=genesis_key,
-        filename=genesis_file,
-    )
-    # Return to original directory
+
+    for msp in get_msps(opts=opts):
+        if not is_orderer_msp(opts=opts, msp=msp):
+            continue
+        ord_namespace = get_namespace(opts, msp=msp)
+        # Create the genesis block secret
+        secret_from_file(
+            secret=get_secret_genesis(opts=opts),
+            namespace=ord_namespace,
+            key=genesis_key,
+            filename=genesis_file,
+        )
+        # Return to original directory
     chdir(PWD)
 
 
@@ -450,5 +464,5 @@ def channel_tx(opts):
                 key=channel_key,
                 filename=channel_file,
             )
-    # Return to original directory
+            # Return to original directory
     chdir(PWD)

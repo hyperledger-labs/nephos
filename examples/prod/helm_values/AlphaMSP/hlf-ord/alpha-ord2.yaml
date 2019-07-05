@@ -11,8 +11,8 @@ ord:
 
 secrets:
   ord:
-    cert: hlf--ord1-idcert
-    key: hlf--ord1-idkey
+    cert: hlf--alpha-ord2-idcert
+    key: hlf--alpha-ord2-idkey
     caCert: hlf--alphaadmin-cacert
   genesis: hlf--genesis
   adminCert: hlf--alphaadmin-idcert

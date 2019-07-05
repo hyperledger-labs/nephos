@@ -47,7 +47,7 @@ class TestCheckOrdTls:
     @patch("nephos.fabric.ord.execute")
     def test_check_ord_tls(self, mock_execute):
         mock_execute.side_effect = [("value", None)]
-        check_ord_tls(self.OPTS,"an-ord")
+        check_ord_tls(self.OPTS, "AlphaMSP", "an-ord")
         mock_execute.assert_called_once_with(
             'kubectl get cm -n orderer-namespace an-ord-hlf-ord--ord -o jsonpath="{.data.ORDERER_GENERAL_TLS_ENABLED}"'
         )
@@ -56,12 +56,16 @@ class TestCheckOrdTls:
 class TestSetupOrd:
     OPTS = {
         "core": {"chart_repo": "a-repo", "dir_values": "./a_dir"},
+        "ordering": {},
         "msps": {
             "AlphaMSP": {
                 "namespace": "ord-namespace",
                 "orderers": {
                     "nodes": {"ord0":{}}
                 }
+            },
+            "BetaMSP": {
+                "namespace": "beat-namespace"
             }
         },
 
@@ -75,8 +79,12 @@ class TestSetupOrd:
     @patch("nephos.fabric.ord.helm_check")
     @patch("nephos.fabric.ord.get_version")
     @patch("nephos.fabric.ord.check_ord")
+    @patch("nephos.fabric.ord.is_orderer_msp")
+    @patch("nephos.fabric.ord.get_msps")
     def test_ord(
         self,
+        mock_get_msps,
+        mock_is_orderer_msp,
         mock_check_ord,
         mock_get_version,
         mock_helm_check,
@@ -87,14 +95,18 @@ class TestSetupOrd:
     ):
         OPTS = deepcopy(self.OPTS)
         OPTS["msps"]["AlphaMSP"]["orderers"]["nodes"] = {"ord0":{}, "ord1":{}}
-        mock_get_version.side_effect = ["ord-version", "ord-version"]
+        mock_get_msps.side_effect = [["AlphaMSP", "BetaMSP"]]
+        mock_is_orderer_msp.side_effect = [True, False]
+        mock_get_version.side_effect = ["ord-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars-ord0", "extra-vars-ord1"]
         mock_get_orderers.side_effect = [["ord0", "ord1"]]
         setup_ord(OPTS)
-        mock_get_orderers.assert_called_once_with(opts=OPTS, msp="AlphaMSP")
-        mock_get_version.assert_has_calls(
-            [call(OPTS, "hlf-ord"), call(OPTS, "hlf-ord")]
+        mock_get_msps.assert_called_once_with(opts=OPTS)
+        mock_is_orderer_msp.assert_has_calls(
+            [call(msp="AlphaMSP", opts=OPTS), call(msp="BetaMSP", opts=OPTS)]
         )
+        mock_get_orderers.assert_called_once_with(opts=OPTS, msp="AlphaMSP")
+        mock_get_version.assert_called_once_with(OPTS, "hlf-ord")
         mock_helm_extra_vars.assert_has_calls(
             [
                 call(version="ord-version", config_yaml="./a_dir/AlphaMSP/hlf-ord/ord0.yaml"),
@@ -151,7 +163,7 @@ class TestSetupOrd:
         mock_helm_upgrade,
     ):
         OPTS = deepcopy(self.OPTS)
-        OPTS["msps"]["AlphaMSP"]["orderers"]["kafka"] = {"name": "kafka-hlf", "pod_num": 42}
+        OPTS["ordering"]["kafka"] = {"name": "kafka-hlf", "pod_num": 42, "msp": "AlphaMSP"}
         mock_get_version.side_effect = ["kafka-version", "ord-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars-kafka", "extra-vars-ord0"]
         setup_ord(OPTS)

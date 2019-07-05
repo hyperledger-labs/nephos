@@ -1,6 +1,6 @@
 core:
   # Comment out to make it work on your cluster
-  # cluster: minikube
+  cluster: minikube
   # ChartMuseum repository or directory holding charts
   chart_repo: stable
   # Directory where we hold configtx.yaml
@@ -17,6 +17,14 @@ cas:
     namespace: cas
     # If testing locally on Minikube, replace this with your own self-signed certificate's PEM
     tls_cert: ./nephos/extras/Lets_Encrypt_Authority_X3.pem
+
+ordering:
+  secret_genesis: hlf--genesis
+  kafka:
+    msp: AlphaMSP
+    name: kafka-hlf
+    pod_num: 4
+
 msps:
   AlphaMSP:
     ca: ca
@@ -27,12 +35,8 @@ msps:
     orderers:
       domain: alpha.svc.cluster.local
       nodes:
-        ord1: {}
-        ord2: {}
-      secret_genesis: hlf--genesis
-      kafka:
-        name: kafka-hlf
-        pod_num: 4
+        alpha-ord1: {}
+        alpha-ord2: {}
   BetaMSP:
     ca: ca
     name: BetaMSP

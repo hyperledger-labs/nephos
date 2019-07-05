@@ -882,7 +882,18 @@ class TestSetupNodes:
 class TestGenesisBlock:
     OPTS = {
         "core": {"dir_config": "./config", "dir_crypto": "./crypto"},
-        "msps": {"AlphaMSP": {"namespace": "ord-ns", "orderers": {"secret_genesis": "a-genesis-secret"}}}
+        "ordering" : {"secret_genesis" : "a-genesis-secret"},
+        "msps": {
+            "AlphaMSP": {
+                "namespace": "ord-ns",
+                "orderers": {
+                    "nodes": {"ord0":{}}
+                }
+            },
+            "BetaMSP": {
+                "namespace": "beta-ns"
+            }
+        }
         ,
     }
 
@@ -891,13 +902,21 @@ class TestGenesisBlock:
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
+    @patch("nephos.fabric.crypto.is_orderer_msp")
+    @patch("nephos.fabric.crypto.get_msps")
     def test_blocks(
-        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self, mock_get_msps, mock_is_orderer_msp, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
     ):
         mock_exists.side_effect = [False, False]
+        mock_get_msps.side_effect = [["AlphaMSP", "BetaMSP"]]
+        mock_is_orderer_msp.side_effect = [True, False]
         genesis_block(self.OPTS)
         mock_chdir.assert_has_calls([call("./config"), call(PWD)])
         mock_exists.assert_called_once_with("./crypto/genesis.block")
+        mock_get_msps.assert_called_once_with(opts=self.OPTS)
+        mock_is_orderer_msp.assert_has_calls(
+            [call(opts=self.OPTS, msp="AlphaMSP"), call(opts=self.OPTS, msp="BetaMSP")]
+        )
         mock_execute.assert_called_once_with(
             "configtxgen -profile OrdererGenesis -outputBlock ./crypto/genesis.block",
             

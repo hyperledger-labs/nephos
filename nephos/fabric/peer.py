@@ -17,7 +17,14 @@ from time import sleep
 
 from nephos.fabric.ord import check_ord_tls
 from nephos.fabric.settings import get_namespace, get_version
-from nephos.fabric.utils import get_helm_pod, get_peers, get_msps, get_channels, get_orderers
+from nephos.fabric.utils import (
+    get_helm_pod,
+    get_peers,
+    get_msps,
+    get_channels,
+    get_orderers,
+    get_an_orderer_msp
+)
 from nephos.helpers.helm import (
     HelmPreserve,
     helm_check,
@@ -130,18 +137,18 @@ def setup_peer(opts, upgrade=False):
             check_peer(peer_namespace, release)
 
 
-def peer_channel_suffix(opts, ord_name):
+def peer_channel_suffix(opts, ord_msp, ord_name):
     """Get command suffix for "peer channel" commands, as they involve speaking with Orderer.
 
     Args:
         opts (dict): Nephos options dict.
         ord_name (str): Orderer we wish to speak to.
-        
+        ord_msp(str): Orderer msp we wish to speark to
 
     Returns:
         str: Command suffix we need to use in "peer channel" commands.
     """
-    ord_tls = check_ord_tls(opts, ord_name)
+    ord_tls = check_ord_tls(opts, ord_msp, ord_name)
     if ord_tls:
         cmd_suffix = (
             "--tls "
@@ -189,9 +196,10 @@ def create_channel(opts):
         opts (dict): Nephos options dict.
         
     """
-    ord_namespace = get_namespace(opts, msp="AlphaMSP")
-    ord_name = random.choice(list(get_orderers(opts=opts, msp="AlphaMSP")))
-    cmd_suffix = peer_channel_suffix(opts, ord_name)
+    ord_msp = get_an_orderer_msp(opts=opts)
+    ord_namespace = get_namespace(opts, msp=ord_msp)
+    ord_name = random.choice(list(get_orderers(opts=opts, msp=ord_msp)))
+    cmd_suffix = peer_channel_suffix(opts, ord_msp, ord_name)
 
     for msp in get_msps(opts=opts):
         peer_namespace = get_namespace(opts, msp=msp)

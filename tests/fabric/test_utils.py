@@ -13,7 +13,9 @@ from nephos.fabric.utils import (
     get_msps,
     get_channels,
     get_secret_genesis,
-    get_kafka_configs
+    get_kafka_configs,
+    get_an_orderer_msp,
+    is_orderer_msp
 )
 
 
@@ -214,17 +216,8 @@ class TestGetChannels:
 
 class TestGetSecretGenesis:
     OPTS = {
-        "msps": {
-            "AlphaMSP": {
-                "namespace": "alpha-namespace",
-                "orderers": {
-                    "nodes": {
-                        "ord1": {},
-                        "ord2": {}
-                    },
-                "secret_genesis": "secret"
-                }
-            }
+        "ordering": {
+            "secret_genesis": "secret"
         }
     }
 
@@ -234,20 +227,47 @@ class TestGetSecretGenesis:
 
 class TestGetKafkaConfigs:
     OPTS = {
-        "msps": {
-            "AlphaMSP": {
-                "namespace": "alpha-namespace",
-                "orderers": {
-                    "nodes": {
-                        "ord1": {},
-                        "ord2": {}
-                    },
-                "secret_genesis": "secret",
-                "kafka": {"name": "kafka-hlf"}
-                }
-            }
+        "ordering": {
+            "kafka": {"name": "kafka-hlf"}
         }
     }
 
     def test_get_kafka_configs(self):
         assert ({"name": "kafka-hlf"} == get_kafka_configs(opts=self.OPTS))
+
+
+class TestGetAnOrdererMSP:
+    OPTS = {
+        "msps": {
+            "AlphaMSP": {
+                "orderers": {
+                    "nodes":{"ord0":{} }
+                }
+            },
+            "BetaMSP": {
+                "orderers": {}
+            }
+        }
+    }
+
+    def test_get_an_orderer_msp(self):
+        assert ("AlphaMSP" == get_an_orderer_msp(opts=self.OPTS))
+
+
+class TestIsOrdererMSP:
+    OPTS = {
+        "msps": {
+            "AlphaMSP": {
+                "orderers": {
+                    "nodes":{"ord0":{} }
+                }
+            },
+            "BetaMSP": {
+                "orderers": {}
+            }
+        }
+    }
+
+    def test_is_orderer_msp(self):
+        assert is_orderer_msp(msp="AlphaMSP", opts=self.OPTS)
+        assert not is_orderer_msp(msp="BetaMSP", opts=self.OPTS)
