@@ -223,7 +223,7 @@ def create_channel(opts):
                             (
                                 "bash -c 'peer channel create "
                                 + f"-o {ord_name}-hlf-ord.{ord_namespace}.svc.cluster.local:7050 "
-                                + f"-c {channel_name} -f /hl_config/channel/{channel_name}.tx {cmd_suffix}'"
+                                + f"-c {channel_name} -f /hl_config/channel/{channel_name}/{channel_name}.tx {cmd_suffix}'"
                             )
                         )
                 res, _ = pod_ex.execute("peer channel list")
