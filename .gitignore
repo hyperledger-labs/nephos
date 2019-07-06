@@ -113,7 +113,7 @@ venv.bak/
 # Examples
 genesis.block
 *channel.tx
-*MSP
+examples/*/crypto/*MSP
 fabric-ca-client-config.yaml
 
 # Cosmic ray

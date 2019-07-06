@@ -49,8 +49,15 @@ class TestCheckCluster:
 
 class TestGetNamespace:
     OPTS = {
-        "core": {"namespace": "core-namespace"},
-        "msps": {"namespaced_MSP": {"namespace": "msp-ns"}, "core_MSP": {}},
+        "core": {
+            "namespace": "core-namespace"
+        },
+        "msps": {
+            "namespaced_MSP": {
+                "namespace": "msp-ns"
+            },
+            "core_MSP": {}
+        },
         "cas": {"a-ca": {"namespace": "ca-namespace"}, "core-ca": {}},
     }
 

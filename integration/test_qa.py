@@ -34,9 +34,9 @@ class TestIntegrationQa:
         releases = (
             [key for key in opts["cas"].keys()]
             + [key + "-pg" for key in opts["cas"].keys()]
-            + opts["orderers"]["names"]
-            + [("cdb-" + key) for key in opts["peers"]["names"]]
-            + [key for key in opts["peers"]["names"]]
+            + list(opts["msps"]["AlphaMSP"]["orderers"]["nodes"].keys())
+            + [("cdb-" + key) for key in opts["msps"]["BetaMSP"]["peers"]["nodes"].keys()]
+            + [key for key in opts["msps"]["BetaMSP"]["peers"]["nodes"].keys()]
         )
 
         # Run Fabric script
@@ -55,4 +55,4 @@ class TestIntegrationQa:
         check_cluster(
             self.CONTEXT
         )  # Dangerous operation, recheck we have not shifted context
-        execute("kubectl delete ns cas orderers peers".format(" ".join(releases)))
+        execute("kubectl delete ns cas alpha beta")

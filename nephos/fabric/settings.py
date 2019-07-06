@@ -18,6 +18,7 @@ from os import path
 import yaml
 
 from nephos.helpers.k8s import context_get
+from nephos.fabric.utils import get_msps
 
 
 # YAML module will load data using an OrderedDict
@@ -57,13 +58,12 @@ def get_namespace(opts, msp=None, ca=None):
         str: Namespace relating to either an MSP or a CA.
     """
     if msp is not None:
-        if "msps" in opts and msp in opts["msps"]:
-            msp_values = opts["msps"][msp]
+        if msp in list(get_msps(opts=opts)):
+            if "namespace" in opts["msps"][msp]:
+                # Specific MSP-based namespace
+                return opts["msps"][msp]["namespace"]
         else:
             raise KeyError(f'Settings dict does not contain MSP "{msp}"')
-        if "namespace" in msp_values:
-            # Specific MSP-based namespace
-            return msp_values["namespace"]
     elif ca is not None:
         if "cas" in opts and ca in opts["cas"]:
             ca_values = opts["cas"][ca]

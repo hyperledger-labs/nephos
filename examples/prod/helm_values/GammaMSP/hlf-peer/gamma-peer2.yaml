@@ -1,0 +1,32 @@
+image:
+  tag: 1.3.0
+
+persistence:
+  accessMode: ReadWriteOnce
+  size: 1Gi
+
+peer:
+  databaseType: CouchDB
+  couchdbInstance: cdb-gamma-peer2
+  mspID: GammaMSP
+
+secrets:
+  peer:
+    cert: hlf--gamma-peer2-idcert
+    key: hlf--gamma-peer2-idkey
+    # TODO: This should not be numbered
+    caCert: hlf--gammaadmin-cacert
+  channel: hlf--foochannel
+  adminCert: hlf--gammaadmin-idcert
+  adminKey: hlf--gammaadmin-idkey
+  caServerTls: ca--tls
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 95
+        podAffinityTerm:
+          topologyKey: "kubernetes.io/hostname"
+          labelSelector:
+            matchLabels:
+              app: hlf-peer

@@ -127,6 +127,8 @@ def ca_enroll(pod_exec):
         else:
             sleep(15)
     # Enroll CA Admin if necessary
+
+    # TODO: Add verification for pem file.
     ca_cert, _ = pod_exec.execute(
         "cat /var/hyperledger/fabric-ca/msp/signcerts/cert.pem"
     )

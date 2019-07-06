@@ -64,29 +64,41 @@ class TestRunnerComposerUp:
 
 
 class TestRunnerCrypto:
-    OPTS = {"orderers": {"msp": "ord_MSP"}, "peers": {"msp": "peer_MSP"}}
+    OPTS = {
+        "msps": {
+            "AlphaMSP": {},
+            "BetaMSP": {}
+        }
+    }
 
+    @patch("nephos.runners.get_msps")
     @patch("nephos.runners.setup_nodes")
     @patch("nephos.runners.genesis_block")
     @patch("nephos.runners.channel_tx")
     @patch("nephos.runners.admin_msp")
     def test_runner_crypto(
-        self, mock_admin_msp, mock_channel_tx, mock_genesis_block, mock_setup_nodes
+        self, mock_admin_msp,
+            mock_channel_tx,
+            mock_genesis_block,
+            mock_setup_nodes,
+            mock_get_msps
     ):
+        mock_get_msps.side_effect = [{"AlphaMSP", "BetaMSP"}]
         runner_crypto(self.OPTS)
+        mock_get_msps.assert_called_once_with(opts= self.OPTS)
         mock_admin_msp.assert_has_calls(
             [
-                call(self.OPTS, "ord_MSP"),
-                call(self.OPTS, "peer_MSP"),
-            ]
+                call(self.OPTS, "AlphaMSP"),
+                call(self.OPTS, "BetaMSP"),
+            ],
+            any_order=True
         )
         mock_genesis_block.assert_called_once_with(self.OPTS)
         mock_channel_tx.assert_called_once_with(self.OPTS)
         # Setup node MSPs
         mock_setup_nodes.assert_has_calls(
             [
-                call(self.OPTS, "orderer"),
-                call(self.OPTS, "peer"),
+                call(self.OPTS),
             ]
         )
 
