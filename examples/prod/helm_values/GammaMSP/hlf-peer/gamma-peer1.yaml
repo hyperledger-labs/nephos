@@ -15,7 +15,8 @@ secrets:
     cert: hlf--gamma-peer1-idcert
     key: hlf--gamma-peer1-idkey
     caCert: hlf--gammaadmin-cacert
-  channel: hlf--foochannel
+  channels:
+    - hlf--foochannel
   adminCert: hlf--gammaadmin-idcert
   adminKey: hlf--gammaadmin-idkey
 

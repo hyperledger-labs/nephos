@@ -16,7 +16,8 @@ secrets:
     key: hlf--gamma-peer2-idkey
     # TODO: This should not be numbered
     caCert: hlf--gammaadmin-cacert
-  channel: hlf--foochannel
+  channels:
+    - hlf--foochannel
   adminCert: hlf--gammaadmin-idcert
   adminKey: hlf--gammaadmin-idkey
   caServerTls: ca--tls
