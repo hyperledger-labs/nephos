@@ -206,6 +206,7 @@ def create_channel(opts):
 
         for channel in get_channels(opts=opts):
             channel_name = opts["channels"][channel]["channel_name"]
+            secret_channel = opts["channels"][channel]["secret_channel"]
             if msp not in opts["channels"][channel]["msps"]:
                 continue
             for index, release in enumerate(get_peers(opts=opts, msp=msp)):
@@ -223,7 +224,7 @@ def create_channel(opts):
                             (
                                 "bash -c 'peer channel create "
                                 + f"-o {ord_name}-hlf-ord.{ord_namespace}.svc.cluster.local:7050 "
-                                + f"-c {channel_name} -f /hl_config/channel/{channel_name}/{channel_name}.tx {cmd_suffix}'"
+                                + f"-c {channel_name} -f /hl_config/channel/{secret_channel}/{channel_name}.tx {cmd_suffix}'"
                             )
                         )
                 res, _ = pod_ex.execute("peer channel list")

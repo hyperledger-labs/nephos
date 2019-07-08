@@ -336,7 +336,8 @@ class TestSetupChannel:
         "channels":{
             "AChannel": {
                 "msps": ["BetaMSP"],
-                "channel_name" : "a-channel"
+                "channel_name" : "a-channel",
+                "secret_channel": "hlf--a-channel"
             }
         }
 
@@ -404,7 +405,7 @@ class TestSetupChannel:
             [
                 call(
                     "bash -c 'peer channel create -o ord0-hlf-ord.ord-namespace.svc.cluster.local:7050 "
-                    + "-c a-channel -f /hl_config/channel/a-channel.tx "
+                    + "-c a-channel -f /hl_config/channel/hlf--a-channel/a-channel.tx "
                     + self.CMD_SUFFIX
                     + "'"
                 ),
@@ -532,7 +533,7 @@ class TestSetupChannel:
             [
                 call(
                     "bash -c 'peer channel create -o ord1-hlf-ord.ord-namespace.svc.cluster.local:7050 "
-                    + "-c a-channel -f /hl_config/channel/a-channel.tx '"
+                    + "-c a-channel -f /hl_config/channel/hlf--a-channel/a-channel.tx '"
                 ),
                 call("peer channel list"),
                 call(
