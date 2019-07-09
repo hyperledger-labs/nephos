@@ -1,4 +1,5 @@
 import os
+import logging
 
 from nephos.fabric.settings import load_config, check_cluster
 from nephos.helpers.misc import execute
@@ -11,6 +12,10 @@ class TestIntegrationDev:
     # We will check cluster and flatly refuse to do integration testing unless on 'minikube'
     CONTEXT = "minikube"
     CONFIG = os.path.join(CURRENT_PATH, "..", "examples", "dev", "nephos_config.yaml")
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(module)-10s %(levelname)-8s %(message)s'
+    )
 
     def test_integration_dev(self):
         # Get options
