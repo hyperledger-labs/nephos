@@ -139,7 +139,7 @@ def peer_channel_suffix(opts, ord_msp, ord_name):
     Args:
         opts (dict): Nephos options dict.
         ord_name (str): Orderer we wish to speak to.
-        ord_msp(str): Orderer msp we wish to speark to
+        ord_msp(str): Orderer msp we wish to speak to
 
     Returns:
         str: Command suffix we need to use in "peer channel" commands.
