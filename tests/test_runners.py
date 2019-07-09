@@ -47,9 +47,7 @@ class TestRunnerComposer:
         self, mock_deploy_composer, mock_install_network, mock_setup_admin
     ):
         runner_composer(self.OPTS, upgrade=False)
-        mock_deploy_composer.assert_called_once_with(
-            self.OPTS, upgrade=False
-        )
+        mock_deploy_composer.assert_called_once_with(self.OPTS, upgrade=False)
         mock_setup_admin.assert_called_once_with(self.OPTS)
         mock_install_network.assert_called_once_with(self.OPTS)
 
@@ -64,12 +62,7 @@ class TestRunnerComposerUp:
 
 
 class TestRunnerCrypto:
-    OPTS = {
-        "msps": {
-            "AlphaMSP": {},
-            "BetaMSP": {}
-        }
-    }
+    OPTS = {"msps": {"AlphaMSP": {}, "BetaMSP": {}}}
 
     @patch("nephos.runners.get_msps")
     @patch("nephos.runners.setup_nodes")
@@ -77,30 +70,23 @@ class TestRunnerCrypto:
     @patch("nephos.runners.channel_tx")
     @patch("nephos.runners.admin_msp")
     def test_runner_crypto(
-        self, mock_admin_msp,
-            mock_channel_tx,
-            mock_genesis_block,
-            mock_setup_nodes,
-            mock_get_msps
+        self,
+        mock_admin_msp,
+        mock_channel_tx,
+        mock_genesis_block,
+        mock_setup_nodes,
+        mock_get_msps,
     ):
         mock_get_msps.side_effect = [{"AlphaMSP", "BetaMSP"}]
         runner_crypto(self.OPTS)
-        mock_get_msps.assert_called_once_with(opts= self.OPTS)
+        mock_get_msps.assert_called_once_with(opts=self.OPTS)
         mock_admin_msp.assert_has_calls(
-            [
-                call(self.OPTS, "AlphaMSP"),
-                call(self.OPTS, "BetaMSP"),
-            ],
-            any_order=True
+            [call(self.OPTS, "AlphaMSP"), call(self.OPTS, "BetaMSP")], any_order=True
         )
         mock_genesis_block.assert_called_once_with(self.OPTS)
         mock_channel_tx.assert_called_once_with(self.OPTS)
         # Setup node MSPs
-        mock_setup_nodes.assert_has_calls(
-            [
-                call(self.OPTS),
-            ]
-        )
+        mock_setup_nodes.assert_has_calls([call(self.OPTS)])
 
 
 class TestRunnerDeploy:
@@ -110,12 +96,8 @@ class TestRunnerDeploy:
     @patch("nephos.runners.runner_composer")
     def test_runner_deploy(self, mock_runner_composer, mock_runner_fabric):
         runner_deploy(self.OPTS, upgrade=False)
-        mock_runner_fabric.assert_called_once_with(
-            self.OPTS, upgrade=False
-        )
-        mock_runner_composer.assert_called_once_with(
-            self.OPTS, upgrade=False
-        )
+        mock_runner_fabric.assert_called_once_with(self.OPTS, upgrade=False)
+        mock_runner_composer.assert_called_once_with(self.OPTS, upgrade=False)
 
 
 class TestRunnerFabric:
@@ -131,12 +113,8 @@ class TestRunnerFabric:
         runner_fabric(self.OPTS, upgrade=False)
         mock_runner_ca.assert_called_once_with(self.OPTS, upgrade=False)
         mock_runner_crypto.assert_called_once_with(self.OPTS)
-        mock_runner_orderer.assert_called_once_with(
-            self.OPTS, upgrade=False
-        )
-        mock_runner_peer.assert_called_once_with(
-            self.OPTS, upgrade=False
-        )
+        mock_runner_orderer.assert_called_once_with(self.OPTS, upgrade=False)
+        mock_runner_peer.assert_called_once_with(self.OPTS, upgrade=False)
 
 
 class TestRunnerOrderer:

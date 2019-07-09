@@ -57,18 +57,9 @@ class TestExecuteUntilSuccess:
             ("<h1>SomeWebsite</h1>", None),
         ]
         execute_until_success("curl example.com", delay=0)
-        mock_print.assert_has_calls(
-            [call(".", end="", flush=True)] * 2
-        )
+        mock_print.assert_has_calls([call(".", end="", flush=True)] * 2)
         mock_log.info.assert_has_calls([call("<h1>SomeWebsite</h1>")])
-        mock_execute.assert_has_calls(
-            [
-                call(
-                    "curl example.com"
-                )
-            ]
-            * 2
-        )
+        mock_execute.assert_has_calls([call("curl example.com")] * 2)
 
 
 class TestInputFiles:
@@ -172,18 +163,17 @@ class TestGetResponse:
         get_response("A question", ("y", "n"))
         mock_input.assert_has_calls([call()] * 2)
         mock_log.info.assert_has_calls(
-            [
-                call("A question"),
-                call("Permitted responses: ('y', 'n')"),
-            ]
+            [call("A question"), call("Permitted responses: ('y', 'n')")]
         )
         mock_log.error.assert_called_with("Invalid response, try again!")
 
 
 class TestPrettyPrint:
     def test_pretty_print(self):
-        assert pretty_print('{"some": "json"}') == \
-               '{\x1b[34;01m"some"\x1b[39;49;00m: \x1b[33m"json"\x1b[39;49;00m}\n'
+        assert (
+            pretty_print('{"some": "json"}')
+            == '{\x1b[34;01m"some"\x1b[39;49;00m: \x1b[33m"json"\x1b[39;49;00m}\n'
+        )
 
 
 class TestRandString:

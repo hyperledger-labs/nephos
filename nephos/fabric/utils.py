@@ -62,10 +62,7 @@ def crypto_secret(secret_name, namespace, file_path, key):
     if len(secret_files) != 1:
         raise Exception("We should only find one file in this directory")
     secret_from_file(
-        secret=secret_name,
-        namespace=namespace,
-        key=key,
-        filename=secret_files[0],
+        secret=secret_name, namespace=namespace, key=key, filename=secret_files[0]
     )
 
 
@@ -147,4 +144,4 @@ def get_secret_genesis(opts):
 
 def get_kafka_configs(opts):
     if "kafka" in opts["ordering"]:
-        return opts['ordering']['kafka']
+        return opts["ordering"]["kafka"]

@@ -125,9 +125,7 @@ class TestRegisterId:
         mock_executor = Mock()
         mock_check_id.side_effect = [True]
         mock_get_pod.side_effect = [mock_executor]
-        register_id(
-            "a-namespace", "a-ca", "an-ord", "a-password", "orderer"
-        )
+        register_id("a-namespace", "a-ca", "an-ord", "a-password", "orderer")
         mock_get_pod.assert_called_once_with(
             namespace="a-namespace", release="a-ca", app="hlf-ca"
         )
@@ -291,8 +289,7 @@ class TestCreateAdmin:
         mock_abspath.assert_called_once_with("./tls_cert.pem")
         mock_execute.assert_called_once_with(
             "FABRIC_CA_CLIENT_HOME=./config fabric-ca-client enroll "
-            + "-u https://an_admin:a_password@an-ingress -M ./crypto/a_MSP --tls.certfiles /home/nephos/tls_cert.pem",
-            
+            + "-u https://an_admin:a_password@an-ingress -M ./crypto/a_MSP --tls.certfiles /home/nephos/tls_cert.pem"
         )
 
     @patch("nephos.fabric.crypto.register_id")
@@ -335,11 +332,7 @@ class TestAdminCreds:
         mock_credentials_secret.side_effect = [{"CA_PASSWORD": "a_password"}]
         admin_creds(self.OPTS, "an-msp")
         mock_credentials_secret.assert_called_once_with(
-            "hlf--an-admin-admincred",
-            "msp-ns",
-            username="an-admin",
-            password=None,
-            
+            "hlf--an-admin-admincred", "msp-ns", username="an-admin", password=None
         )
         assert self.OPTS["msps"]["an-msp"].get("org_adminpw") == "a_password"
 
@@ -352,7 +345,6 @@ class TestAdminCreds:
             "msp-ns",
             username="an-admin",
             password="a_password",
-            
         )
         assert self.OPTS["msps"]["an-msp"].get("org_adminpw") == "a_password"
 
@@ -468,13 +460,11 @@ class TestMspSecrets:
             "msp-ns",
             "./crypto/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp",
             "an-admin",
-            
         )
         mock_id_to_secrets.assert_called_once_with(
             "msp-ns",
             "./crypto/crypto-config/ordererOrganizations/msp-ns.domain/users/Admin@msp-ns.domain/msp",
             "an-admin",
-            
         )
 
     @patch("nephos.fabric.crypto.id_to_secrets")
@@ -557,7 +547,6 @@ class TestItemToSecret:
             "msp-ns",
             file_path="./crypto/a_subfolder",
             key="a-key",
-            
         )
         mock_log.warning.assert_not_called()
 
@@ -576,7 +565,6 @@ class TestItemToSecret:
             "msp-ns",
             file_path="./crypto/a_subfolder",
             key="a-key",
-            
         )
         mock_log.warning.assert_called_once_with(
             'No ./crypto/a_subfolder found, so secret "hlf--a-user-a-type" was not created'
@@ -598,7 +586,6 @@ class TestItemToSecret:
             "msp-ns",
             file_path="./crypto/a_subfolder",
             key="a-key",
-            
         )
         mock_log.warning.assert_not_called()
 
@@ -615,14 +602,12 @@ class TestIdToSecrets:
                     "./crypto",
                     "a-user",
                     CryptoInfo("idcert", "signcerts", "cert.pem", True),
-                    
                 ),
                 call(
                     "msp-ns",
                     "./crypto",
                     "a-user",
                     CryptoInfo("idkey", "keystore", "key.pem", True),
-                    
                 ),
             ]
         )
@@ -637,7 +622,6 @@ class TestIdToSecrets:
             "./crypto",
             "a-user",
             CryptoInfo("idcert", "signcerts", "cert.pem", True),
-            
         )
 
 
@@ -653,7 +637,6 @@ class TestCaCertsToSecrets:
                     "./crypto",
                     "a-user",
                     CryptoInfo("cacert", "cacerts", "cacert.pem", True),
-                    
                 ),
                 call(
                     "msp-ns",
@@ -665,7 +648,6 @@ class TestCaCertsToSecrets:
                         "intermediatecacert.pem",
                         False,
                     ),
-                    
                 ),
             ]
         )
@@ -680,7 +662,6 @@ class TestCaCertsToSecrets:
             "./crypto",
             "a-user",
             CryptoInfo("cacert", "cacerts", "cacert.pem", True),
-            
         )
 
 
@@ -695,19 +676,14 @@ class TestSetupId:
             "AlphaMSP": {
                 "ca": "ca-ord",
                 "namespace": "ord-ns",
-                "orderers": {
-                    "nodes": {"ord0":{}}
-                }
+                "orderers": {"nodes": {"ord0": {}}},
             },
             "BetaMSP": {
                 "ca": "ca-peer",
                 "namespace": "peer-ns",
-                "peers": {
-                    "nodes": {"peer0":{}}
-                }
+                "peers": {"nodes": {"peer0": {}}},
             },
         },
-
     }
 
     @patch("nephos.fabric.crypto.register_id")
@@ -735,9 +711,7 @@ class TestSetupId:
         mock_register_id.assert_called_once_with(
             "ca-namespace", "ca-peer", "peer0", "peer0-pw", "peer"
         )
-        mock_enroll_id.assert_called_once_with(
-            opts, "ca-peer", "peer0", "peer0-pw"
-        )
+        mock_enroll_id.assert_called_once_with(opts, "ca-peer", "peer0", "peer0-pw")
         mock_glob.assert_not_called()
         mock_id_to_secrets.assert_called_once_with(
             namespace="peer-ns", msp_path="./peer0_MSP", username="peer0"
@@ -768,9 +742,7 @@ class TestSetupId:
         mock_register_id.assert_called_once_with(
             "ca-namespace", "ca-ord", "ord0", "ord0-pw", "orderer"
         )
-        mock_enroll_id.assert_called_once_with(
-            opts, "ca-ord", "ord0", "ord0-pw"
-        )
+        mock_enroll_id.assert_called_once_with(opts, "ca-ord", "ord0", "ord0-pw")
         mock_glob.assert_not_called()
         mock_id_to_secrets.assert_called_once_with(
             namespace="ord-ns", msp_path="./ord0_MSP", username="ord0"
@@ -807,7 +779,6 @@ class TestSetupId:
             namespace="peer-ns",
             msp_path="./crypto/crypto-config/peerOrganizations/peer-ns.domain/peers/peer0.domain/msp",
             username="peer0",
-            
         )
 
     @patch("nephos.fabric.crypto.register_id")
@@ -852,18 +823,14 @@ class TestSetupNodes:
             "AlphaMSP": {
                 "ca": "ca-ord",
                 "namespace": "ord-ns",
-                "orderers": {
-                    "nodes": {"ord0":{}}
-                }
+                "orderers": {"nodes": {"ord0": {}}},
             },
             "BetaMSP": {
                 "ca": "ca-peer",
                 "namespace": "peer-ns",
-                "peers": {
-                    "nodes": {"peer0":{}, "peer1":{}}
-                }
+                "peers": {"nodes": {"peer0": {}, "peer1": {}}},
             },
-        }
+        },
     }
 
     @patch("nephos.fabric.crypto.setup_id")
@@ -875,26 +842,18 @@ class TestSetupNodes:
                 call(self.OPTS, "BetaMSP", "peer0", "peer"),
                 call(self.OPTS, "BetaMSP", "peer1", "peer"),
             ],
-            any_order=True
+            any_order=True,
         )
 
 
 class TestGenesisBlock:
     OPTS = {
         "core": {"dir_config": "./config", "dir_crypto": "./crypto"},
-        "ordering" : {"secret_genesis" : "a-genesis-secret"},
+        "ordering": {"secret_genesis": "a-genesis-secret"},
         "msps": {
-            "AlphaMSP": {
-                "namespace": "ord-ns",
-                "orderers": {
-                    "nodes": {"ord0":{}}
-                }
-            },
-            "BetaMSP": {
-                "namespace": "beta-ns"
-            }
-        }
-        ,
+            "AlphaMSP": {"namespace": "ord-ns", "orderers": {"nodes": {"ord0": {}}}},
+            "BetaMSP": {"namespace": "beta-ns"},
+        },
     }
 
     @patch("nephos.fabric.crypto.secret_from_file")
@@ -905,7 +864,14 @@ class TestGenesisBlock:
     @patch("nephos.fabric.crypto.is_orderer_msp")
     @patch("nephos.fabric.crypto.get_msps")
     def test_blocks(
-        self, mock_get_msps, mock_is_orderer_msp, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self,
+        mock_get_msps,
+        mock_is_orderer_msp,
+        mock_chdir,
+        mock_execute,
+        mock_exists,
+        mock_log,
+        mock_secret_from_file,
     ):
         mock_exists.side_effect = [False, False]
         mock_get_msps.side_effect = [["AlphaMSP", "BetaMSP"]]
@@ -918,8 +884,7 @@ class TestGenesisBlock:
             [call(opts=self.OPTS, msp="AlphaMSP"), call(opts=self.OPTS, msp="BetaMSP")]
         )
         mock_execute.assert_called_once_with(
-            "configtxgen -profile OrdererGenesis -outputBlock ./crypto/genesis.block",
-            
+            "configtxgen -profile OrdererGenesis -outputBlock ./crypto/genesis.block"
         )
         mock_log.info.assert_not_called()
         mock_secret_from_file.assert_called_once_with(
@@ -927,7 +892,6 @@ class TestGenesisBlock:
             namespace="ord-ns",
             key="genesis.block",
             filename="./crypto/genesis.block",
-            
         )
 
     @patch("nephos.fabric.crypto.secret_from_file")
@@ -949,18 +913,13 @@ class TestGenesisBlock:
             namespace="ord-ns",
             key="genesis.block",
             filename="./crypto/genesis.block",
-            
         )
 
 
 class TestChannelTx:
     OPTS = {
         "core": {"dir_config": "./config", "dir_crypto": "./crypto"},
-        "msps": {
-            "peer_MSP": {
-                "namespace": "peer-ns"
-            }
-        },
+        "msps": {"peer_MSP": {"namespace": "peer-ns"}},
         "channels": {
             "AChannel": {
                 "channel_name": "a-channel",
@@ -984,8 +943,7 @@ class TestChannelTx:
         mock_chdir.assert_has_calls([call("./config"), call(PWD)])
         mock_exists.assert_called_once_with("./crypto/a-channel.tx")
         mock_execute.assert_called_once_with(
-            "configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx ./crypto/a-channel.tx",
-            
+            "configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx ./crypto/a-channel.tx"
         )
         mock_logging.info.assert_not_called()
         mock_secret_from_file.assert_called_once_with(
@@ -993,7 +951,6 @@ class TestChannelTx:
             namespace="peer-ns",
             key="a-channel.tx",
             filename="./crypto/a-channel.tx",
-            
         )
 
     @patch("nephos.fabric.crypto.secret_from_file")
@@ -1015,7 +972,6 @@ class TestChannelTx:
             namespace="peer-ns",
             key="a-channel.tx",
             filename="./crypto/a-channel.tx",
-            
         )
 
     @patch("nephos.fabric.crypto.secret_from_file")
@@ -1024,7 +980,7 @@ class TestChannelTx:
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_with_no_channel_msp(
-            self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
     ):
         opts = deepcopy(self.OPTS)
         opts["channels"]["AChannel"]["msps"] = []

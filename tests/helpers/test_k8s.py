@@ -60,13 +60,10 @@ class TestExecuter:
     @patch("nephos.helpers.k8s.execute")
     def test_executer_logs_tail(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
-        executer = Executer(
-            "a_pod", "a-namespace", container="a_container"
-        )
+        executer = Executer("a_pod", "a-namespace", container="a_container")
         executer.logs(tail=10)
         mock_execute.assert_called_once_with(
-            "kubectl logs a_pod -n a-namespace --container a_container --tail=10",
-            
+            "kubectl logs a_pod -n a-namespace --container a_container --tail=10"
         )
 
     @patch("nephos.helpers.k8s.execute")
@@ -75,8 +72,7 @@ class TestExecuter:
         executer = Executer("a_pod", "a-namespace")
         executer.logs(since_time="1970-01-01T00:00:00Z")
         mock_execute.assert_called_once_with(
-            "kubectl logs a_pod -n a-namespace --tail=-1 --since-time='1970-01-01T00:00:00Z'",
-            
+            "kubectl logs a_pod -n a-namespace --tail=-1 --since-time='1970-01-01T00:00:00Z'"
         )
 
 
@@ -162,10 +158,7 @@ class TestPodCheck:
         pod_check("a-namespace", "an-identifier", sleep_interval=15)
         assert mock_execute.call_count == 2
         mock_log.info.assert_has_calls(
-            [
-                call("Ensuring that all pods are running "),
-                call("All pods are running"),
-            ]
+            [call("Ensuring that all pods are running "), call("All pods are running")]
         )
         mock_print.assert_called_once_with(".", end="", flush=True)
         mock_sleep.assert_called_once_with(15)
@@ -182,10 +175,7 @@ class TestPodCheck:
         pod_check("a-namespace", "an_identifier", pod_num=2)
         assert mock_execute.call_count == 2
         mock_log.info.assert_has_calls(
-            [
-                call("Ensuring that all pods are running "),
-                call("All pods are running"),
-            ]
+            [call("Ensuring that all pods are running "), call("All pods are running")]
         )
         mock_print.assert_called_once_with(".", end="", flush=True)
         mock_sleep.assert_called_once_with(10)
@@ -297,9 +287,7 @@ class TestGetAppInfo:
         mock_secret_read.side_effect = [{"API_KEY": "an-api-key"}]
         mock_ingress_read.side_effect = [["a-url"]]
         get_app_info("a-namespace", "an-ingress", "a-secret")
-        mock_ingress_read.assert_called_once_with(
-            "an-ingress", namespace="a-namespace"
-        )
+        mock_ingress_read.assert_called_once_with("an-ingress", namespace="a-namespace")
 
     @patch("nephos.helpers.k8s.secret_read")
     @patch("nephos.helpers.k8s.ingress_read")
@@ -307,12 +295,8 @@ class TestGetAppInfo:
         mock_secret_read.side_effect = [ApiException]
         with pytest.raises(ApiException):
             get_app_info("a-namespace", "an-ingress", "a-secret")
-        mock_ingress_read.assert_called_once_with(
-            "an-ingress", namespace="a-namespace"
-        )
-        mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace"
-        )
+        mock_ingress_read.assert_called_once_with("an-ingress", namespace="a-namespace")
+        mock_secret_read.assert_called_once_with("a-secret", "a-namespace")
 
     @patch("nephos.helpers.k8s.secret_read")
     @patch("nephos.helpers.k8s.ingress_read")
@@ -321,13 +305,7 @@ class TestGetAppInfo:
         mock_ingress_read.side_effect = [ApiException]
         with pytest.raises(ApiException):
             get_app_info(
-                "a-namespace",
-                "an-ingress",
-                "a-secret",
-                secret_key="CUSTOM_KEY",
-                
+                "a-namespace", "an-ingress", "a-secret", secret_key="CUSTOM_KEY"
             )
-        mock_ingress_read.assert_called_once_with(
-            "an-ingress", namespace="a-namespace"
-        )
+        mock_ingress_read.assert_called_once_with("an-ingress", namespace="a-namespace")
         mock_secret_read.assert_not_called()

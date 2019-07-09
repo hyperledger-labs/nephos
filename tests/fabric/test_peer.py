@@ -56,12 +56,9 @@ class TestSetupPeer:
         "msps": {
             "BetaMSP": {
                 "namespace": "peer-namespace",
-                "peers": {
-                    "nodes": {"peer0":{}, "peer1":{}}
-                }
+                "peers": {"nodes": {"peer0": {}, "peer1": {}}},
             }
-        }
-
+        },
     }
 
     @patch("nephos.fabric.peer.get_peers")
@@ -79,7 +76,7 @@ class TestSetupPeer:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
-        mock_get_peers
+        mock_get_peers,
     ):
         OPTS = deepcopy(self.OPTS)
         mock_get_version.side_effect = [
@@ -103,12 +100,18 @@ class TestSetupPeer:
                     version="cdb-version",
                     config_yaml="./a_dir/BetaMSP/hlf-couchdb/cdb-peer0.yaml",
                 ),
-                call(version="peer-version", config_yaml="./a_dir/BetaMSP/hlf-peer/peer0.yaml"),
+                call(
+                    version="peer-version",
+                    config_yaml="./a_dir/BetaMSP/hlf-peer/peer0.yaml",
+                ),
                 call(
                     version="cdb-version",
                     config_yaml="./a_dir/BetaMSP/hlf-couchdb/cdb-peer1.yaml",
                 ),
-                call(version="peer-version", config_yaml="./a_dir/BetaMSP/hlf-peer/peer1.yaml"),
+                call(
+                    version="peer-version",
+                    config_yaml="./a_dir/BetaMSP/hlf-peer/peer1.yaml",
+                ),
             ]
         )
         mock_helm_install.assert_has_calls(
@@ -119,7 +122,6 @@ class TestSetupPeer:
                     "cdb-peer0",
                     "peer-namespace",
                     extra_vars="extra-vars-cdb-peer0",
-                    
                 ),
                 call(
                     "a-repo",
@@ -127,7 +129,6 @@ class TestSetupPeer:
                     "peer0",
                     "peer-namespace",
                     extra_vars="extra-vars-peer0",
-                    
                 ),
                 call(
                     "a-repo",
@@ -135,7 +136,6 @@ class TestSetupPeer:
                     "cdb-peer1",
                     "peer-namespace",
                     extra_vars="extra-vars-cdb-peer1",
-                    
                 ),
                 call(
                     "a-repo",
@@ -143,7 +143,6 @@ class TestSetupPeer:
                     "peer1",
                     "peer-namespace",
                     extra_vars="extra-vars-peer1",
-                    
                 ),
             ]
         )
@@ -157,10 +156,7 @@ class TestSetupPeer:
             ]
         )
         mock_check_peer.assert_has_calls(
-            [
-                call("peer-namespace", "peer0"),
-                call("peer-namespace", "peer1"),
-            ]
+            [call("peer-namespace", "peer0"), call("peer-namespace", "peer1")]
         )
 
     @patch("nephos.fabric.peer.get_peers")
@@ -178,10 +174,10 @@ class TestSetupPeer:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
-        mock_get_peers
+        mock_get_peers,
     ):
         OPTS = deepcopy(self.OPTS)
-        OPTS["msps"]["BetaMSP"]["peers"]["nodes"] = {"peer0":{}}
+        OPTS["msps"]["BetaMSP"]["peers"]["nodes"] = {"peer0": {}}
         mock_get_version.side_effect = ["cdb-version", "peer-version"]
         mock_get_peers.side_effect = [["peer0"]]
         mock_helm_extra_vars.side_effect = ["extra-vars-cdb-peer0", "extra-vars-peer0"]
@@ -207,7 +203,10 @@ class TestSetupPeer:
                         ),
                     ),
                 ),
-                call(version="peer-version", config_yaml="./a_dir/BetaMSP/hlf-peer/peer0.yaml"),
+                call(
+                    version="peer-version",
+                    config_yaml="./a_dir/BetaMSP/hlf-peer/peer0.yaml",
+                ),
             ]
         )
         mock_helm_install.assert_not_called()
@@ -218,15 +217,8 @@ class TestSetupPeer:
                     "hlf-couchdb",
                     "cdb-peer0",
                     extra_vars="extra-vars-cdb-peer0",
-                    
                 ),
-                call(
-                    "a-repo",
-                    "hlf-peer",
-                    "peer0",
-                    extra_vars="extra-vars-peer0",
-                    
-                ),
+                call("a-repo", "hlf-peer", "peer0", extra_vars="extra-vars-peer0"),
             ]
         )
         mock_helm_check.assert_has_calls(
@@ -235,9 +227,7 @@ class TestSetupPeer:
                 call("hlf-peer", "peer0", "peer-namespace"),
             ]
         )
-        mock_check_peer.assert_called_once_with(
-            "peer-namespace", "peer0"
-        )
+        mock_check_peer.assert_called_once_with("peer-namespace", "peer0")
 
 
 class TestPeerChannelSuffix:
@@ -322,25 +312,20 @@ class TestSetupChannel:
         "msps": {
             "AlphaMSP": {
                 "namespace": "ord-namespace",
-                "orderers": {
-                    "nodes": {"ord0":{}, "ord1":{}}
-                }
+                "orderers": {"nodes": {"ord0": {}, "ord1": {}}},
             },
             "BetaMSP": {
                 "namespace": "peer-namespace",
-                "peers": {
-                    "nodes": {"peer0":{}, "peer1":{}}
-                }
+                "peers": {"nodes": {"peer0": {}, "peer1": {}}},
             },
         },
-        "channels":{
+        "channels": {
             "AChannel": {
                 "msps": ["BetaMSP"],
-                "channel_name" : "a-channel",
-                "secret_channel": "hlf--a-channel"
+                "channel_name": "a-channel",
+                "secret_channel": "hlf--a-channel",
             }
-        }
-
+        },
     }
     CMD_SUFFIX = "--tls --ordererTLSHostnameOverride ord0-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
 
@@ -357,7 +342,7 @@ class TestSetupChannel:
         mock_get_pod,
         mock_peer_channel_suffix,
         mock_random,
-        mock_get_orderers
+        mock_get_orderers,
     ):
         mock_get_an_orderer_msp.side_effect = ["AlphaMSP"]
         mock_get_orderers.side_effect = [{"ord0", "ord1"}]
@@ -379,9 +364,7 @@ class TestSetupChannel:
         create_channel(self.OPTS)
         mock_get_an_orderer_msp.assert_called_once_with(opts=self.OPTS)
         mock_random.choice.assert_called_once()
-        mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "AlphaMSP", "ord0"
-        )
+        mock_peer_channel_suffix.assert_called_once_with(self.OPTS, "AlphaMSP", "ord0")
         mock_get_pod.assert_has_calls(
             [
                 call("peer-namespace", "peer0", "hlf-peer"),
@@ -459,9 +442,7 @@ class TestSetupChannel:
         create_channel(self.OPTS)
         mock_get_an_orderer_msp.assert_called_once_with(opts=self.OPTS)
         mock_random.choice.assert_called_once()
-        mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "AlphaMSP", "ord0"
-        )
+        mock_peer_channel_suffix.assert_called_once_with(self.OPTS, "AlphaMSP", "ord0")
         mock_get_pod.assert_has_calls(
             [
                 call("peer-namespace", "peer0", "hlf-peer"),
@@ -485,7 +466,7 @@ class TestSetupChannel:
     @patch("nephos.fabric.peer.peer_channel_suffix")
     @patch("nephos.fabric.peer.get_helm_pod")
     @patch("nephos.fabric.peer.get_channel_block")
-    @patch ("nephos.fabric.peer.get_an_orderer_msp")
+    @patch("nephos.fabric.peer.get_an_orderer_msp")
     def test_create_channel_notls(
         self,
         mock_get_an_orderer_msp,
@@ -513,9 +494,7 @@ class TestSetupChannel:
         create_channel(self.OPTS)
         mock_get_an_orderer_msp.assert_called_once_with(opts=self.OPTS)
         mock_random.choice.assert_called()
-        mock_peer_channel_suffix.assert_called_once_with(
-            self.OPTS, "AlphaMSP", "ord1"
-        )
+        mock_peer_channel_suffix.assert_called_once_with(self.OPTS, "AlphaMSP", "ord1")
         mock_get_pod.assert_has_calls(
             [
                 call("peer-namespace", "peer0", "hlf-peer"),

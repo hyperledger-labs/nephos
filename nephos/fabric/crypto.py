@@ -32,7 +32,7 @@ from nephos.fabric.utils import (
     credentials_secret,
     crypto_secret,
     get_helm_pod,
-    get_secret_genesis
+    get_secret_genesis,
 )
 
 PWD = getcwd()
@@ -52,15 +52,11 @@ def check_id(ca_namespace, ca, username):
         bool: Does the ID exist?
     """
     # Get CA
-    ca_exec = get_helm_pod(
-        namespace=ca_namespace, release=ca, app="hlf-ca"
-    )
+    ca_exec = get_helm_pod(namespace=ca_namespace, release=ca, app="hlf-ca")
     # Check if Orderer is registered with the relevant CA
     got_id = False
     while not got_id:
-        ord_id, err = ca_exec.execute(
-            f"fabric-ca-client identity list --id {username}"
-        )
+        ord_id, err = ca_exec.execute(f"fabric-ca-client identity list --id {username}")
         if err:
             # Expected error (identity does not exist)
             if "no rows in result set" in err:
@@ -73,8 +69,7 @@ def check_id(ca_namespace, ca, username):
     return ord_id
 
 
-def register_id(
-    ca_namespace, ca, username, password, node_type="client", admin=False):
+def register_id(ca_namespace, ca, username, password, node_type="client", admin=False):
     """Register an ID with a Fabric Certificate Authority
 
     Args:
@@ -128,8 +123,8 @@ def enroll_id(opts, ca, username, password):
     if not isdir(msp_path):
         # Enroll
         command = (
-            f'FABRIC_CA_CLIENT_HOME={dir_crypto} fabric-ca-client enroll '
-            + f'-u https://{username}:{password}@{ingress_urls[0]} -M {join(dir_crypto, msp_dir)} '
+            f"FABRIC_CA_CLIENT_HOME={dir_crypto} fabric-ca-client enroll "
+            + f"-u https://{username}:{password}@{ingress_urls[0]} -M {join(dir_crypto, msp_dir)} "
             + f'--tls.certfiles {abspath(opts["cas"][ca]["tls_cert"])}'
         )
         execute_until_success(command)
@@ -153,8 +148,7 @@ def create_admin(opts, msp_name):
     ca_namespace = get_namespace(opts, ca=ca_name)
 
     # Get CA ingress
-    ingress_urls = ingress_read(
-        ca_name + "-hlf-ca", namespace=ca_namespace)
+    ingress_urls = ingress_read(ca_name + "-hlf-ca", namespace=ca_namespace)
     ca_ingress = ingress_urls[0]
 
     # Register the Organisation with the CAs
@@ -175,7 +169,7 @@ def create_admin(opts, msp_name):
                 f"FABRIC_CA_CLIENT_HOME={dir_config} fabric-ca-client enroll "
                 + f"-u https://{msp_values['org_admin']}:{msp_values['org_adminpw']}@{ca_ingress} "
                 + f"-M {join(dir_crypto, msp_name)} --tls.certfiles {abspath(ca_values['tls_cert'])}"
-            ),
+            )
         )
 
 
@@ -211,9 +205,7 @@ def copy_secret(from_dir, to_dir):
     if len(from_list) == 1:
         from_file = from_list[0]
     else:
-        raise ValueError(
-            f"from_dir contains {len(from_list)} files - {from_list}"
-        )
+        raise ValueError(f"from_dir contains {len(from_list)} files - {from_list}")
     _, from_filename = split(from_file)
     to_file = join(to_dir, from_filename)
     if not isfile(to_file):
@@ -349,9 +341,7 @@ def setup_id(opts, msp_name, release, id_type):
         ca_namespace = get_namespace(opts, ca=opts["msps"][msp_name]["ca"])
         # Create secret with Orderer credentials
         secret_name = f"hlf--{release}-cred"
-        secret_data = credentials_secret(
-            secret_name, node_namespace, username=release
-        )
+        secret_data = credentials_secret(secret_name, node_namespace, username=release)
         # Register node
         register_id(
             ca_namespace,
@@ -378,9 +368,7 @@ def setup_id(opts, msp_name, release, id_type):
                 f"MSP path list length is {msp_path_list} - {msp_path_list}"
             )
     # Secrets
-    id_to_secrets(
-        namespace=node_namespace, msp_path=msp_path, username=release
-    )
+    id_to_secrets(namespace=node_namespace, msp_path=msp_path, username=release)
 
 
 # TODO: Rename to mention identities.
@@ -413,9 +401,7 @@ def genesis_block(opts):
     genesis_file = join(opts["core"]["dir_crypto"], genesis_key)
     if not exists(genesis_file):
         # Genesis block creation and storage
-        execute(
-            f"configtxgen -profile OrdererGenesis -outputBlock {genesis_file}",
-        )
+        execute(f"configtxgen -profile OrdererGenesis -outputBlock {genesis_file}")
     else:
         logging.info(f"{genesis_file} already exists")
 
@@ -449,7 +435,7 @@ def channel_tx(opts):
         if not exists(channel_file):
             # Channel transaction creation and storage
             execute(
-                f"configtxgen -profile {opts['channels'][channel]['channel_profile']} -channelID {opts['channels'][channel]['channel_name']} -outputCreateChannelTx {channel_file}",
+                f"configtxgen -profile {opts['channels'][channel]['channel_profile']} -channelID {opts['channels'][channel]['channel_name']} -outputCreateChannelTx {channel_file}"
             )
         else:
             logging.info(f"{channel_file} already exists")
@@ -459,7 +445,7 @@ def channel_tx(opts):
                 continue
             peer_namespace = get_namespace(opts, msp=msp)
             secret_from_file(
-                secret=opts['channels'][channel]["secret_channel"],
+                secret=opts["channels"][channel]["secret_channel"],
                 namespace=peer_namespace,
                 key=channel_key,
                 filename=channel_file,

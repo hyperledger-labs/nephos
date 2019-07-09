@@ -23,7 +23,7 @@ from nephos.fabric.utils import (
     get_msps,
     get_channels,
     get_orderers,
-    get_an_orderer_msp
+    get_an_orderer_msp,
 )
 from nephos.helpers.helm import (
     HelmPreserve,
@@ -45,9 +45,7 @@ def check_peer(namespace, release):
     Returns:
         bool: True once Peer is correctly running.
     """
-    pod_exec = get_helm_pod(
-        namespace=namespace, release=release, app="hlf-peer"
-    )
+    pod_exec = get_helm_pod(namespace=namespace, release=release, app="hlf-peer")
     res = pod_exec.logs(1000)
     if "Received block" in res:
         return True
@@ -73,7 +71,9 @@ def setup_peer(opts, upgrade=False):
         for release in get_peers(opts=opts, msp=msp):
             # Deploy the CouchDB instances
             version = get_version(opts, "hlf-couchdb")
-            config_yaml = f'{opts["core"]["dir_values"]}/{msp}/hlf-couchdb/cdb-{release}.yaml'
+            config_yaml = (
+                f'{opts["core"]["dir_values"]}/{msp}/hlf-couchdb/cdb-{release}.yaml'
+            )
             if not upgrade:
                 extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
                 helm_install(
@@ -82,7 +82,6 @@ def setup_peer(opts, upgrade=False):
                     f"cdb-{release}",
                     peer_namespace,
                     extra_vars=extra_vars,
-
                 )
             else:
                 preserve = (
@@ -107,7 +106,6 @@ def setup_peer(opts, upgrade=False):
                     "hlf-couchdb",
                     f"cdb-{release}",
                     extra_vars=extra_vars,
-
                 )
             helm_check("hlf-couchdb", f"cdb-{release}", peer_namespace)
 
@@ -122,7 +120,6 @@ def setup_peer(opts, upgrade=False):
                     release,
                     peer_namespace,
                     extra_vars=extra_vars,
-
                 )
             else:
                 helm_upgrade(
@@ -130,7 +127,6 @@ def setup_peer(opts, upgrade=False):
                     "hlf-peer",
                     release,
                     extra_vars=extra_vars,
-
                 )
             helm_check("hlf-peer", release, peer_namespace)
             # Check that peer is running
@@ -143,7 +139,7 @@ def peer_channel_suffix(opts, ord_msp, ord_name):
     Args:
         opts (dict): Nephos options dict.
         ord_name (str): Orderer we wish to speak to.
-        ord_msp(str): Orderer msp we wish to speark to
+        ord_msp(str): Orderer msp we wish to speak to
 
     Returns:
         str: Command suffix we need to use in "peer channel" commands.

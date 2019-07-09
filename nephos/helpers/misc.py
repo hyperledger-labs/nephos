@@ -54,9 +54,7 @@ def execute_until_success(command, delay=15):
     """
     res = None
     while not res:
-        res, err = execute(
-            command,
-        )
+        res, err = execute(command)
         if err:
             print(t.red("."), end="", flush=True)
             time.sleep(delay)
@@ -91,7 +89,9 @@ def input_files(keys, clean_key=False):
                 dirty_key = key
                 key = re.sub(r"[^0-9a-zA-Z_.\-]+", "_", dirty_key)
                 if key != dirty_key:
-                    logging.warning(t.yellow("Replaced ") + dirty_key + t.yellow(" with ") + key)
+                    logging.warning(
+                        t.yellow("Replaced ") + dirty_key + t.yellow(" with ") + key
+                    )
         with open(filename, "rb") as f:
             data[key] = f.read()
     return data
