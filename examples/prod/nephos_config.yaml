@@ -69,6 +69,12 @@ channels:
     channel_name: foochannel
     channel_profile: "FooChannel"
     secret_channel: hlf--foochannel
+  barchannel:
+    msps:
+      - BetaMSP
+    channel_name: barchannel
+    channel_profile: "BarChannel"
+    secret_channel: hlf--barchannel
 # This is only used when we implement a Composer network
 composer:
   name: hlc

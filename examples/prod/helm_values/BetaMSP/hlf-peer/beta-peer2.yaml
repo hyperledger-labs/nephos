@@ -16,7 +16,9 @@ secrets:
     key: hlf--beta-peer2-idkey
     # TODO: This should not be numbered
     caCert: hlf--betaadmin-cacert
-  channel: hlf--foochannel
+  channels:
+    - hlf--foochannel
+    - hlf--barchannel
   adminCert: hlf--betaadmin-idcert
   adminKey: hlf--betaadmin-idkey
   caServerTls: ca--tls

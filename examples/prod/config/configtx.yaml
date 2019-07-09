@@ -154,3 +154,9 @@ Profiles:
             Organizations:
                 - *BetaOrg
                 - *GammaOrg
+    BarChannel:
+        Consortium: MyConsortium
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *BetaOrg
