@@ -47,10 +47,7 @@ def get_composer_data(opts, verbose=False):
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     composer_name = opts["composer"]["name"] + "-hl-composer-rest"
     data = get_app_info(
-        peer_namespace,
-        composer_name,
-        composer_name,
-        secret_key="COMPOSER_APIKEY"
+        peer_namespace, composer_name, composer_name, secret_key="COMPOSER_APIKEY"
     )
     return data
 
@@ -69,9 +66,7 @@ def composer_connection(opts, verbose=False):
     peer_msp = opts["peers"]["msp"]
     peer_ca = opts["msps"][peer_msp]["ca"]
     ca_namespace = opts["cas"][peer_ca]["namespace"]
-    ingress_urls = ingress_read(
-        peer_ca + "-hlf-ca", namespace=ca_namespace
-    )
+    ingress_urls = ingress_read(peer_ca + "-hlf-ca", namespace=ca_namespace)
     peer_ca_url = ingress_urls[0]
     try:
         cm_read(opts["composer"]["secret_connection"], peer_namespace)
@@ -89,11 +84,7 @@ def composer_connection(opts, verbose=False):
                 opts["peers"]["channel_name"],
             )
         }
-        cm_create(
-            cm_data,
-            opts["composer"]["secret_connection"],
-            peer_namespace,
-        )
+        cm_create(cm_data, opts["composer"]["secret_connection"], peer_namespace)
 
 
 def deploy_composer(opts, upgrade=False, verbose=False):
@@ -110,14 +101,14 @@ def deploy_composer(opts, upgrade=False, verbose=False):
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     # Ensure BNA exists
-    secret_from_file(
-        secret=opts["composer"]["secret_bna"], namespace=peer_namespace
-    )
+    secret_from_file(secret=opts["composer"]["secret_bna"], namespace=peer_namespace)
     composer_connection(opts, verbose=verbose)
 
     # Start Composer
     version = get_version(opts, "hl-composer")
-    config_yaml = f'{opts["core"]["dir_values"]}/hl-composer/{opts["composer"]["name"]}.yaml'
+    config_yaml = (
+        f'{opts["core"]["dir_values"]}/hl-composer/{opts["composer"]["name"]}.yaml'
+    )
     if not upgrade:
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
@@ -125,7 +116,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
             "hl-composer",
             opts["composer"]["name"],
             peer_namespace,
-            extra_vars=extra_vars
+            extra_vars=extra_vars,
         )
     else:
         preserve = (
@@ -143,7 +134,7 @@ def deploy_composer(opts, upgrade=False, verbose=False):
             opts["core"]["chart_repo"],
             "hl-composer",
             opts["composer"]["name"],
-            extra_vars=extra_vars
+            extra_vars=extra_vars,
         )
     helm_check("hl-composer", opts["composer"]["name"], peer_namespace, pod_num=3)
 
@@ -161,14 +152,10 @@ def setup_card(opts, msp_path, user_name, roles, network=None, verbose=False):
     """
 
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    hlc_cli_ex = get_helm_pod(
-        peer_namespace, opts["composer"]["name"], "hl-composer"
-    )
+    hlc_cli_ex = get_helm_pod(peer_namespace, opts["composer"]["name"], "hl-composer")
 
     # Set up the PeerAdmin card
-    ls_res, _ = hlc_cli_ex.execute(
-        f"composer card list --card {user_name}@{network}"
-    )
+    ls_res, _ = hlc_cli_ex.execute(f"composer card list --card {user_name}@{network}")
 
     if roles:
         roles_string = "-r " + " -r ".join(roles) + " "
@@ -217,9 +204,7 @@ def install_network(opts, verbose=False):
         verbose (bool): Verbosity. False by default.
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    hlc_cli_ex = get_helm_pod(
-        peer_namespace, opts["composer"]["name"], "hl-composer"
-    )
+    hlc_cli_ex = get_helm_pod(peer_namespace, opts["composer"]["name"], "hl-composer")
 
     # Install network
     # TODO: Getting BNA could be a helper function
@@ -232,9 +217,7 @@ def install_network(opts, verbose=False):
     admin_creds(opts, peer_msp)
     bna_pw = opts["msps"][peer_msp]["org_adminpw"]
 
-    ls_res, _ = hlc_cli_ex.execute(
-        f"composer card list --card {bna_admin}@{bna_name}"
-    )
+    ls_res, _ = hlc_cli_ex.execute(f"composer card list --card {bna_admin}@{bna_name}")
 
     if not ls_res:
         hlc_cli_ex.execute(
@@ -251,12 +234,8 @@ def install_network(opts, verbose=False):
                 + f"--networkAdmin {bna_admin} --networkAdminEnrollSecret {bna_pw}"
             )
         )
-        hlc_cli_ex.execute(
-            f"composer card import --file {bna_admin}@{bna_name}.card"
-        )
+        hlc_cli_ex.execute(f"composer card import --file {bna_admin}@{bna_name}.card")
 
     # TODO: This step sometimes fail, maybe needs some try logic to test it,
     # executing it manually after a minute succeeds.
-    hlc_cli_ex.execute(
-        f"composer network ping --card {bna_admin}@{bna_name}"
-    )
+    hlc_cli_ex.execute(f"composer network ping --card {bna_admin}@{bna_name}")

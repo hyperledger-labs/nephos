@@ -36,12 +36,9 @@ class TestCheckOrdTls:
         "msps": {
             "AlphaMSP": {
                 "namespace": "orderer-namespace",
-                "orderers": {
-                    "nodes": {"an-ord":{}}
-                }
+                "orderers": {"nodes": {"an-ord": {}}},
             }
-        },
-
+        }
     }
 
     @patch("nephos.fabric.ord.execute")
@@ -60,15 +57,10 @@ class TestSetupOrd:
         "msps": {
             "AlphaMSP": {
                 "namespace": "ord-namespace",
-                "orderers": {
-                    "nodes": {"ord0":{}}
-                }
+                "orderers": {"nodes": {"ord0": {}}},
             },
-            "BetaMSP": {
-                "namespace": "beat-namespace"
-            }
+            "BetaMSP": {"namespace": "beat-namespace"},
         },
-
     }
 
     # TODO: We should not be able to deploy more than one orderer without Kafka
@@ -91,10 +83,10 @@ class TestSetupOrd:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
-        mock_get_orderers
+        mock_get_orderers,
     ):
         OPTS = deepcopy(self.OPTS)
-        OPTS["msps"]["AlphaMSP"]["orderers"]["nodes"] = {"ord0":{}, "ord1":{}}
+        OPTS["msps"]["AlphaMSP"]["orderers"]["nodes"] = {"ord0": {}, "ord1": {}}
         mock_get_msps.side_effect = [["AlphaMSP", "BetaMSP"]]
         mock_is_orderer_msp.side_effect = [True, False]
         mock_get_version.side_effect = ["ord-version"]
@@ -109,8 +101,14 @@ class TestSetupOrd:
         mock_get_version.assert_called_once_with(OPTS, "hlf-ord")
         mock_helm_extra_vars.assert_has_calls(
             [
-                call(version="ord-version", config_yaml="./a_dir/AlphaMSP/hlf-ord/ord0.yaml"),
-                call(version="ord-version", config_yaml="./a_dir/AlphaMSP/hlf-ord/ord1.yaml"),
+                call(
+                    version="ord-version",
+                    config_yaml="./a_dir/AlphaMSP/hlf-ord/ord0.yaml",
+                ),
+                call(
+                    version="ord-version",
+                    config_yaml="./a_dir/AlphaMSP/hlf-ord/ord1.yaml",
+                ),
             ]
         )
         mock_helm_install.assert_has_calls(
@@ -121,7 +119,6 @@ class TestSetupOrd:
                     "ord0",
                     "ord-namespace",
                     extra_vars="extra-vars-ord0",
-                    
                 ),
                 call(
                     "a-repo",
@@ -129,7 +126,6 @@ class TestSetupOrd:
                     "ord1",
                     "ord-namespace",
                     extra_vars="extra-vars-ord1",
-                    
                 ),
             ]
         )
@@ -141,10 +137,7 @@ class TestSetupOrd:
             ]
         )
         mock_check_ord.assert_has_calls(
-            [
-                call("ord-namespace", "ord0"),
-                call("ord-namespace", "ord1"),
-            ]
+            [call("ord-namespace", "ord0"), call("ord-namespace", "ord1")]
         )
 
     @patch("nephos.fabric.ord.helm_upgrade")
@@ -163,7 +156,11 @@ class TestSetupOrd:
         mock_helm_upgrade,
     ):
         OPTS = deepcopy(self.OPTS)
-        OPTS["ordering"]["kafka"] = {"name": "kafka-hlf", "pod_num": 42, "msp": "AlphaMSP"}
+        OPTS["ordering"]["kafka"] = {
+            "name": "kafka-hlf",
+            "pod_num": 42,
+            "msp": "AlphaMSP",
+        }
         mock_get_version.side_effect = ["kafka-version", "ord-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars-kafka", "extra-vars-ord0"]
         setup_ord(OPTS)
@@ -171,9 +168,13 @@ class TestSetupOrd:
         mock_helm_extra_vars.assert_has_calls(
             [
                 call(
-                    version="kafka-version", config_yaml="./a_dir/AlphaMSP/kafka/kafka-hlf.yaml"
+                    version="kafka-version",
+                    config_yaml="./a_dir/AlphaMSP/kafka/kafka-hlf.yaml",
                 ),
-                call(version="ord-version", config_yaml="./a_dir/AlphaMSP/hlf-ord/ord0.yaml"),
+                call(
+                    version="ord-version",
+                    config_yaml="./a_dir/AlphaMSP/hlf-ord/ord0.yaml",
+                ),
             ]
         )
         mock_helm_install.assert_has_calls(
@@ -184,7 +185,6 @@ class TestSetupOrd:
                     "kafka-hlf",
                     "ord-namespace",
                     extra_vars="extra-vars-kafka",
-                    
                 ),
                 call(
                     "a-repo",
@@ -192,7 +192,6 @@ class TestSetupOrd:
                     "ord0",
                     "ord-namespace",
                     extra_vars="extra-vars-ord0",
-                    
                 ),
             ]
         )
@@ -225,7 +224,12 @@ class TestSetupOrd:
         setup_ord(self.OPTS, upgrade=True)
         mock_get_version.assert_has_calls([call(self.OPTS, "hlf-ord")])
         mock_helm_extra_vars.assert_has_calls(
-            [call(version="ord-version", config_yaml="./a_dir/AlphaMSP/hlf-ord/ord0.yaml")]
+            [
+                call(
+                    version="ord-version",
+                    config_yaml="./a_dir/AlphaMSP/hlf-ord/ord0.yaml",
+                )
+            ]
         )
         mock_helm_install.assert_not_called()
         mock_helm_upgrade.assert_called_once_with(

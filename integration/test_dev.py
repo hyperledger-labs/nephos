@@ -21,7 +21,10 @@ class TestIntegrationDev:
             [key for key in opts["cas"].keys()]
             + [key + "-pg" for key in opts["cas"].keys()]
             + list(opts["msps"]["AlphaMSP"]["orderers"]["nodes"].keys())
-            + [("cdb-" + key) for key in opts["msps"]["BetaMSP"]["peers"]["nodes"].keys()]
+            + [
+                ("cdb-" + key)
+                for key in opts["msps"]["BetaMSP"]["peers"]["nodes"].keys()
+            ]
             + [key for key in opts["msps"]["BetaMSP"]["peers"]["nodes"].keys()]
         )
 

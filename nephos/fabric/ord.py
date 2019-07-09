@@ -14,7 +14,13 @@
 
 from time import sleep
 
-from nephos.fabric.utils import get_helm_pod, get_orderers, get_kafka_configs, get_msps, is_orderer_msp
+from nephos.fabric.utils import (
+    get_helm_pod,
+    get_orderers,
+    get_kafka_configs,
+    get_msps,
+    is_orderer_msp,
+)
 from nephos.fabric.settings import get_namespace, get_version
 from nephos.helpers.helm import helm_check, helm_extra_vars, helm_install, helm_upgrade
 from nephos.helpers.misc import execute
@@ -30,9 +36,7 @@ def check_ord(namespace, release):
     Returns:
         bool: True once Orderer is correctly running.
     """
-    pod_exec = get_helm_pod(
-        namespace=namespace, release=release, app="hlf-ord"
-    )
+    pod_exec = get_helm_pod(namespace=namespace, release=release, app="hlf-ord")
     res = pod_exec.logs(1000)
     if "fetching metadata for all topics from broker" in res:
         return True
@@ -60,7 +64,7 @@ def check_ord_tls(opts, ord_msp, ord_name):
         (
             f"kubectl get cm -n {ord_namespace} "
             + f'{ord_name}-hlf-ord--ord -o jsonpath="{{.data.ORDERER_GENERAL_TLS_ENABLED}}"'
-        ),
+        )
     )
     return ord_tls == "true"
 
@@ -83,13 +87,13 @@ def setup_ord(opts, upgrade=False):
         helm_install(
             "incubator",
             "kafka",
-            kafka_config['name'],
+            kafka_config["name"],
             ord_namespace,
             extra_vars=extra_vars,
         )
         helm_check(
             "kafka",
-            kafka_config['name'],
+            kafka_config["name"],
             ord_namespace,
             pod_num=kafka_config["pod_num"],
         )

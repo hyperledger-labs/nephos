@@ -110,9 +110,7 @@ def helm_preserve(preserve):
             item = HelmPreserve(*item)
         elif not isinstance(item, HelmPreserve):
             raise TypeError("Items in preserve array must be HelmPerserve named tuples")
-        secret_data = secret_read(
-            item.secret_name, item.secret_namespace
-        )
+        secret_data = secret_read(item.secret_name, item.secret_namespace)
         env_vars.append(HelmSet(item.values_path, secret_data[item.data_item]))
     # Environmental variables
     # TODO: This may well be its own subfunction
@@ -127,9 +125,7 @@ def helm_preserve(preserve):
     return env_vars_string
 
 
-def helm_extra_vars(
-    version=None, config_yaml=None, env_vars=None, preserve=None
-):
+def helm_extra_vars(version=None, config_yaml=None, env_vars=None, preserve=None):
     """Centralise obtaining extra variables for our helm_install and/or helm_upgrade
 
     Args:

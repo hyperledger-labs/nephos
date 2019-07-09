@@ -34,9 +34,10 @@ from nephos.fabric.settings import load_config
 from nephos.helpers.misc import pretty_print
 
 TERM = Terminal()
-log_format = '%(asctime)s %(module)-10s %(levelname)-8s %(message)s'
+log_format = "%(asctime)s %(module)-10s %(levelname)-8s %(message)s"
 logging_level = logging.INFO
 log_file = "/tmp/nephos_log"
+
 
 class Settings(object):
     def __init__(self, settings_file, upgrade, verbose, out):
@@ -88,9 +89,9 @@ def cli(ctx, settings_file, upgrade, verbose, out):
         level=logging_level,
         format=log_format,
         handlers=[
-            logging.FileHandler(filename=log_file, mode='a', encoding='utf-8'),
-            logging.StreamHandler()
-        ]
+            logging.FileHandler(filename=log_file, mode="a", encoding="utf-8"),
+            logging.StreamHandler(),
+        ],
     )
     ctx.obj = Settings(settings_file, upgrade, verbose, out)
 

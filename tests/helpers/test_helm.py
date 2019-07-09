@@ -99,9 +99,7 @@ class TestHelmPreserve:
             preserve=(("a-namespace", "a-secret", "BAR_ENV", "egg"),)
         )
         assert result == " --set egg=sausage"
-        mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace"
-        )
+        mock_secret_read.assert_called_once_with("a-secret", "a-namespace")
 
     @patch("nephos.helpers.helm.secret_read")
     def test_helm_preserve_bad(self, mock_secret_read):
@@ -129,7 +127,6 @@ class TestHelmExtraVars:
             config_yaml="some-config",
             env_vars="some-env-vars",
             preserve="some-preserve",
-            
         )
         mock_helm_env_vars.assert_called_once_with("some-env-vars")
         mock_helm_preserve.assert_called_once_with("some-preserve")
@@ -166,10 +163,7 @@ class TestHelmInstall:
         mock_execute.assert_has_calls(
             [
                 call("helm status a-release"),
-                call(
-                    "helm install a_repo/an_app -n a-release --namespace a-namespace",
-                    
-                ),
+                call("helm install a_repo/an_app -n a-release --namespace a-namespace"),
             ]
         )
 
@@ -193,8 +187,7 @@ class TestHelmInstall:
                 call("helm status a-release"),
                 call(
                     "helm install a_repo/an_app -n a-release "
-                    + "--namespace a-namespace EXTRA-VARS",
-                    
+                    + "--namespace a-namespace EXTRA-VARS"
                 ),
             ]
         )

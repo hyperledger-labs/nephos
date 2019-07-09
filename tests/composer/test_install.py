@@ -29,7 +29,7 @@ class TestGetComposerData:
             "peer-namespace",
             "hlc-hl-composer-rest",
             "hlc-hl-composer-rest",
-            secret_key="COMPOSER_APIKEY"
+            secret_key="COMPOSER_APIKEY",
         )
 
     @patch("nephos.composer.install.get_app_info")
@@ -41,7 +41,7 @@ class TestGetComposerData:
             "peer-namespace",
             "hlc-hl-composer-rest",
             "hlc-hl-composer-rest",
-            secret_key="COMPOSER_APIKEY"
+            secret_key="COMPOSER_APIKEY",
         )
 
 
@@ -70,14 +70,10 @@ class TestComposerConnection:
         mock_ingress_read.assert_called_once_with(
             "peer-ca-hlf-ca", namespace="ca-namespace"
         )
-        mock_cm_read.assert_called_once_with(
-            "connection-secret", "peer-namespace"
-        )
+        mock_cm_read.assert_called_once_with("connection-secret", "peer-namespace")
         mock_json_ct.assert_called_once()
         mock_cm_create.assert_called_once_with(
-            {"connection.json": "cm-data"},
-            "connection-secret",
-            "peer-namespace"
+            {"connection.json": "cm-data"}, "connection-secret", "peer-namespace"
         )
 
     @patch("nephos.composer.install.json_ct")
@@ -92,9 +88,7 @@ class TestComposerConnection:
         mock_ingress_read.assert_called_once_with(
             "peer-ca-hlf-ca", namespace="ca-namespace"
         )
-        mock_cm_read.assert_called_once_with(
-            "connection-secret", "peer-namespace"
-        )
+        mock_cm_read.assert_called_once_with("connection-secret", "peer-namespace")
         mock_json_ct.assert_not_called()
         mock_cm_create.assert_not_called()
 
@@ -136,11 +130,7 @@ class TestDeployComposer:
             version="hlc-version", config_yaml="./a_dir/hl-composer/hlc.yaml"
         )
         mock_helm_install.assert_called_once_with(
-            "a-repo",
-            "hl-composer",
-            "hlc",
-            "peer-namespace",
-            extra_vars="extra-vars"
+            "a-repo", "hl-composer", "hlc", "peer-namespace", extra_vars="extra-vars"
         )
         mock_helm_upgrade.assert_not_called()
         mock_helm_check.assert_called_once_with(
@@ -218,9 +208,7 @@ class TestSetupCard:
             network="a-network",
             roles=("a-role", "another-role"),
         )
-        mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer"
-        )
+        mock_get_pod.assert_called_once_with("peer-namespace", "hlc", "hl-composer")
         mock_pod.execute.assert_has_calls(
             [
                 call("composer card list --card a-user@a-network"),
@@ -257,9 +245,7 @@ class TestSetupCard:
             roles="",
             network="a-network",
         )
-        mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer"
-        )
+        mock_get_pod.assert_called_once_with("peer-namespace", "hlc", "hl-composer")
         mock_pod.execute.assert_has_calls(
             [
                 call("composer card list --card a-user@a-network"),
@@ -291,11 +277,9 @@ class TestSetupCard:
             user_name="a-user",
             network="a-network",
             roles=None,
-            verbose=True
+            verbose=True,
         )
-        mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer"
-        )
+        mock_get_pod.assert_called_once_with("peer-namespace", "hlc", "hl-composer")
         mock_pod.execute.assert_has_calls(
             [call("composer card list --card a-user@a-network")]
         )
@@ -343,9 +327,7 @@ class TestInstallNetwork:
         ]
         mock_get_pod.side_effect = [mock_pod]
         install_network(self.OPTS)
-        mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer"
-        )
+        mock_get_pod.assert_called_once_with("peer-namespace", "hlc", "hl-composer")
         mock_pod.execute.assert_has_calls(
             [
                 call("ls /hl_config/blockchain_network"),
@@ -378,9 +360,7 @@ class TestInstallNetwork:
         ]
         mock_get_pod.side_effect = [mock_pod]
         install_network(self.OPTS, verbose=True)
-        mock_get_pod.assert_called_once_with(
-            "peer-namespace", "hlc", "hl-composer"
-        )
+        mock_get_pod.assert_called_once_with("peer-namespace", "hlc", "hl-composer")
         mock_pod.execute.assert_has_calls(
             [
                 call("ls /hl_config/blockchain_network"),

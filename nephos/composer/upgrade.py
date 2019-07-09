@@ -44,9 +44,7 @@ def upgrade_network(opts, verbose=False):
     peer_msp = opts["peers"]["msp"]
     bna_admin = opts["msps"][peer_msp]["org_admin"]
 
-    res, _ = hlc_cli_ex.execute(
-        f"composer network ping --card {bna_admin}@{bna_name}"
-    )
+    res, _ = hlc_cli_ex.execute(f"composer network ping --card {bna_admin}@{bna_name}")
 
     curr_version = (res.split("Business network version: ")[1]).split()[0]
     logging.info(curr_version)

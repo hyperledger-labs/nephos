@@ -15,7 +15,7 @@ from nephos.fabric.utils import (
     get_secret_genesis,
     get_kafka_configs,
     get_an_orderer_msp,
-    is_orderer_msp
+    is_orderer_msp,
 )
 
 
@@ -31,9 +31,7 @@ class TestCredentialsSecret:
         mock_secret_read.side_effect = [ApiException]
         mock_rand_string.side_effect = ["a-password"]
         credentials_secret("a-secret", "a-namespace", "a-user")
-        mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace"
-        )
+        mock_secret_read.assert_called_once_with("a-secret", "a-namespace")
         mock_rand_string.assert_called_once_with(24)
         mock_secret_create.assert_called_once_with(
             self.SECRET_DATA, "a-secret", "a-namespace"
@@ -47,9 +45,7 @@ class TestCredentialsSecret:
     ):
         mock_secret_read.side_effect = [self.SECRET_DATA]
         credentials_secret("a-secret", "a-namespace", "a-user", "a-password")
-        mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace"
-        )
+        mock_secret_read.assert_called_once_with("a-secret", "a-namespace")
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
 
@@ -61,12 +57,8 @@ class TestCredentialsSecret:
     ):
         mock_secret_read.side_effect = [self.SECRET_DATA]
         with pytest.raises(AssertionError):
-            credentials_secret(
-                "a-secret", "a-namespace", "a-user", "another-password"
-            )
-        mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace"
-        )
+            credentials_secret("a-secret", "a-namespace", "a-user", "another-password")
+        mock_secret_read.assert_called_once_with("a-secret", "a-namespace")
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
 
@@ -79,9 +71,7 @@ class TestCredentialsSecret:
         mock_secret_read.side_effect = [self.SECRET_DATA]
         with pytest.raises(AssertionError):
             credentials_secret("a-secret", "a-namespace", "another-user", "a-password")
-        mock_secret_read.assert_called_once_with(
-            "a-secret", "a-namespace"
-        )
+        mock_secret_read.assert_called_once_with("a-secret", "a-namespace")
         mock_rand_string.assert_not_called()
         mock_secret_create.assert_not_called()
 
@@ -98,7 +88,6 @@ class TestCryptoSecret:
             namespace="a-namespace",
             key="some_file.txt",
             filename="./a_path/a_file.txt",
-            
         )
 
     @patch("nephos.fabric.utils.secret_from_file")
@@ -119,12 +108,9 @@ class TestGetPod:
         get_pod("a-namespace", "an-identifier")
         mock_execute.assert_called_once_with(
             "kubectl get pods -n a-namespace an-identifier "
-            + '-o jsonpath="{.items[0].metadata.name}"',
-            
+            + '-o jsonpath="{.items[0].metadata.name}"'
         )
-        mock_Executer.assert_called_once_with(
-            "a-pod", namespace="a-namespace"
-        )
+        mock_Executer.assert_called_once_with("a-pod", namespace="a-namespace")
 
     @patch("nephos.fabric.utils.Executer")
     @patch("nephos.fabric.utils.execute")
@@ -134,8 +120,7 @@ class TestGetPod:
             get_pod("a-namespace", "an-identifier", item=3)
         mock_execute.assert_called_once_with(
             "kubectl get pods -n a-namespace an-identifier "
-            + '-o jsonpath="{.items[3].metadata.name}"',
-            
+            + '-o jsonpath="{.items[3].metadata.name}"'
         )
         mock_Executer.assert_not_called()
 
@@ -154,24 +139,17 @@ class TestGetOrderers:
         "msps": {
             "AlphaMSP": {
                 "namespace": "alpha-namespace",
-                "orderers": {
-                    "nodes":{
-                        "ord1": {},
-                        "ord2": {}
-                    }
-                }
+                "orderers": {"nodes": {"ord1": {}, "ord2": {}}},
             },
-            "BetaMSP": {
-                "namespace": "beta-namespace"
-            }
+            "BetaMSP": {"namespace": "beta-namespace"},
         }
     }
 
     def test_get_orderers(self):
-        assert ({"ord2", "ord1"} == get_orderers(opts=self.OPTS, msp="AlphaMSP"))
+        assert {"ord2", "ord1"} == get_orderers(opts=self.OPTS, msp="AlphaMSP")
 
     def test_get_orderers_from_msp_with_no_orderer(self):
-        assert ([] == get_orderers(opts=self.OPTS, msp="BetaMSP"))
+        assert [] == get_orderers(opts=self.OPTS, msp="BetaMSP")
 
 
 class TestGetPeers:
@@ -179,92 +157,60 @@ class TestGetPeers:
         "msps": {
             "BetaMSP": {
                 "namespace": "peer-namespace",
-                "peers": {
-                    "nodes": {"peer0":{}, "peer1":{}}
-                }
+                "peers": {"nodes": {"peer0": {}, "peer1": {}}},
             }
         }
     }
 
     def test_get_peers(self):
-        assert ({"peer0", "peer1"} == get_peers(opts=self.OPTS, msp="BetaMSP"))
+        assert {"peer0", "peer1"} == get_peers(opts=self.OPTS, msp="BetaMSP")
 
 
 class TestGetMSPS:
-    OPTS = {
-        "msps": {
-            "BetaMSP": {},
-            "AlphaMSP": {}
-            }
-        }
+    OPTS = {"msps": {"BetaMSP": {}, "AlphaMSP": {}}}
 
     def test_get_msps(self):
-        assert ({"BetaMSP", "AlphaMSP"} == get_msps(opts=self.OPTS))
+        assert {"BetaMSP", "AlphaMSP"} == get_msps(opts=self.OPTS)
 
 
 class TestGetChannels:
-    OPTS = {
-        "channels": {
-            "AChannel": {},
-            "BChannel": {}
-            }
-        }
+    OPTS = {"channels": {"AChannel": {}, "BChannel": {}}}
 
     def test_get_channels(self):
-        assert ({"AChannel", "BChannel"} == get_channels(opts=self.OPTS))
+        assert {"AChannel", "BChannel"} == get_channels(opts=self.OPTS)
 
 
 class TestGetSecretGenesis:
-    OPTS = {
-        "ordering": {
-            "secret_genesis": "secret"
-        }
-    }
+    OPTS = {"ordering": {"secret_genesis": "secret"}}
 
     def test_get_secret_genesis(self):
-        assert ("secret" == get_secret_genesis(opts=self.OPTS))
+        assert "secret" == get_secret_genesis(opts=self.OPTS)
 
 
 class TestGetKafkaConfigs:
-    OPTS = {
-        "ordering": {
-            "kafka": {"name": "kafka-hlf"}
-        }
-    }
+    OPTS = {"ordering": {"kafka": {"name": "kafka-hlf"}}}
 
     def test_get_kafka_configs(self):
-        assert ({"name": "kafka-hlf"} == get_kafka_configs(opts=self.OPTS))
+        assert {"name": "kafka-hlf"} == get_kafka_configs(opts=self.OPTS)
 
 
 class TestGetAnOrdererMSP:
     OPTS = {
         "msps": {
-            "AlphaMSP": {
-                "orderers": {
-                    "nodes":{"ord0":{} }
-                }
-            },
-            "BetaMSP": {
-                "orderers": {}
-            }
+            "AlphaMSP": {"orderers": {"nodes": {"ord0": {}}}},
+            "BetaMSP": {"orderers": {}},
         }
     }
 
     def test_get_an_orderer_msp(self):
-        assert ("AlphaMSP" == get_an_orderer_msp(opts=self.OPTS))
+        assert "AlphaMSP" == get_an_orderer_msp(opts=self.OPTS)
 
 
 class TestIsOrdererMSP:
     OPTS = {
         "msps": {
-            "AlphaMSP": {
-                "orderers": {
-                    "nodes":{"ord0":{} }
-                }
-            },
-            "BetaMSP": {
-                "orderers": {}
-            }
+            "AlphaMSP": {"orderers": {"nodes": {"ord0": {}}}},
+            "BetaMSP": {"orderers": {}},
         }
     }
 

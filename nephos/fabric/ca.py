@@ -52,17 +52,10 @@ def ca_chart(opts, release, upgrade=False):
         config_yaml = f"{values_dir}/postgres-ca/{release}-pg.yaml"
         extra_vars = helm_extra_vars(version=version, config_yaml=config_yaml)
         helm_install(
-            "stable",
-            "postgresql",
-            f"{release}-pg",
-            ca_namespace,
-            extra_vars=extra_vars,
-            
+            "stable", "postgresql", f"{release}-pg", ca_namespace, extra_vars=extra_vars
         )
         helm_check("postgresql", f"{release}-pg", ca_namespace)
-    psql_secret = secret_read(
-        f"{release}-pg-postgresql", ca_namespace
-    )
+    psql_secret = secret_read(f"{release}-pg-postgresql", ca_namespace)
     # Different key depending of PostgreSQL version
     psql_password = (
         psql_secret.get("postgres-password") or psql_secret["postgresql-password"]
@@ -75,27 +68,14 @@ def ca_chart(opts, release, upgrade=False):
         extra_vars = helm_extra_vars(
             version=version, config_yaml=config_yaml, env_vars=env_vars
         )
-        helm_install(
-            repository,
-            "hlf-ca",
-            release,
-            ca_namespace,
-            extra_vars=extra_vars,
-            
-        )
+        helm_install(repository, "hlf-ca", release, ca_namespace, extra_vars=extra_vars)
     else:
         preserve = (
             HelmPreserve(
-                ca_namespace,
-                f"{release}-hlf-ca--ca",
-                "CA_ADMIN",
-                "adminUsername",
+                ca_namespace, f"{release}-hlf-ca--ca", "CA_ADMIN", "adminUsername"
             ),
             HelmPreserve(
-                ca_namespace,
-                f"{release}-hlf-ca--ca",
-                "CA_PASSWORD",
-                "adminPassword",
+                ca_namespace, f"{release}-hlf-ca--ca", "CA_PASSWORD", "adminPassword"
             ),
         )
         extra_vars = helm_extra_vars(
@@ -104,9 +84,7 @@ def ca_chart(opts, release, upgrade=False):
             env_vars=env_vars,
             preserve=preserve,
         )
-        helm_upgrade(
-            repository, "hlf-ca", release, extra_vars=extra_vars
-        )
+        helm_upgrade(repository, "hlf-ca", release, extra_vars=extra_vars)
     helm_check("hlf-ca", release, ca_namespace)
 
 
@@ -177,24 +155,16 @@ def setup_ca(opts, upgrade=False):
         ca_chart(opts=opts, release=ca_name, upgrade=upgrade)
 
         # Obtain CA pod and Enroll
-        pod_exec = get_helm_pod(
-            namespace=ca_namespace, release=ca_name, app="hlf-ca"
-        )
+        pod_exec = get_helm_pod(namespace=ca_namespace, release=ca_name, app="hlf-ca")
         ca_enroll(pod_exec)
 
         # Get CA Ingress and check it is running
         try:
             # Get ingress of CA
-            ingress_urls = ingress_read(
-                ca_name + "-hlf-ca", namespace=ca_namespace
-            )
+            ingress_urls = ingress_read(ca_name + "-hlf-ca", namespace=ca_namespace)
         except ApiException:
             logging.warning("No ingress found for CA")
             continue
 
         # Check the CA is running
-        check_ca(
-            ingress_host=ingress_urls[0],
-            cacert=ca_values.get("tls_cert"),
-            
-        )
+        check_ca(ingress_host=ingress_urls[0], cacert=ca_values.get("tls_cert"))

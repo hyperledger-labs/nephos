@@ -242,18 +242,8 @@ class TestSetupCa:
         )
         mock_get_pod.assert_has_calls(
             [
-                call(
-                    namespace="root-namespace",
-                    release="root-ca",
-                    app="hlf-ca",
-                    
-                ),
-                call(
-                    namespace="int-namespace",
-                    release="int-ca",
-                    app="hlf-ca",
-                    
-                ),
+                call(namespace="root-namespace", release="root-ca", app="hlf-ca"),
+                call(namespace="int-namespace", release="int-ca", app="hlf-ca"),
             ]
         )
         mock_ca_enroll.assert_has_calls(
@@ -293,18 +283,8 @@ class TestSetupCa:
         )
         mock_get_pod.assert_has_calls(
             [
-                call(
-                    namespace="root-namespace",
-                    release="root-ca",
-                    app="hlf-ca",
-                    
-                ),
-                call(
-                    namespace="int-namespace",
-                    release="int-ca",
-                    app="hlf-ca",
-                    
-                ),
+                call(namespace="root-namespace", release="root-ca", app="hlf-ca"),
+                call(namespace="int-namespace", release="int-ca", app="hlf-ca"),
             ]
         )
         mock_ca_enroll.assert_has_calls(

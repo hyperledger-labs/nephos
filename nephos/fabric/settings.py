@@ -42,7 +42,9 @@ def check_cluster(cluster_name):
     """
     context = context_get()
     if context["context"]["cluster"] != cluster_name:
-        message = f"We expect to use cluster {cluster_name}, but are instead using cluster {context['context']['cluster']}",
+        message = (
+            f"We expect to use cluster {cluster_name}, but are instead using cluster {context['context']['cluster']}",
+        )
         raise ValueError(message)
 
 
