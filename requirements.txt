@@ -27,7 +27,7 @@ kubernetes==10.0.0
 m2r==0.2.1
 MarkupSafe==1.1.1
 mistune==0.8.4
-more-itertools==7.1.0
+more-itertools==7.2.0
 oauthlib==3.0.2
 packaging==19.0
 pbr==5.4.1
