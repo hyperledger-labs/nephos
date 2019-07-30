@@ -16,7 +16,7 @@ chardet==3.0.4
 Click==7.0
 coverage==4.5.3
 cryptography==2.7
-docutils==0.15.1
+docutils==0.15.2
 gitdb2==2.0.5
 GitPython==2.1.12
 google-auth==1.6.3
