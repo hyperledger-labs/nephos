@@ -1,5 +1,5 @@
 image:
-  tag: 1.3.0
+  tag: 1.4.1
 
 ingress:
   enabled: true
@@ -9,12 +9,12 @@ ingress:
   path: /
   hosts:
     # TODO: Change this to your Domain Name
-    - ca.nephos.local
+    - inzamam.tk
   tls:
     - secretName: ca--tls
       hosts:
         # TODO: Change this to your Domain Name
-        - ca.nephos.local
+        - inzamam.tk
 
 persistence:
   accessMode: ReadWriteOnce
