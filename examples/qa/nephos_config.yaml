@@ -2,7 +2,7 @@ core:
   # Comment out to make it work on your cluster
   cluster: minikube
   # ChartMuseum repository or directory holding charts
-  chart_repo: aidtech
+  chart_repo: stable
   # Directory where we hold configtx.yaml
   dir_config: ./examples/qa/config
   # Directory where we hold:
