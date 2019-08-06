@@ -15,6 +15,7 @@ secrets:
     cert: hlf--peer1-idcert
     key: hlf--peer1-idkey
     caCert: hlf--betaadmin-cacert
+  ordTlsRootCert: hlf--tls-client-orderer-certs
   channels:
     - hlf--foochannel
   adminCert: hlf--betaadmin-idcert
