@@ -125,9 +125,21 @@ def get_org_tls_ca_cert(opts, msp_namespace):
             )
 
 
+def get_tls_path(opts, id_type, namespace, release):
+    # will be modified to get the tls_cert directory according to opts["ordering"]["tls"]["tls_ca"]
+    glob_target = f"{opts['core']['dir_crypto']}/crypto-config/{id_type}Organizations/{namespace}*/{id_type}s/{release}*/tls"
+    tls_path_list = glob(glob_target)
+    if len(tls_path_list) == 1:
+        return tls_path_list[0]
+    else:
+        raise ValueError(
+            f"MSP path list length is {len(tls_path_list)} - {tls_path_list}"
+        )
+
+
 def is_orderer_tls_true(opts):
     if opts["ordering"]["tls"]:
-        return opts["ordering"]["tls"]
+        return opts["ordering"]["tls"]["enable"]
     return False
 
 
