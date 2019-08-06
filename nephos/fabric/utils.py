@@ -17,7 +17,7 @@ from os import path
 
 from kubernetes.client.rest import ApiException
 
-from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret_read
+from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret_read, secret_from_files
 from nephos.helpers.misc import execute, rand_string
 
 
@@ -47,6 +47,12 @@ def credentials_secret(secret_name, namespace, username, password=None):
         secret_data = {"CA_USERNAME": username, "CA_PASSWORD": password}
         secret_create(secret_data, secret_name, namespace)
     return secret_data
+
+
+def tls_secret(secret_name, namespace, keys_files_path):
+    secret_from_files(
+        secret=secret_name, namespace=namespace, keys_files_path=keys_files_path
+    )
 
 
 def crypto_secret(secret_name, namespace, file_path, key):
@@ -103,6 +109,26 @@ def get_helm_pod(namespace, release, app, item=0):
     """
     identifier = f'-l "app={app},release={release}"'
     return get_pod(namespace, identifier, item=item)
+
+
+def get_org_tls_ca_cert(opts, msp_namespace):
+    if opts["cas"]:
+        pass
+    else:
+        glob_target = f"{opts['core']['dir_crypto']}/crypto-config/*Organizations/{msp_namespace}*/tlsca/*.pem"
+        msp_path_list = glob(glob_target)
+        if len(msp_path_list) == 1:
+            return msp_path_list[0]
+        else:
+            raise ValueError(
+                f"TLS path list length is {len(msp_path_list)} - {msp_path_list}"
+            )
+
+
+def is_orderer_tls_true(opts):
+    if opts["ordering"]["tls"]:
+        return opts["ordering"]["tls"]
+    return False
 
 
 def get_orderers(opts, msp):
