@@ -33,6 +33,10 @@ from nephos.fabric.utils import (
     crypto_secret,
     get_helm_pod,
     get_secret_genesis,
+    tls_secret,
+    is_orderer_tls_true,
+    get_org_tls_ca_cert,
+    get_tls_path
 )
 
 PWD = getcwd()
@@ -326,6 +330,23 @@ def cacerts_to_secrets(namespace, msp_path, user):
         item_to_secret(namespace, msp_path, user, item)
 
 
+def tls_to_secrets(namespace, tls_path, username):
+    keys_files_path = {"tls.crt": f"{tls_path}/server.crt", "tls.key": f"{tls_path}/server.key"}
+    secret_name = f"hlf--{username}-tls"
+    tls_secret(secret_name=secret_name, namespace=namespace, keys_files_path=keys_files_path)
+
+    keys_files_path = {"cacert.pem": f"{tls_path}/ca.crt"}
+    secret_name = f"hlf--orderer-tlsrootcert"
+    tls_secret(secret_name=secret_name, namespace=namespace, keys_files_path=keys_files_path)
+
+
+def setup_tls(opts, msp_name, release, id_type):
+    node_namespace = get_namespace(opts, msp_name)
+    tls_path = get_tls_path(opts=opts, id_type=id_type, namespace=node_namespace, release=release)
+
+    tls_to_secrets(namespace=node_namespace, tls_path=tls_path, username=release)
+
+
 def setup_id(opts, msp_name, release, id_type):
     """Setup single ID by registering, enrolling, and saving ID to K8S secrets.
 
@@ -382,9 +403,25 @@ def setup_nodes(opts):
         for peer in get_peers(opts=opts, msp=msp):
             setup_id(opts, msp, peer, "peer")
 
+    tls = is_orderer_tls_true(opts)
     for msp in get_msps(opts=opts):
         for orderer in get_orderers(opts=opts, msp=msp):
             setup_id(opts, msp, orderer, "orderer")
+            if tls:
+                setup_tls(opts, msp, orderer, "orderer")
+
+    # create necessary secrets in peer nodes
+    if tls:
+        keys_files_path = {}
+        for msp in get_msps(opts=opts):
+            if is_orderer_msp(opts=opts, msp=msp):
+                msp_namespace = get_namespace(opts=opts, msp=msp)
+                keys_files_path[f"{msp_namespace}.pem"] = get_org_tls_ca_cert(opts=opts, msp_namespace=msp_namespace)
+
+        for msp in get_msps(opts=opts):
+            secret_name = f"hlf--tls-client-orderer-certs"
+            msp_namespace = get_namespace(opts=opts, msp=msp)
+            tls_secret(secret_name=secret_name, namespace=msp_namespace, keys_files_path=keys_files_path)
 
 
 # ConfigTxGen helpers
