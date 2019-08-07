@@ -116,7 +116,7 @@ def get_org_tls_ca_cert(opts, msp_namespace):
             path: path to the directory containing tls certificate for an org
     """
 
-    if opts["cas"]:
+    if "tls_ca" in opts["ordering"]["tls"]:
         pass
     else:
         glob_target = f"{opts['core']['dir_crypto']}/crypto-config/*Organizations/{msp_namespace}*/tlsca/*.pem"
@@ -161,7 +161,7 @@ def is_orderer_tls_true(opts):
             Boolean: return true if tls is enabled for orderer and false otherwise
     """
 
-    if opts["ordering"]["tls"]:
+    if "tls" in opts["ordering"]:
         return opts["ordering"]["tls"]["enable"]
     return False
 

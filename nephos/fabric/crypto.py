@@ -339,11 +339,11 @@ def tls_to_secrets(namespace, tls_path, username):
     """
     keys_files_path = {"tls.crt": f"{tls_path}/server.crt", "tls.key": f"{tls_path}/server.key"}
     secret_name = f"hlf--{username}-tls"
-    secret_from_files(secret_name=secret_name, namespace=namespace, keys_files_path=keys_files_path)
+    secret_from_files(secret=secret_name, namespace=namespace, keys_files_path=keys_files_path)
 
     keys_files_path = {"cacert.pem": f"{tls_path}/ca.crt"}
     secret_name = f"hlf--orderer-tlsrootcert"
-    secret_from_files(secret_name=secret_name, namespace=namespace, keys_files_path=keys_files_path)
+    secret_from_files(secret=secret_name, namespace=namespace, keys_files_path=keys_files_path)
 
 
 def setup_tls(opts, msp_name, release, id_type):
@@ -435,7 +435,7 @@ def setup_nodes(opts):
         for msp in get_msps(opts=opts):
             secret_name = f"hlf--tls-client-orderer-certs"
             msp_namespace = get_namespace(opts=opts, msp=msp)
-            secret_from_files(secret_name=secret_name, namespace=msp_namespace, keys_files_path=keys_files_path)
+            secret_from_files(secret=secret_name, namespace=msp_namespace, keys_files_path=keys_files_path)
 
 
 # ConfigTxGen helpers
