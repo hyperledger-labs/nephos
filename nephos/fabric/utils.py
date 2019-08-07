@@ -17,7 +17,7 @@ from os import path
 
 from kubernetes.client.rest import ApiException
 
-from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret_read, secret_from_files
+from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret_read
 from nephos.helpers.misc import execute, rand_string
 
 
@@ -47,12 +47,6 @@ def credentials_secret(secret_name, namespace, username, password=None):
         secret_data = {"CA_USERNAME": username, "CA_PASSWORD": password}
         secret_create(secret_data, secret_name, namespace)
     return secret_data
-
-
-def tls_secret(secret_name, namespace, keys_files_path):
-    secret_from_files(
-        secret=secret_name, namespace=namespace, keys_files_path=keys_files_path
-    )
 
 
 def crypto_secret(secret_name, namespace, file_path, key):
@@ -112,6 +106,16 @@ def get_helm_pod(namespace, release, app, item=0):
 
 
 def get_org_tls_ca_cert(opts, msp_namespace):
+    """Get path to the directory containing tls certificate for an org
+
+        Args:
+            opts (dict): Nephos options dict.
+            msp_name (str): Name of Membership Service Provider.
+
+        Returns:
+            path: path to the directory containing tls certificate for an org
+    """
+
     if opts["cas"]:
         pass
     else:
@@ -126,6 +130,17 @@ def get_org_tls_ca_cert(opts, msp_namespace):
 
 
 def get_tls_path(opts, id_type, namespace, release):
+    """Get path to the directory containing tls materials for a node
+        Args:
+            opts (dict): Nephos options dict.
+            id_type (str): Type of ID we use.
+            namespace (str): Name of namespace.
+            release (str): Name of release/node.
+
+        Returns:
+            path: path to the directory containing materials of a node
+    """
+
     # will be modified to get the tls_cert directory according to opts["ordering"]["tls"]["tls_ca"]
     glob_target = f"{opts['core']['dir_crypto']}/crypto-config/{id_type}Organizations/{namespace}*/{id_type}s/{release}*/tls"
     tls_path_list = glob(glob_target)
@@ -138,6 +153,14 @@ def get_tls_path(opts, id_type, namespace, release):
 
 
 def is_orderer_tls_true(opts):
+    """Check if tls is enabled for orderer
+        Args:
+            opts (dict): Nephos options dict.
+
+        Returns:
+            Boolean: return true if tls is enabled for orderer and false otherwise
+    """
+
     if opts["ordering"]["tls"]:
         return opts["ordering"]["tls"]["enable"]
     return False

@@ -18,7 +18,6 @@ ordering:
   secret_genesis: hlf--genesis
   tls:
     enable: true
-    tls_ca: {}
 msps:
   AlphaMSP:
     ca: ca

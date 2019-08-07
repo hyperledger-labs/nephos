@@ -21,7 +21,7 @@ from time import sleep
 import logging
 
 from nephos.fabric.settings import get_namespace
-from nephos.helpers.k8s import ns_create, ingress_read, secret_from_file
+from nephos.helpers.k8s import ns_create, ingress_read, secret_from_file, secret_from_files
 from nephos.helpers.misc import execute, execute_until_success
 from nephos.fabric.utils import (
     get_msps,
@@ -33,7 +33,6 @@ from nephos.fabric.utils import (
     crypto_secret,
     get_helm_pod,
     get_secret_genesis,
-    tls_secret,
     is_orderer_tls_true,
     get_org_tls_ca_cert,
     get_tls_path
@@ -331,16 +330,31 @@ def cacerts_to_secrets(namespace, msp_path, user):
 
 
 def tls_to_secrets(namespace, tls_path, username):
+    """Get the tls server.crt and server.key and create the relevant secret
+
+        Args:
+            namespace (str): Namespace where secret will live.
+            tls_path (str): Path to the tls crypto-material.
+            username (str): Username for identity.
+    """
     keys_files_path = {"tls.crt": f"{tls_path}/server.crt", "tls.key": f"{tls_path}/server.key"}
     secret_name = f"hlf--{username}-tls"
-    tls_secret(secret_name=secret_name, namespace=namespace, keys_files_path=keys_files_path)
+    secret_from_files(secret_name=secret_name, namespace=namespace, keys_files_path=keys_files_path)
 
     keys_files_path = {"cacert.pem": f"{tls_path}/ca.crt"}
     secret_name = f"hlf--orderer-tlsrootcert"
-    tls_secret(secret_name=secret_name, namespace=namespace, keys_files_path=keys_files_path)
+    secret_from_files(secret_name=secret_name, namespace=namespace, keys_files_path=keys_files_path)
 
 
 def setup_tls(opts, msp_name, release, id_type):
+    """Setup tls by saving ID to K8S secrets.
+
+    Args:
+        opts (dict): Nephos options dict.
+        msp_name (str): Name of Membership Service Provider.
+        release (str): Name of release/node.
+        id_type (str): Type of ID we use.
+    """
     node_namespace = get_namespace(opts, msp_name)
     tls_path = get_tls_path(opts=opts, id_type=id_type, namespace=node_namespace, release=release)
 
@@ -421,7 +435,7 @@ def setup_nodes(opts):
         for msp in get_msps(opts=opts):
             secret_name = f"hlf--tls-client-orderer-certs"
             msp_namespace = get_namespace(opts=opts, msp=msp)
-            tls_secret(secret_name=secret_name, namespace=msp_namespace, keys_files_path=keys_files_path)
+            secret_from_files(secret_name=secret_name, namespace=msp_namespace, keys_files_path=keys_files_path)
 
 
 # ConfigTxGen helpers
