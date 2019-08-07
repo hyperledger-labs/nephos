@@ -8,11 +8,15 @@ persistence:
 ord:
   type: Solo
   mspID: AlphaMSP
-
+  tls:
+    server:
+      enabled: "true"
 secrets:
   ord:
     cert: hlf--ord1-idcert
     key: hlf--ord1-idkey
     caCert: hlf--alphaadmin-cacert
+    tls: hlf--ord1-tls
+    tlsRootCert: hlf--orderer-tlsrootcert
   genesis: hlf--genesis
   adminCert: hlf--alphaadmin-idcert
