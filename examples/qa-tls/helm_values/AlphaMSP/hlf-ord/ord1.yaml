@@ -1,0 +1,33 @@
+image:
+  tag: 1.4.1
+
+persistence:
+  accessMode: ReadWriteOnce
+  size: 1Gi
+
+ord:
+  type: Solo
+  mspID: AlphaMSP
+  tls:
+    server:
+      enabled: "true"
+
+secrets:
+  ord:
+    cert: hlf--ord1-idcert
+    key: hlf--ord1-idkey
+    caCert: hlf--alphaadmin-cacert
+    tls: hlf--ord1-tls
+    tlsRootCert: hlf--orderer-tlsrootcert
+  genesis: hlf--genesis
+  adminCert: hlf--alphaadmin-idcert
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 95
+        podAffinityTerm:
+          topologyKey: "kubernetes.io/hostname"
+          labelSelector:
+            matchLabels:
+              app: hlf-ord

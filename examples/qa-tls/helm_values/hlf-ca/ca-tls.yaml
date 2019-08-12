@@ -1,0 +1,44 @@
+image:
+  tag: 1.4.1
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    # TODO: When working locally, we may wish to comment the cluster-issuer
+    #certmanager.k8s.io/cluster-issuer: "letsencrypt-production"
+  path: /
+  hosts:
+    # TODO: Change this to your Domain Name if not working locally
+    - ca-tls.nephos.local
+  tls:
+    - secretName: ca--tls
+      hosts:
+        # TODO: Change this to your Domain Name if not working locally
+        - ca-tls.nephos.local
+
+persistence:
+  accessMode: ReadWriteOnce
+  size: 1Gi
+
+caName: ca-tls
+
+externalDatabase:
+  type: postgres
+  host: ca-tls-pg-postgresql
+  username: postgres
+  # password:
+  database: fabric_tls_ca
+  port: "5432"
+
+config:
+  hlfToolsVersion: 1.3.0
+  csr:
+    names:
+      c: IE
+      st: Dublin
+      l:
+      o: "AID:Tech"
+      ou: Blockchain
+  affiliations:
+    aidtech: []

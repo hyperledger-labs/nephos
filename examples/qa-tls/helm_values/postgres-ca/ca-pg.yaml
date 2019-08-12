@@ -1,0 +1,15 @@
+imageTag: "9.6.2"
+
+# postgresPassword:
+postgresDatabase: fabric_ca
+
+service:
+  ## PosgresSQL service type
+  type: ClusterIP
+  # clusterIP: None
+  port: 5433
+
+persistence:
+  enabled: true
+  size: 1Gi
+
