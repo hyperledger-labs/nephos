@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 from glob import glob
-from os import path
+from os import path, rename
 
 from kubernetes.client.rest import ApiException
 
@@ -106,27 +106,27 @@ def get_helm_pod(namespace, release, app, item=0):
 
 
 def get_org_tls_ca_cert(opts, msp_namespace):
-    """Get path to the directory containing tls certificate for an org
+    """Get path to the directory containing tls CA certificate
 
         Args:
             opts (dict): Nephos options dict.
             msp_name (str): Name of Membership Service Provider.
 
         Returns:
-            path: path to the directory containing tls certificate for an org
+            path: path to the directory containing tls CA certificate
     """
 
     if "tls_ca" in opts["ordering"]["tls"]:
-        pass
+        glob_target = f"{opts['core']['dir_crypto']}/tlscacerts/*.crt"
     else:
         glob_target = f"{opts['core']['dir_crypto']}/crypto-config/*Organizations/{msp_namespace}*/tlsca/*.pem"
-        msp_path_list = glob(glob_target)
-        if len(msp_path_list) == 1:
-            return msp_path_list[0]
-        else:
-            raise ValueError(
-                f"TLS path list length is {len(msp_path_list)} - {msp_path_list}"
-            )
+    tls_path_list = glob(glob_target)
+    if len(tls_path_list) == 1:
+        return tls_path_list[0]
+    else:
+        raise ValueError(
+            f"TLS path list length is {len(tls_path_list)} - {tls_path_list}"
+        )
 
 
 def get_tls_path(opts, id_type, namespace, release):
@@ -141,8 +141,10 @@ def get_tls_path(opts, id_type, namespace, release):
             path: path to the directory containing materials of a node
     """
 
-    # will be modified to get the tls_cert directory according to opts["ordering"]["tls"]["tls_ca"]
-    glob_target = f"{opts['core']['dir_crypto']}/crypto-config/{id_type}Organizations/{namespace}*/{id_type}s/{release}*/tls"
+    if "tls_ca" in opts["ordering"]["tls"]:
+        glob_target = f"{opts['core']['dir_crypto']}/{release}_TLS/tls"
+    else:
+        glob_target = f"{opts['core']['dir_crypto']}/crypto-config/{id_type}Organizations/{namespace}*/{id_type}s/{release}*/tls"
     tls_path_list = glob(glob_target)
     if len(tls_path_list) == 1:
         return tls_path_list[0]
@@ -164,6 +166,20 @@ def is_orderer_tls_true(opts):
     if "tls" in opts["ordering"]:
         return opts["ordering"]["tls"]["enable"]
     return False
+
+
+def rename_file(directory, name):
+    """Rename a single file within a folder
+        Args:
+            directory (string): Path to the folder
+            name (string): name to which the file should be renamed
+    """
+    file_list = glob(path.join(directory, "*"))
+    if len(file_list) == 1:
+        file = file_list[0]
+    else:
+        raise ValueError(f"from_dir contains {len(file_list)} files - {file_list}")
+    rename(file, path.join(directory, name))
 
 
 def get_orderers(opts, msp):
