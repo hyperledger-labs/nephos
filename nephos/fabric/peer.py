@@ -148,7 +148,6 @@ def peer_channel_suffix(opts, ord_msp, ord_name):
     if ord_tls:
         cmd_suffix = (
             "--tls "
-            + f"--ordererTLSHostnameOverride {ord_name}-hlf-ord "
             + f"--cafile $(ls ${{ORD_TLS_PATH}}/*.pem)"
         )
     else:
