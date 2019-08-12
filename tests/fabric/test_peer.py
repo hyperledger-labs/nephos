@@ -240,7 +240,7 @@ class TestPeerChannelSuffix:
         mock_check_ord_tls.assert_called_once_with(self.OPTS, "AlphaMSP", "ord42")
         assert (
             result
-            == "--tls --ordererTLSHostnameOverride ord42-hlf-ord --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
+            == "--tls --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
         )
 
     @patch("nephos.fabric.peer.check_ord_tls")

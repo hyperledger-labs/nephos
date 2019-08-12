@@ -202,7 +202,7 @@ class TestEnrollId:
         mock_isdir.assert_called_once_with("./crypto/an-ord_MSP")
         mock_execute_until_success.assert_called_once_with(
             "FABRIC_CA_CLIENT_HOME=./crypto fabric-ca-client enroll "
-            + "-u https://an-ord:a-password@an-ingress -M ./crypto/an-ord_MSP "
+            + "-u https://an-ord:a-password@an-ingress  -M ./crypto/an-ord_MSP "
             + "--tls.certfiles /home/nephos/tls_cert.pem"
         )
 
@@ -240,7 +240,7 @@ class TestEnrollId:
         mock_isdir.assert_called_once_with("./crypto/a-peer_MSP")
         mock_execute_until_success.assert_called_once_with(
             "FABRIC_CA_CLIENT_HOME=./crypto fabric-ca-client enroll "
-            + "-u https://a-peer:a-password@an-ingress -M ./crypto/a-peer_MSP "
+            + "-u https://a-peer:a-password@an-ingress  -M ./crypto/a-peer_MSP "
             + "--tls.certfiles /home/nephos/tls_cert.pem"
         )
 
@@ -818,6 +818,9 @@ class TestSetupNodes:
         "cas": {
             "ca-ord": {"namespace": "ca-namespace"},
             "ca-peer": {"namespace": "ca-namespace"},
+        },
+        "ordering":{
+            "enable": "true"
         },
         "msps": {
             "AlphaMSP": {
