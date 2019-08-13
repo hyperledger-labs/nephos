@@ -164,7 +164,7 @@ def is_orderer_tls_true(opts):
     """
 
     if "tls" in opts["ordering"]:
-        return opts["ordering"]["tls"]["enable"]
+        return opts["ordering"]["tls"]["enable"] == "true"
     return False
 
 
