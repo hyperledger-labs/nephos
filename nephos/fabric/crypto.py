@@ -333,7 +333,7 @@ def cacerts_to_secrets(namespace, msp_path, user):
 
 
 def tls_to_secrets(namespace, tls_path, username):
-    """Get the tls server.crt and server.key and create the relevant secret
+    """Get the TLS server.crt and server.key and create the relevant secret
 
         Args:
             namespace (str): Namespace where secret will live.
@@ -350,7 +350,7 @@ def tls_to_secrets(namespace, tls_path, username):
 
 
 def setup_tls(opts, msp_name, release, id_type):
-    """Setup tls by saving ID to K8S secrets.
+    """Setup TLS by saving ID to K8S secrets.
 
     Args:
         opts (dict): Nephos options dict.

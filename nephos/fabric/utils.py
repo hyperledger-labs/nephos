@@ -130,7 +130,7 @@ def get_org_tls_ca_cert(opts, msp_namespace):
 
 
 def get_tls_path(opts, id_type, namespace, release):
-    """Get path to the directory containing tls materials for a node
+    """Get path to the directory containing TLS materials for a node
         Args:
             opts (dict): Nephos options dict.
             id_type (str): Type of ID we use.
@@ -138,7 +138,7 @@ def get_tls_path(opts, id_type, namespace, release):
             release (str): Name of release/node.
 
         Returns:
-            path: path to the directory containing materials of a node
+            str: path to the directory containing materials of a node
     """
 
     if "tls_ca" in opts["ordering"]["tls"]:
@@ -160,7 +160,7 @@ def is_orderer_tls_true(opts):
             opts (dict): Nephos options dict.
 
         Returns:
-            Boolean: return true if tls is enabled for orderer and false otherwise
+            bool: return true if tls is enabled for orderer and false otherwise
     """
 
     if "tls" in opts["ordering"]:
