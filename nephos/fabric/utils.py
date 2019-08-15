@@ -17,7 +17,7 @@ from os import path, rename
 
 from kubernetes.client.rest import ApiException
 
-from nephos.helpers.k8s import Executer, secret_create, secret_from_file, secret_read
+from nephos.helpers.k8s import Executer, secret_create, secret_read, secret_from_files
 from nephos.helpers.misc import execute, rand_string
 
 
@@ -61,8 +61,8 @@ def crypto_secret(secret_name, namespace, file_path, key):
     secret_files = glob(path.join(file_path, "*"))
     if len(secret_files) != 1:
         raise Exception("We should only find one file in this directory")
-    secret_from_file(
-        secret=secret_name, namespace=namespace, key=key, filename=secret_files[0]
+    secret_from_files(
+        secret=secret_name, namespace=namespace, keys_files_path={key: secret_files[0]}
     )
 
 

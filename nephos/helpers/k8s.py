@@ -265,28 +265,6 @@ def secret_from_files(secret, namespace, keys_files_path):
         secret_create(secret_data, secret, namespace)
 
 
-def secret_from_file(secret, namespace, key=None, filename=None):
-    """Convert a file into a K8S Secret.
-
-    Args:
-        secret (str): Name of Secret where to save the file.
-        namespace (str): Name of namespace.
-        key (str): Key to which to assign the file in the K8S t. If not specified, the filename is used.
-        filename (str): If not provided, we ask the user for input.
-    """
-    try:
-        secret_read(secret, namespace)
-    except ApiException:
-        # Get relevant variables
-        if not filename:
-            secret_data = input_files((key,), clean_key=True)
-        else:
-            with open(filename, "rb") as f:
-                data = f.read()
-                secret_data = {key: data}
-        secret_create(secret_data, secret, namespace)
-
-
 def get_app_info(namespace, ingress, secret, secret_key="API_KEY"):
     """Get application information.
 

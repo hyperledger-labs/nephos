@@ -21,7 +21,7 @@ from time import sleep
 import logging
 
 from nephos.fabric.settings import get_namespace
-from nephos.helpers.k8s import ns_create, ingress_read, secret_from_file, secret_from_files
+from nephos.helpers.k8s import ns_create, ingress_read, secret_from_files
 from nephos.helpers.misc import execute, execute_until_success
 from nephos.fabric.utils import (
     get_msps,
@@ -494,11 +494,10 @@ def genesis_block(opts):
             continue
         ord_namespace = get_namespace(opts, msp=msp)
         # Create the genesis block secret
-        secret_from_file(
+        secret_from_files(
             secret=get_secret_genesis(opts=opts),
             namespace=ord_namespace,
-            key=genesis_key,
-            filename=genesis_file,
+            keys_files_path = {genesis_key: genesis_file}
         )
         # Return to original directory
     chdir(PWD)
@@ -528,11 +527,10 @@ def channel_tx(opts):
             if msp not in opts["channels"][channel]["msps"]:
                 continue
             peer_namespace = get_namespace(opts, msp=msp)
-            secret_from_file(
+            secret_from_files(
                 secret=opts["channels"][channel]["secret_channel"],
                 namespace=peer_namespace,
-                key=channel_key,
-                filename=channel_file,
+                keys_files_path = {channel_key: channel_file}
             )
             # Return to original directory
     chdir(PWD)

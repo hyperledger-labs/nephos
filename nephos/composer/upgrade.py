@@ -19,7 +19,8 @@ import logging
 
 from nephos.fabric.settings import get_namespace
 from nephos.fabric.utils import get_helm_pod
-from nephos.helpers.k8s import secret_from_file
+from nephos.helpers.k8s import secret_create
+from nephos.helpers.misc import input_files
 
 CURRENT_DIR = os.path.abspath(os.path.split(__file__)[0])
 
@@ -32,9 +33,9 @@ def upgrade_network(opts, verbose=False):
         verbose (bool): Verbosity. False by default.
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
-    secret_from_file(
-        secret=opts["composer"]["secret_bna"], namespace=peer_namespace, verbose=verbose
-    )
+    secret_data = input_files((None,), clean_key=True)
+    secret_create(secret_data, opts["composer"]["secret_bna"], peer_namespace)
+
     # Set up the PeerAdmin card
     hlc_cli_ex = get_helm_pod(peer_namespace, "hlc", "hl-composer", verbose=verbose)
 
