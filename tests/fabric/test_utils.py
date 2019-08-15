@@ -82,27 +82,26 @@ class TestCredentialsSecret:
 
 
 class TestCryptoSecret:
-    @patch("nephos.fabric.utils.secret_from_file")
+    @patch("nephos.fabric.utils.secret_from_files")
     @patch("nephos.fabric.utils.glob")
-    def test_crypto_secret(self, mock_glob, mock_secret_from_file):
+    def test_crypto_secret(self, mock_glob, mock_secret_from_files):
         mock_glob.side_effect = [["./a_path/a_file.txt"]]
         crypto_secret("a-secret", "a-namespace", "./a_dir", "some_file.txt")
         mock_glob.assert_called_once_with("./a_dir/*")
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-secret",
             namespace="a-namespace",
-            key="some_file.txt",
-            filename="./a_path/a_file.txt",
+            keys_files_path={"some_file.txt": "./a_path/a_file.txt"}
         )
 
-    @patch("nephos.fabric.utils.secret_from_file")
+    @patch("nephos.fabric.utils.secret_from_files")
     @patch("nephos.fabric.utils.glob")
-    def test_crypto_secret_fail(self, mock_glob, mock_secret_from_file):
+    def test_crypto_secret_fail(self, mock_glob, mock_secret_from_files):
         mock_glob.side_effect = [[]]
         with pytest.raises(Exception):
             crypto_secret("a-secret", "a-namespace", "./a_dir", "some_file.txt")
         mock_glob.assert_called_once_with("./a_dir/*")
-        mock_secret_from_file.assert_not_called()
+        mock_secret_from_files.assert_not_called()
 
 
 class TestGetPod:

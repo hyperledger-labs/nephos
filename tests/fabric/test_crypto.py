@@ -894,7 +894,7 @@ class TestGenesisBlock:
         },
     }
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
@@ -909,7 +909,7 @@ class TestGenesisBlock:
         mock_execute,
         mock_exists,
         mock_log,
-        mock_secret_from_file,
+        mock_secret_from_files,
     ):
         mock_exists.side_effect = [False, False]
         mock_get_msps.side_effect = [["AlphaMSP", "BetaMSP"]]
@@ -925,20 +925,19 @@ class TestGenesisBlock:
             "configtxgen -profile OrdererGenesis -outputBlock ./crypto/genesis.block"
         )
         mock_log.info.assert_not_called()
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-genesis-secret",
             namespace="ord-ns",
-            key="genesis.block",
-            filename="./crypto/genesis.block",
+            keys_files_path={"genesis.block": "./crypto/genesis.block"}
         )
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_again(
-        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_files
     ):
         mock_exists.side_effect = [True, True]
         genesis_block(self.OPTS)
@@ -946,11 +945,10 @@ class TestGenesisBlock:
         mock_exists.assert_called_once_with("./crypto/genesis.block")
         mock_execute.assert_not_called()
         mock_log.info.assert_called_once_with("./crypto/genesis.block already exists")
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-genesis-secret",
             namespace="ord-ns",
-            key="genesis.block",
-            filename="./crypto/genesis.block",
+            keys_files_path= {"genesis.block": "./crypto/genesis.block"}
         )
 
 
@@ -968,13 +966,13 @@ class TestChannelTx:
         },
     }
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_blocks(
-        self, mock_chdir, mock_execute, mock_exists, mock_logging, mock_secret_from_file
+        self, mock_chdir, mock_execute, mock_exists, mock_logging, mock_secret_from_files
     ):
         mock_exists.side_effect = [False, False]
         channel_tx(self.OPTS)
@@ -984,20 +982,19 @@ class TestChannelTx:
             "configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx ./crypto/a-channel.tx"
         )
         mock_logging.info.assert_not_called()
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-channel-secret",
             namespace="peer-ns",
-            key="a-channel.tx",
-            filename="./crypto/a-channel.tx",
+            keys_files_path={"a-channel.tx": "./crypto/a-channel.tx"}
         )
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_again(
-        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_files
     ):
         mock_exists.side_effect = [True, True]
         channel_tx(self.OPTS)
@@ -1005,20 +1002,19 @@ class TestChannelTx:
         mock_exists.assert_called_once_with("./crypto/a-channel.tx")
         mock_execute.assert_not_called()
         mock_log.info.assert_called_once_with("./crypto/a-channel.tx already exists")
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-channel-secret",
             namespace="peer-ns",
-            key="a-channel.tx",
-            filename="./crypto/a-channel.tx",
+            keys_files_path={"a-channel.tx": "./crypto/a-channel.tx"}
         )
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_with_no_channel_msp(
-        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_files
     ):
         opts = deepcopy(self.OPTS)
         opts["channels"]["AChannel"]["msps"] = []
@@ -1028,7 +1024,7 @@ class TestChannelTx:
         mock_exists.assert_called_once_with("./crypto/a-channel.tx")
         mock_execute.assert_not_called()
         mock_log.info.assert_called_once_with("./crypto/a-channel.tx already exists")
-        mock_secret_from_file.assert_not_called()
+        mock_secret_from_files.assert_not_called()
 
 
 class TestTLSToSecrets:

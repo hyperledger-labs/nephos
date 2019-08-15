@@ -17,10 +17,11 @@ class TestUpgradeNetwork:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @patch("nephos.composer.upgrade.secret_from_file")
+    @patch("nephos.composer.upgrade.secret_create")
+    @patch("nephos.composer.upgrade.input_files")
     @patch("nephos.composer.upgrade.logging")
     @patch("nephos.composer.upgrade.get_helm_pod")
-    def test_upgrade_network(self, mock_get_pod, mock_log, mock_secret_from_file):
+    def test_upgrade_network(self, mock_get_pod, mock_log, mock_input_files, mock_secret_create):
         mock_pod_ex = Mock()
         mock_pod_ex.execute.side_effect = [
             ("a-network_a-version.bna", None),
@@ -30,9 +31,11 @@ class TestUpgradeNetwork:
             ("Business network version: a-version", None),
         ]
         mock_get_pod.side_effect = [mock_pod_ex]
+        mock_input_files.side_effect = [{"key": "data"}]
         upgrade_network(self.OPTS)
-        mock_secret_from_file.assert_called_once_with(
-            secret="bna-secret", namespace="peer-ns", verbose=False
+        mock_input_files.assert_called_once_with((None,), clean_key=True)
+        mock_secret_create.assert_called_once_with(
+            {"key": "data"}, "bna-secret", "peer-ns"
         )
         mock_get_pod.assert_called_once_with(
             "peer-ns", "hlc", "hl-composer", verbose=False
@@ -56,19 +59,22 @@ class TestUpgradeNetwork:
             [call("another-version"), call("Upgraded to a-version")]
         )
 
-    @patch("nephos.composer.upgrade.secret_from_file")
+    @patch("nephos.composer.upgrade.secret_create")
+    @patch("nephos.composer.upgrade.input_files")
     @patch("nephos.composer.upgrade.logging")
     @patch("nephos.composer.upgrade.get_helm_pod")
-    def test_upgrade_network_again(self, mock_get_pod, mock_log, mock_secret_from_file):
+    def test_upgrade_network_again(self, mock_get_pod, mock_log, mock_input_files, mock_secret_create):
         mock_pod_ex = Mock()
         mock_pod_ex.execute.side_effect = [
             ("a-network_a-version.bna", None),
             ("Business network version: a-version", None),
         ]
         mock_get_pod.side_effect = [mock_pod_ex]
+        mock_input_files.side_effect = [{"key": "data"}]
         upgrade_network(self.OPTS, verbose=True)
-        mock_secret_from_file.assert_called_once_with(
-            secret="bna-secret", namespace="peer-ns", verbose=True
+        mock_input_files.assert_called_once_with((None,), clean_key=True)
+        mock_secret_create.assert_called_once_with(
+            {"key": "data"}, "bna-secret", "peer-ns"
         )
         mock_get_pod.assert_called_once_with(
             "peer-ns", "hlc", "hl-composer", verbose=True
