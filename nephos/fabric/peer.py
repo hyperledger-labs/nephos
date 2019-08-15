@@ -146,10 +146,7 @@ def peer_channel_suffix(opts, ord_msp, ord_name):
     """
     ord_tls = check_ord_tls(opts, ord_msp, ord_name)
     if ord_tls:
-        cmd_suffix = (
-            "--tls "
-            + f"--cafile $(ls ${{ORD_TLS_PATH}}/*.pem)"
-        )
+        cmd_suffix = "--tls " + f"--cafile $(ls ${{ORD_TLS_PATH}}/*.pem)"
     else:
         cmd_suffix = ""
     return cmd_suffix

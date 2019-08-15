@@ -21,7 +21,9 @@ class TestUpgradeNetwork:
     @patch("nephos.composer.upgrade.input_files")
     @patch("nephos.composer.upgrade.logging")
     @patch("nephos.composer.upgrade.get_helm_pod")
-    def test_upgrade_network(self, mock_get_pod, mock_log, mock_input_files, mock_secret_create):
+    def test_upgrade_network(
+        self, mock_get_pod, mock_log, mock_input_files, mock_secret_create
+    ):
         mock_pod_ex = Mock()
         mock_pod_ex.execute.side_effect = [
             ("a-network_a-version.bna", None),
@@ -63,7 +65,9 @@ class TestUpgradeNetwork:
     @patch("nephos.composer.upgrade.input_files")
     @patch("nephos.composer.upgrade.logging")
     @patch("nephos.composer.upgrade.get_helm_pod")
-    def test_upgrade_network_again(self, mock_get_pod, mock_log, mock_input_files, mock_secret_create):
+    def test_upgrade_network_again(
+        self, mock_get_pod, mock_log, mock_input_files, mock_secret_create
+    ):
         mock_pod_ex = Mock()
         mock_pod_ex.execute.side_effect = [
             ("a-network_a-version.bna", None),

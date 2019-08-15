@@ -238,10 +238,7 @@ class TestPeerChannelSuffix:
         mock_check_ord_tls.side_effect = [True]
         result = peer_channel_suffix(self.OPTS, "AlphaMSP", "ord42")
         mock_check_ord_tls.assert_called_once_with(self.OPTS, "AlphaMSP", "ord42")
-        assert (
-            result
-            == "--tls --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
-        )
+        assert result == "--tls --cafile $(ls ${ORD_TLS_PATH}/*.pem)"
 
     @patch("nephos.fabric.peer.check_ord_tls")
     def test_peer_channel_suffix_notls(self, mock_check_ord_tls):

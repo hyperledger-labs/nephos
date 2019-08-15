@@ -118,7 +118,7 @@ class TestDeployComposer:
         mock_helm_install,
         mock_helm_upgrade,
         mock_input_files,
-        mock_secret_create
+        mock_secret_create,
     ):
         mock_get_version.side_effect = ["hlc-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars"]
@@ -158,7 +158,7 @@ class TestDeployComposer:
         mock_helm_install,
         mock_helm_upgrade,
         mock_input_files,
-        mock_secret_create
+        mock_secret_create,
     ):
         mock_get_version.side_effect = ["hlc-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars"]

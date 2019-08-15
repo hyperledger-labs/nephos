@@ -17,7 +17,7 @@ from nephos.helpers.k8s import (
     secret_create,
     secret_read,
     secret_from_file,
-    secret_from_files
+    secret_from_files,
 )
 
 # NamedTuples for mocking
@@ -316,9 +316,7 @@ class TestSecretFromFiles:
     @patch("nephos.helpers.k8s.open")
     @patch("nephos.helpers.k8s.secret_create")
     @patch("nephos.helpers.k8s.secret_read")
-    def test_secret_from_files(
-        self, mock_secret_read, mock_secret_create, mock_open
-    ):
+    def test_secret_from_files(self, mock_secret_read, mock_secret_create, mock_open):
         mock_secret_read.side_effect = ApiException()
         secret_from_files("a_secret", "a-namespace", {"a": "path_a"})
         mock_secret_read.assert_called_once()

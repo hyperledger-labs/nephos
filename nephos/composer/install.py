@@ -31,7 +31,7 @@ from nephos.helpers.k8s import (
     cm_create,
     cm_read,
     ingress_read,
-    secret_create
+    secret_create,
 )
 
 

@@ -20,7 +20,7 @@ from nephos.fabric.utils import (
     get_org_tls_ca_cert,
     is_orderer_tls_true,
     get_tls_path,
-    rename_file
+    rename_file,
 )
 
 
@@ -91,7 +91,7 @@ class TestCryptoSecret:
         mock_secret_from_files.assert_called_once_with(
             secret="a-secret",
             namespace="a-namespace",
-            keys_files_path={"some_file.txt": "./a_path/a_file.txt"}
+            keys_files_path={"some_file.txt": "./a_path/a_file.txt"},
         )
 
     @patch("nephos.fabric.utils.secret_from_files")
@@ -226,12 +226,7 @@ class TestIsOrdererMSP:
 class TestGetOrgTLSCACert:
     OPTS = {
         "core": {"dir_crypto": "./crypto"},
-        "ordering": {
-            "tls": {
-                "enable": "true",
-                "tls_ca": "ca-tls"
-            },
-        }
+        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
     }
 
     @patch("nephos.fabric.utils.glob")
@@ -242,7 +237,9 @@ class TestGetOrgTLSCACert:
 
     @patch("nephos.fabric.utils.glob")
     def test_get_org_tls_cacert_with_exception(self, mock_glob):
-        mock_glob.side_effect = [["./crypto/tlscacerts/ca.crt", "./crypto/tlscacerts/ca-tls.crt"]]
+        mock_glob.side_effect = [
+            ["./crypto/tlscacerts/ca.crt", "./crypto/tlscacerts/ca-tls.crt"]
+        ]
         with pytest.raises(ValueError):
             get_org_tls_ca_cert(self.OPTS, "ns")
         mock_glob.assert_called_once_with("./crypto/tlscacerts/*.crt")
@@ -250,32 +247,25 @@ class TestGetOrgTLSCACert:
     @patch("nephos.fabric.utils.glob")
     def test_get_org_tls_cacert_cryptogen(self, mock_glob):
         opts = deepcopy(self.OPTS)
-        opts["ordering"]["tls"] = {
-            "enable" : "true"
-        }
-        mock_glob.side_effect = [["./crypto/crypto-config/*Organizations/ns_TLS/tlsca/ca.pem"]]
+        opts["ordering"]["tls"] = {"enable": "true"}
+        mock_glob.side_effect = [
+            ["./crypto/crypto-config/*Organizations/ns_TLS/tlsca/ca.pem"]
+        ]
         get_org_tls_ca_cert(opts, "ns")
-        mock_glob.assert_called_once_with("./crypto/crypto-config/*Organizations/ns*/tlsca/*.pem")
+        mock_glob.assert_called_once_with(
+            "./crypto/crypto-config/*Organizations/ns*/tlsca/*.pem"
+        )
 
 
 class TestIsOrdererTLSTrue:
-    OPTS = {
-        "ordering": {
-            "tls": {
-                "enable": "true",
-                "tls_ca": "ca-tls"
-            },
-        }
-    }
+    OPTS = {"ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}}}
 
     def test_is_orderer_tls_true(self):
         assert is_orderer_tls_true(opts=self.OPTS)
 
     def test_is_orderer_tls_true_tls_false(self):
         opts = deepcopy(self.OPTS)
-        opts["ordering"]["tls"] = {
-            "enable": "false"
-        }
+        opts["ordering"]["tls"] = {"enable": "false"}
         assert not is_orderer_tls_true(opts=opts)
 
     def test_is_orderer_tls_true_tls_false(self):
@@ -287,12 +277,7 @@ class TestIsOrdererTLSTrue:
 class TestGetTLSPath:
     OPTS = {
         "core": {"dir_crypto": "./crypto"},
-        "ordering": {
-            "tls": {
-                "enable": "true",
-                "tls_ca": "ca-tls"
-            },
-        }
+        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
     }
 
     @patch("nephos.fabric.utils.glob")
@@ -311,12 +296,14 @@ class TestGetTLSPath:
     @patch("nephos.fabric.utils.glob")
     def test_get_tls_path_cryptogen(self, mock_glob):
         opts = deepcopy(self.OPTS)
-        opts["ordering"]["tls"] = {
-            "enable" : "true"
-        }
-        mock_glob.side_effect = [["./crypto/crypto-config/ordererOrganizations/ns_MSP/orderers/ord0/tls"]]
+        opts["ordering"]["tls"] = {"enable": "true"}
+        mock_glob.side_effect = [
+            ["./crypto/crypto-config/ordererOrganizations/ns_MSP/orderers/ord0/tls"]
+        ]
         get_tls_path(opts, "orderer", "ns", "ord0")
-        mock_glob.assert_called_once_with("./crypto/crypto-config/ordererOrganizations/ns*/orderers/ord0*/tls")
+        mock_glob.assert_called_once_with(
+            "./crypto/crypto-config/ordererOrganizations/ns*/orderers/ord0*/tls"
+        )
 
 
 class TestRenameFile:

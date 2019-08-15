@@ -36,7 +36,7 @@ from nephos.fabric.utils import (
     is_orderer_tls_true,
     get_org_tls_ca_cert,
     get_tls_path,
-    rename_file
+    rename_file,
 )
 
 PWD = getcwd()
@@ -340,13 +340,20 @@ def tls_to_secrets(namespace, tls_path, username):
             tls_path (str): Path to the tls crypto-material.
             username (str): Username for identity.
     """
-    keys_files_path = {"tls.crt": f"{tls_path}/server.crt", "tls.key": f"{tls_path}/server.key"}
+    keys_files_path = {
+        "tls.crt": f"{tls_path}/server.crt",
+        "tls.key": f"{tls_path}/server.key",
+    }
     secret_name = f"hlf--{username}-tls"
-    secret_from_files(secret=secret_name, namespace=namespace, keys_files_path=keys_files_path)
+    secret_from_files(
+        secret=secret_name, namespace=namespace, keys_files_path=keys_files_path
+    )
 
     keys_files_path = {"cacert.pem": f"{tls_path}/ca.crt"}
     secret_name = f"hlf--orderer-tlsrootcert"
-    secret_from_files(secret=secret_name, namespace=namespace, keys_files_path=keys_files_path)
+    secret_from_files(
+        secret=secret_name, namespace=namespace, keys_files_path=keys_files_path
+    )
 
 
 def setup_tls(opts, msp_name, release, id_type):
@@ -381,7 +388,7 @@ def setup_tls(opts, msp_name, release, id_type):
             secret_data["CA_USERNAME"],
             secret_data["CA_PASSWORD"],
             "TLS",
-            f"--enrollment.profile tls --csr.hosts {node_domain}"
+            f"--enrollment.profile tls --csr.hosts {node_domain}",
         )
 
         rename_file(join(tls_path, "keystore"), "server.key")
@@ -390,9 +397,13 @@ def setup_tls(opts, msp_name, release, id_type):
         copy_secret(join(tls_path, "signcerts"), join(tls_path, "tls"))
         copy_secret(join(tls_path, "keystore"), join(tls_path, "tls"))
         copy_secret(join(tls_path, "tlscacerts"), join(tls_path, "tls"))
-        copy_secret(join(tls_path, "tlscacerts"), join(opts['core']['dir_crypto'], "tlscacerts"))
+        copy_secret(
+            join(tls_path, "tlscacerts"), join(opts["core"]["dir_crypto"], "tlscacerts")
+        )
 
-    tls_path = get_tls_path(opts=opts, id_type=id_type, namespace=node_namespace, release=release)
+    tls_path = get_tls_path(
+        opts=opts, id_type=id_type, namespace=node_namespace, release=release
+    )
     tls_to_secrets(namespace=node_namespace, tls_path=tls_path, username=release)
 
 
@@ -464,11 +475,17 @@ def setup_nodes(opts):
         for msp in get_msps(opts=opts):
             if is_orderer_msp(opts=opts, msp=msp):
                 msp_namespace = get_namespace(opts=opts, msp=msp)
-                keys_files_path[f"{msp_namespace}.pem"] = get_org_tls_ca_cert(opts=opts, msp_namespace=msp_namespace)
+                keys_files_path[f"{msp_namespace}.pem"] = get_org_tls_ca_cert(
+                    opts=opts, msp_namespace=msp_namespace
+                )
         for msp in get_msps(opts=opts):
             secret_name = f"hlf--tls-client-orderer-certs"
             msp_namespace = get_namespace(opts=opts, msp=msp)
-            secret_from_files(secret=secret_name, namespace=msp_namespace, keys_files_path=keys_files_path)
+            secret_from_files(
+                secret=secret_name,
+                namespace=msp_namespace,
+                keys_files_path=keys_files_path,
+            )
 
 
 # ConfigTxGen helpers
@@ -497,7 +514,7 @@ def genesis_block(opts):
         secret_from_files(
             secret=get_secret_genesis(opts=opts),
             namespace=ord_namespace,
-            keys_files_path = {genesis_key: genesis_file}
+            keys_files_path={genesis_key: genesis_file},
         )
         # Return to original directory
     chdir(PWD)
@@ -530,7 +547,7 @@ def channel_tx(opts):
             secret_from_files(
                 secret=opts["channels"][channel]["secret_channel"],
                 namespace=peer_namespace,
-                keys_files_path = {channel_key: channel_file}
+                keys_files_path={channel_key: channel_file},
             )
             # Return to original directory
     chdir(PWD)

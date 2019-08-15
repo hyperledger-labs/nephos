@@ -257,7 +257,7 @@ def secret_from_files(secret, namespace, keys_files_path):
     try:
         secret_read(secret, namespace)
     except ApiException:
-        secret_data={}
+        secret_data = {}
         for key, file_path in keys_files_path.items():
             with open(file_path, "rb") as f:
                 data = f.read()

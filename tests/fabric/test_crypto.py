@@ -22,7 +22,7 @@ from nephos.fabric.crypto import (
     channel_tx,
     PWD,
     tls_to_secrets,
-    setup_tls
+    setup_tls,
 )
 
 
@@ -820,11 +820,9 @@ class TestSetupNodes:
         "cas": {
             "ca-ord": {"namespace": "ca-namespace"},
             "ca-peer": {"namespace": "ca-namespace"},
-            "ca-tls": {"namespace": "cas-tls"}
+            "ca-tls": {"namespace": "cas-tls"},
         },
-        "ordering":{
-            "tls":{"enable": "false"}
-        },
+        "ordering": {"tls": {"enable": "false"}},
         "msps": {
             "AlphaMSP": {
                 "ca": "ca-ord",
@@ -856,12 +854,14 @@ class TestSetupNodes:
     @patch("nephos.fabric.crypto.setup_tls")
     @patch("nephos.fabric.crypto.get_org_tls_ca_cert")
     def test_setup_nodes_with_tls(
-            self, mock_get_org_tls_ca_cert, mock_setup_tls, mock_setup_id, mock_secret_from_files):
+        self,
+        mock_get_org_tls_ca_cert,
+        mock_setup_tls,
+        mock_setup_id,
+        mock_secret_from_files,
+    ):
         opts = deepcopy(self.OPTS)
-        opts["ordering"]["tls"] = {
-                "enable": "true",
-                "tls_ca": "ca-tls"
-        }
+        opts["ordering"]["tls"] = {"enable": "true", "tls_ca": "ca-tls"}
         mock_get_org_tls_ca_cert.side_effect = ["./alpha_tls"]
         setup_nodes(opts)
         mock_setup_id.assert_has_calls(
@@ -873,14 +873,23 @@ class TestSetupNodes:
             any_order=True,
         )
         mock_setup_tls.assert_called_once_with(opts, "AlphaMSP", "ord0", "orderer")
-        mock_get_org_tls_ca_cert.assert_called_once_with(opts=opts, msp_namespace="ord-ns")
+        mock_get_org_tls_ca_cert.assert_called_once_with(
+            opts=opts, msp_namespace="ord-ns"
+        )
         mock_secret_from_files.assert_has_calls(
             [
-                call(secret="hlf--tls-client-orderer-certs", namespace="ord-ns", keys_files_path={'ord-ns.pem': './alpha_tls'}),
-                call(secret="hlf--tls-client-orderer-certs", namespace="peer-ns",
-                     keys_files_path={'ord-ns.pem': './alpha_tls'})
+                call(
+                    secret="hlf--tls-client-orderer-certs",
+                    namespace="ord-ns",
+                    keys_files_path={"ord-ns.pem": "./alpha_tls"},
+                ),
+                call(
+                    secret="hlf--tls-client-orderer-certs",
+                    namespace="peer-ns",
+                    keys_files_path={"ord-ns.pem": "./alpha_tls"},
+                ),
             ],
-            any_order=True
+            any_order=True,
         )
 
 
@@ -928,7 +937,7 @@ class TestGenesisBlock:
         mock_secret_from_files.assert_called_once_with(
             secret="a-genesis-secret",
             namespace="ord-ns",
-            keys_files_path={"genesis.block": "./crypto/genesis.block"}
+            keys_files_path={"genesis.block": "./crypto/genesis.block"},
         )
 
     @patch("nephos.fabric.crypto.secret_from_files")
@@ -948,7 +957,7 @@ class TestGenesisBlock:
         mock_secret_from_files.assert_called_once_with(
             secret="a-genesis-secret",
             namespace="ord-ns",
-            keys_files_path= {"genesis.block": "./crypto/genesis.block"}
+            keys_files_path={"genesis.block": "./crypto/genesis.block"},
         )
 
 
@@ -972,7 +981,12 @@ class TestChannelTx:
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_blocks(
-        self, mock_chdir, mock_execute, mock_exists, mock_logging, mock_secret_from_files
+        self,
+        mock_chdir,
+        mock_execute,
+        mock_exists,
+        mock_logging,
+        mock_secret_from_files,
     ):
         mock_exists.side_effect = [False, False]
         channel_tx(self.OPTS)
@@ -985,7 +999,7 @@ class TestChannelTx:
         mock_secret_from_files.assert_called_once_with(
             secret="a-channel-secret",
             namespace="peer-ns",
-            keys_files_path={"a-channel.tx": "./crypto/a-channel.tx"}
+            keys_files_path={"a-channel.tx": "./crypto/a-channel.tx"},
         )
 
     @patch("nephos.fabric.crypto.secret_from_files")
@@ -1005,7 +1019,7 @@ class TestChannelTx:
         mock_secret_from_files.assert_called_once_with(
             secret="a-channel-secret",
             namespace="peer-ns",
-            keys_files_path={"a-channel.tx": "./crypto/a-channel.tx"}
+            keys_files_path={"a-channel.tx": "./crypto/a-channel.tx"},
         )
 
     @patch("nephos.fabric.crypto.secret_from_files")
@@ -1036,7 +1050,10 @@ class TestTLSToSecrets:
                 call(
                     secret="hlf--a-user-tls",
                     namespace="msp-ns",
-                    keys_files_path={"tls.crt": "./crypto-tls/server.crt", "tls.key": "./crypto-tls/server.key"},
+                    keys_files_path={
+                        "tls.crt": "./crypto-tls/server.crt",
+                        "tls.key": "./crypto-tls/server.key",
+                    },
                 ),
                 call(
                     secret="hlf--orderer-tlsrootcert",
@@ -1050,27 +1067,17 @@ class TestTLSToSecrets:
 class TestSetupTLS:
     OPTS = {
         "core": {"dir_crypto": "./crypto"},
-        "ordering": {
-            "tls": {
-                "enable": "true",
-                "tls_ca": "ca-tls"
-            }
-        },
+        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
         "cas": {
             "ca-ord": {"namespace": "ca-namespace"},
             "ca-peer": {"namespace": "ca-namespace"},
-            "ca-tls": {"namespace": "cas-tls"}
+            "ca-tls": {"namespace": "cas-tls"},
         },
         "msps": {
             "AlphaMSP": {
                 "ca": "ca-ord",
                 "namespace": "ord-ns",
-                "orderers": {
-                    "domain": "ord0-domain",
-                    "nodes": {
-                        "ord0": {}
-                    }
-                },
+                "orderers": {"domain": "ord0-domain", "nodes": {"ord0": {}}},
             },
             "BetaMSP": {
                 "ca": "ca-peer",
@@ -1095,7 +1102,7 @@ class TestSetupTLS:
         mock_tls_to_secrets,
         mock_credentials_secret,
         mock_enroll_id,
-        mock_register_id
+        mock_register_id,
     ):
         opts = deepcopy(self.OPTS)
         mock_credentials_secret.side_effect = [
@@ -1115,14 +1122,14 @@ class TestSetupTLS:
             "ca-tls",
             "ord0",
             "ord0-pw",
-            'TLS',
-            '--enrollment.profile tls --csr.hosts ord0-hlf-ord.ord0-domain'
+            "TLS",
+            "--enrollment.profile tls --csr.hosts ord0-hlf-ord.ord0-domain",
         )
         mock_rename_file.assert_has_calls(
             [
                 call("./ord0_TLS/keystore", "server.key"),
                 call("./ord0_TLS/signcerts", "server.crt"),
-                call("./ord0_TLS/tlscacerts", "ca.crt")
+                call("./ord0_TLS/tlscacerts", "ca.crt"),
             ]
         )
         mock_copy_secret.assert_has_calls(
@@ -1133,9 +1140,11 @@ class TestSetupTLS:
                 call("./ord0_TLS/tlscacerts", "./crypto/tlscacerts"),
             ]
         )
-        mock_get_tls_path.assert_called_once_with(opts=opts, id_type="orderer", namespace="ord-ns", release="ord0")
+        mock_get_tls_path.assert_called_once_with(
+            opts=opts, id_type="orderer", namespace="ord-ns", release="ord0"
+        )
         mock_tls_to_secrets.assert_called_once_with(
-            namespace='ord-ns', tls_path='./tls', username='ord0'
+            namespace="ord-ns", tls_path="./tls", username="ord0"
         )
 
     @patch("nephos.fabric.crypto.register_id")
@@ -1153,7 +1162,7 @@ class TestSetupTLS:
         mock_tls_to_secrets,
         mock_credentials_secret,
         mock_enroll_id,
-        mock_register_id
+        mock_register_id,
     ):
         opts = deepcopy(self.OPTS)
         opts["ordering"]["tls"] = {"enable": "true"}
@@ -1165,7 +1174,9 @@ class TestSetupTLS:
         mock_enroll_id.assert_not_called()
         mock_rename_file.assert_not_called()
         mock_copy_secret.assert_not_called()
-        mock_get_tls_path.assert_called_once_with(opts=opts, id_type="orderer", namespace="ord-ns", release="ord0")
+        mock_get_tls_path.assert_called_once_with(
+            opts=opts, id_type="orderer", namespace="ord-ns", release="ord0"
+        )
         mock_tls_to_secrets.assert_called_once_with(
-            namespace='ord-ns', tls_path='./tls', username='ord0'
+            namespace="ord-ns", tls_path="./tls", username="ord0"
         )
