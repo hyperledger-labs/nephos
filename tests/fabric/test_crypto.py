@@ -21,6 +21,8 @@ from nephos.fabric.crypto import (
     genesis_block,
     channel_tx,
     PWD,
+    tls_to_secrets,
+    setup_tls,
 )
 
 
@@ -202,7 +204,7 @@ class TestEnrollId:
         mock_isdir.assert_called_once_with("./crypto/an-ord_MSP")
         mock_execute_until_success.assert_called_once_with(
             "FABRIC_CA_CLIENT_HOME=./crypto fabric-ca-client enroll "
-            + "-u https://an-ord:a-password@an-ingress -M ./crypto/an-ord_MSP "
+            + "-u https://an-ord:a-password@an-ingress  -M ./crypto/an-ord_MSP "
             + "--tls.certfiles /home/nephos/tls_cert.pem"
         )
 
@@ -240,7 +242,7 @@ class TestEnrollId:
         mock_isdir.assert_called_once_with("./crypto/a-peer_MSP")
         mock_execute_until_success.assert_called_once_with(
             "FABRIC_CA_CLIENT_HOME=./crypto fabric-ca-client enroll "
-            + "-u https://a-peer:a-password@an-ingress -M ./crypto/a-peer_MSP "
+            + "-u https://a-peer:a-password@an-ingress  -M ./crypto/a-peer_MSP "
             + "--tls.certfiles /home/nephos/tls_cert.pem"
         )
 
@@ -818,7 +820,9 @@ class TestSetupNodes:
         "cas": {
             "ca-ord": {"namespace": "ca-namespace"},
             "ca-peer": {"namespace": "ca-namespace"},
+            "ca-tls": {"namespace": "cas-tls"},
         },
+        "ordering": {"tls": {"enable": "false"}},
         "msps": {
             "AlphaMSP": {
                 "ca": "ca-ord",
@@ -845,6 +849,49 @@ class TestSetupNodes:
             any_order=True,
         )
 
+    @patch("nephos.fabric.crypto.secret_from_files")
+    @patch("nephos.fabric.crypto.setup_id")
+    @patch("nephos.fabric.crypto.setup_tls")
+    @patch("nephos.fabric.crypto.get_org_tls_ca_cert")
+    def test_setup_nodes_with_tls(
+        self,
+        mock_get_org_tls_ca_cert,
+        mock_setup_tls,
+        mock_setup_id,
+        mock_secret_from_files,
+    ):
+        opts = deepcopy(self.OPTS)
+        opts["ordering"]["tls"] = {"enable": "true", "tls_ca": "ca-tls"}
+        mock_get_org_tls_ca_cert.side_effect = ["./alpha_tls"]
+        setup_nodes(opts)
+        mock_setup_id.assert_has_calls(
+            [
+                call(opts, "AlphaMSP", "ord0", "orderer"),
+                call(opts, "BetaMSP", "peer0", "peer"),
+                call(opts, "BetaMSP", "peer1", "peer"),
+            ],
+            any_order=True,
+        )
+        mock_setup_tls.assert_called_once_with(opts, "AlphaMSP", "ord0", "orderer")
+        mock_get_org_tls_ca_cert.assert_called_once_with(
+            opts=opts, msp_namespace="ord-ns"
+        )
+        mock_secret_from_files.assert_has_calls(
+            [
+                call(
+                    secret="hlf--tls-client-orderer-certs",
+                    namespace="ord-ns",
+                    keys_files_path={"ord-ns.pem": "./alpha_tls"},
+                ),
+                call(
+                    secret="hlf--tls-client-orderer-certs",
+                    namespace="peer-ns",
+                    keys_files_path={"ord-ns.pem": "./alpha_tls"},
+                ),
+            ],
+            any_order=True,
+        )
+
 
 class TestGenesisBlock:
     OPTS = {
@@ -856,7 +903,7 @@ class TestGenesisBlock:
         },
     }
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
@@ -871,7 +918,7 @@ class TestGenesisBlock:
         mock_execute,
         mock_exists,
         mock_log,
-        mock_secret_from_file,
+        mock_secret_from_files,
     ):
         mock_exists.side_effect = [False, False]
         mock_get_msps.side_effect = [["AlphaMSP", "BetaMSP"]]
@@ -887,20 +934,19 @@ class TestGenesisBlock:
             "configtxgen -profile OrdererGenesis -outputBlock ./crypto/genesis.block"
         )
         mock_log.info.assert_not_called()
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-genesis-secret",
             namespace="ord-ns",
-            key="genesis.block",
-            filename="./crypto/genesis.block",
+            keys_files_path={"genesis.block": "./crypto/genesis.block"},
         )
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_again(
-        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_files
     ):
         mock_exists.side_effect = [True, True]
         genesis_block(self.OPTS)
@@ -908,11 +954,10 @@ class TestGenesisBlock:
         mock_exists.assert_called_once_with("./crypto/genesis.block")
         mock_execute.assert_not_called()
         mock_log.info.assert_called_once_with("./crypto/genesis.block already exists")
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-genesis-secret",
             namespace="ord-ns",
-            key="genesis.block",
-            filename="./crypto/genesis.block",
+            keys_files_path={"genesis.block": "./crypto/genesis.block"},
         )
 
 
@@ -930,13 +975,18 @@ class TestChannelTx:
         },
     }
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_blocks(
-        self, mock_chdir, mock_execute, mock_exists, mock_logging, mock_secret_from_file
+        self,
+        mock_chdir,
+        mock_execute,
+        mock_exists,
+        mock_logging,
+        mock_secret_from_files,
     ):
         mock_exists.side_effect = [False, False]
         channel_tx(self.OPTS)
@@ -946,20 +996,19 @@ class TestChannelTx:
             "configtxgen -profile AProfile -channelID a-channel -outputCreateChannelTx ./crypto/a-channel.tx"
         )
         mock_logging.info.assert_not_called()
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-channel-secret",
             namespace="peer-ns",
-            key="a-channel.tx",
-            filename="./crypto/a-channel.tx",
+            keys_files_path={"a-channel.tx": "./crypto/a-channel.tx"},
         )
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_again(
-        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_files
     ):
         mock_exists.side_effect = [True, True]
         channel_tx(self.OPTS)
@@ -967,20 +1016,19 @@ class TestChannelTx:
         mock_exists.assert_called_once_with("./crypto/a-channel.tx")
         mock_execute.assert_not_called()
         mock_log.info.assert_called_once_with("./crypto/a-channel.tx already exists")
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-channel-secret",
             namespace="peer-ns",
-            key="a-channel.tx",
-            filename="./crypto/a-channel.tx",
+            keys_files_path={"a-channel.tx": "./crypto/a-channel.tx"},
         )
 
-    @patch("nephos.fabric.crypto.secret_from_file")
+    @patch("nephos.fabric.crypto.secret_from_files")
     @patch("nephos.fabric.crypto.logging")
     @patch("nephos.fabric.crypto.exists")
     @patch("nephos.fabric.crypto.execute")
     @patch("nephos.fabric.crypto.chdir")
     def test_with_no_channel_msp(
-        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_file
+        self, mock_chdir, mock_execute, mock_exists, mock_log, mock_secret_from_files
     ):
         opts = deepcopy(self.OPTS)
         opts["channels"]["AChannel"]["msps"] = []
@@ -990,4 +1038,145 @@ class TestChannelTx:
         mock_exists.assert_called_once_with("./crypto/a-channel.tx")
         mock_execute.assert_not_called()
         mock_log.info.assert_called_once_with("./crypto/a-channel.tx already exists")
-        mock_secret_from_file.assert_not_called()
+        mock_secret_from_files.assert_not_called()
+
+
+class TestTLSToSecrets:
+    @patch("nephos.fabric.crypto.secret_from_files")
+    def test_tls_to_secrets(self, mock_secret_from_files):
+        tls_to_secrets("msp-ns", "./crypto-tls", "a-user")
+        mock_secret_from_files.assert_has_calls(
+            [
+                call(
+                    secret="hlf--a-user-tls",
+                    namespace="msp-ns",
+                    keys_files_path={
+                        "tls.crt": "./crypto-tls/server.crt",
+                        "tls.key": "./crypto-tls/server.key",
+                    },
+                ),
+                call(
+                    secret="hlf--orderer-tlsrootcert",
+                    namespace="msp-ns",
+                    keys_files_path={"cacert.pem": "./crypto-tls/ca.crt"},
+                ),
+            ]
+        )
+
+
+class TestSetupTLS:
+    OPTS = {
+        "core": {"dir_crypto": "./crypto"},
+        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
+        "cas": {
+            "ca-ord": {"namespace": "ca-namespace"},
+            "ca-peer": {"namespace": "ca-namespace"},
+            "ca-tls": {"namespace": "cas-tls"},
+        },
+        "msps": {
+            "AlphaMSP": {
+                "ca": "ca-ord",
+                "namespace": "ord-ns",
+                "orderers": {"domain": "ord0-domain", "nodes": {"ord0": {}}},
+            },
+            "BetaMSP": {
+                "ca": "ca-peer",
+                "namespace": "peer-ns",
+                "peers": {"nodes": {"peer0": {}}},
+            },
+        },
+    }
+
+    @patch("nephos.fabric.crypto.register_id")
+    @patch("nephos.fabric.crypto.enroll_id")
+    @patch("nephos.fabric.crypto.credentials_secret")
+    @patch("nephos.fabric.crypto.tls_to_secrets")
+    @patch("nephos.fabric.crypto.get_tls_path")
+    @patch("nephos.fabric.crypto.copy_secret")
+    @patch("nephos.fabric.crypto.rename_file")
+    def test_setup_tls(
+        self,
+        mock_rename_file,
+        mock_copy_secret,
+        mock_get_tls_path,
+        mock_tls_to_secrets,
+        mock_credentials_secret,
+        mock_enroll_id,
+        mock_register_id,
+    ):
+        opts = deepcopy(self.OPTS)
+        mock_credentials_secret.side_effect = [
+            {"CA_USERNAME": "ord0", "CA_PASSWORD": "ord0-pw"}
+        ]
+        mock_enroll_id.side_effect = ["./ord0_TLS"]
+        mock_get_tls_path.side_effect = ["./tls"]
+        setup_tls(opts, "AlphaMSP", "ord0", "orderer")
+        mock_credentials_secret.assert_called_once_with(
+            "hlf--ord0-cred", "ord-ns", username="ord0"
+        )
+        mock_register_id.assert_called_once_with(
+            "cas-tls", "ca-tls", "ord0", "ord0-pw", "orderer"
+        )
+        mock_enroll_id.assert_called_once_with(
+            opts,
+            "ca-tls",
+            "ord0",
+            "ord0-pw",
+            "TLS",
+            "--enrollment.profile tls --csr.hosts ord0-hlf-ord.ord0-domain",
+        )
+        mock_rename_file.assert_has_calls(
+            [
+                call("./ord0_TLS/keystore", "server.key"),
+                call("./ord0_TLS/signcerts", "server.crt"),
+                call("./ord0_TLS/tlscacerts", "ca.crt"),
+            ]
+        )
+        mock_copy_secret.assert_has_calls(
+            [
+                call("./ord0_TLS/signcerts", "./ord0_TLS/tls"),
+                call("./ord0_TLS/keystore", "./ord0_TLS/tls"),
+                call("./ord0_TLS/tlscacerts", "./ord0_TLS/tls"),
+                call("./ord0_TLS/tlscacerts", "./crypto/tlscacerts"),
+            ]
+        )
+        mock_get_tls_path.assert_called_once_with(
+            opts=opts, id_type="orderer", namespace="ord-ns", release="ord0"
+        )
+        mock_tls_to_secrets.assert_called_once_with(
+            namespace="ord-ns", tls_path="./tls", username="ord0"
+        )
+
+    @patch("nephos.fabric.crypto.register_id")
+    @patch("nephos.fabric.crypto.enroll_id")
+    @patch("nephos.fabric.crypto.credentials_secret")
+    @patch("nephos.fabric.crypto.tls_to_secrets")
+    @patch("nephos.fabric.crypto.get_tls_path")
+    @patch("nephos.fabric.crypto.copy_secret")
+    @patch("nephos.fabric.crypto.rename_file")
+    def test_setup_tls_cryptogen(
+        self,
+        mock_rename_file,
+        mock_copy_secret,
+        mock_get_tls_path,
+        mock_tls_to_secrets,
+        mock_credentials_secret,
+        mock_enroll_id,
+        mock_register_id,
+    ):
+        opts = deepcopy(self.OPTS)
+        opts["ordering"]["tls"] = {"enable": "true"}
+        mock_get_tls_path.side_effect = ["./tls"]
+
+        setup_tls(opts, "AlphaMSP", "ord0", "orderer")
+        mock_credentials_secret.assert_not_called()
+        mock_register_id.assert_not_called()
+        mock_enroll_id.assert_not_called()
+        mock_rename_file.assert_not_called()
+        mock_copy_secret.assert_not_called()
+        mock_get_tls_path.assert_called_once_with(
+            opts=opts, id_type="orderer", namespace="ord-ns", release="ord0"
+        )
+        mock_tls_to_secrets.assert_called_once_with(
+            namespace="ord-ns", tls_path="./tls", username="ord0"
+        )

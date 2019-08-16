@@ -101,7 +101,8 @@ class TestDeployComposer:
         "peers": {"msp": "peer_MSP"},
     }
 
-    @patch("nephos.composer.install.secret_from_file")
+    @patch("nephos.composer.install.secret_create")
+    @patch("nephos.composer.install.input_files")
     @patch("nephos.composer.install.helm_upgrade")
     @patch("nephos.composer.install.helm_install")
     @patch("nephos.composer.install.helm_extra_vars")
@@ -116,13 +117,16 @@ class TestDeployComposer:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
-        mock_secret_from_file,
+        mock_input_files,
+        mock_secret_create,
     ):
         mock_get_version.side_effect = ["hlc-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars"]
+        mock_input_files.side_effect = [{"key": "data"}]
         deploy_composer(self.OPTS)
-        mock_secret_from_file.assert_called_once_with(
-            secret="bna-secret", namespace="peer-namespace"
+        mock_input_files.assert_called_once_with((None,), clean_key=True)
+        mock_secret_create.assert_called_once_with(
+            {"key": "data"}, "bna-secret", "peer-namespace"
         )
         mock_composer_connection.assert_called_once_with(self.OPTS, verbose=False)
         mock_get_version.assert_has_calls([call(self.OPTS, "hl-composer")])
@@ -137,7 +141,8 @@ class TestDeployComposer:
             "hl-composer", "hlc", "peer-namespace", pod_num=3
         )
 
-    @patch("nephos.composer.install.secret_from_file")
+    @patch("nephos.composer.install.secret_create")
+    @patch("nephos.composer.install.input_files")
     @patch("nephos.composer.install.helm_upgrade")
     @patch("nephos.composer.install.helm_install")
     @patch("nephos.composer.install.helm_extra_vars")
@@ -152,13 +157,16 @@ class TestDeployComposer:
         mock_helm_extra_vars,
         mock_helm_install,
         mock_helm_upgrade,
-        mock_secret_from_file,
+        mock_input_files,
+        mock_secret_create,
     ):
         mock_get_version.side_effect = ["hlc-version"]
         mock_helm_extra_vars.side_effect = ["extra-vars"]
+        mock_input_files.side_effect = [{"key": "data"}]
         deploy_composer(self.OPTS, upgrade=True, verbose=True)
-        mock_secret_from_file.assert_called_once_with(
-            secret="bna-secret", namespace="peer-namespace"
+        mock_input_files.assert_called_once_with((None,), clean_key=True)
+        mock_secret_create.assert_called_once_with(
+            {"key": "data"}, "bna-secret", "peer-namespace"
         )
         mock_composer_connection.assert_called_once_with(self.OPTS, verbose=True)
         mock_get_version.assert_has_calls([call(self.OPTS, "hl-composer")])

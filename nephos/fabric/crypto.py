@@ -21,7 +21,7 @@ from time import sleep
 import logging
 
 from nephos.fabric.settings import get_namespace
-from nephos.helpers.k8s import ns_create, ingress_read, secret_from_file
+from nephos.helpers.k8s import ns_create, ingress_read, secret_from_files
 from nephos.helpers.misc import execute, execute_until_success
 from nephos.fabric.utils import (
     get_msps,
@@ -33,6 +33,10 @@ from nephos.fabric.utils import (
     crypto_secret,
     get_helm_pod,
     get_secret_genesis,
+    is_orderer_tls_true,
+    get_org_tls_ca_cert,
+    get_tls_path,
+    rename_file,
 )
 
 PWD = getcwd()
@@ -102,7 +106,7 @@ def register_id(ca_namespace, ca, username, password, node_type="client", admin=
                 sleep(15)
 
 
-def enroll_id(opts, ca, username, password):
+def enroll_id(opts, ca, username, password, cert_type="MSP", extra=""):
     """Enroll an ID with a Fabric Certificate Authority
 
     Args:
@@ -110,6 +114,8 @@ def enroll_id(opts, ca, username, password):
         ca (str): K8S release name of CA.
         username (str): Username for identity.
         password (str): Password for identity.
+        cert_type (str): type of enrollment (MSP or TLS)
+        extra (str): any extra parameters to be passed during enrolment
 
     Returns:
         str: Path of the MSP directory where cryptographic data is saved.
@@ -118,17 +124,17 @@ def enroll_id(opts, ca, username, password):
     dir_crypto = opts["core"]["dir_crypto"]
     ca_namespace = get_namespace(opts, ca=ca)
     ingress_urls = ingress_read(ca + "-hlf-ca", namespace=ca_namespace)
-    msp_dir = f"{username}_MSP"
-    msp_path = join(dir_crypto, msp_dir)
-    if not isdir(msp_path):
+    certificates_dir = f"{username}_{cert_type}"
+    certificates_path = join(dir_crypto, certificates_dir)
+    if not isdir(certificates_path):
         # Enroll
         command = (
             f"FABRIC_CA_CLIENT_HOME={dir_crypto} fabric-ca-client enroll "
-            + f"-u https://{username}:{password}@{ingress_urls[0]} -M {join(dir_crypto, msp_dir)} "
+            + f"-u https://{username}:{password}@{ingress_urls[0]} {extra} -M {join(dir_crypto, certificates_dir)} "
             + f'--tls.certfiles {abspath(opts["cas"][ca]["tls_cert"])}'
         )
         execute_until_success(command)
-    return msp_path
+    return certificates_path
 
 
 def create_admin(opts, msp_name):
@@ -326,6 +332,81 @@ def cacerts_to_secrets(namespace, msp_path, user):
         item_to_secret(namespace, msp_path, user, item)
 
 
+def tls_to_secrets(namespace, tls_path, username):
+    """Get the TLS server.crt and server.key and create the relevant secret
+
+        Args:
+            namespace (str): Namespace where secret will live.
+            tls_path (str): Path to the tls crypto-material.
+            username (str): Username for identity.
+    """
+    keys_files_path = {
+        "tls.crt": f"{tls_path}/server.crt",
+        "tls.key": f"{tls_path}/server.key",
+    }
+    secret_name = f"hlf--{username}-tls"
+    secret_from_files(
+        secret=secret_name, namespace=namespace, keys_files_path=keys_files_path
+    )
+
+    keys_files_path = {"cacert.pem": f"{tls_path}/ca.crt"}
+    secret_name = f"hlf--orderer-tlsrootcert"
+    secret_from_files(
+        secret=secret_name, namespace=namespace, keys_files_path=keys_files_path
+    )
+
+
+def setup_tls(opts, msp_name, release, id_type):
+    """Setup TLS by saving ID to K8S secrets.
+
+    Args:
+        opts (dict): Nephos options dict.
+        msp_name (str): Name of Membership Service Provider.
+        release (str): Name of release/node.
+        id_type (str): Type of ID we use.
+    """
+    node_namespace = get_namespace(opts, msp_name)
+    node_domain = f"{release}-hlf-ord.{opts['msps'][msp_name][id_type+'s']['domain']}"
+    if "tls_ca" in opts["ordering"]["tls"]:
+        tls_ca_name = opts["ordering"]["tls"]["tls_ca"]
+        ca_namespace = get_namespace(opts, ca=tls_ca_name)
+        # Create secret with Orderer credentials
+        secret_name = f"hlf--{release}-cred"
+        secret_data = credentials_secret(secret_name, node_namespace, username=release)
+        # Register node
+        register_id(
+            ca_namespace,
+            tls_ca_name,
+            secret_data["CA_USERNAME"],
+            secret_data["CA_PASSWORD"],
+            id_type,
+        )
+        # Enroll node
+        tls_path = enroll_id(
+            opts,
+            tls_ca_name,
+            secret_data["CA_USERNAME"],
+            secret_data["CA_PASSWORD"],
+            "TLS",
+            f"--enrollment.profile tls --csr.hosts {node_domain}",
+        )
+
+        rename_file(join(tls_path, "keystore"), "server.key")
+        rename_file(join(tls_path, "signcerts"), "server.crt")
+        rename_file(join(tls_path, "tlscacerts"), "ca.crt")
+        copy_secret(join(tls_path, "signcerts"), join(tls_path, "tls"))
+        copy_secret(join(tls_path, "keystore"), join(tls_path, "tls"))
+        copy_secret(join(tls_path, "tlscacerts"), join(tls_path, "tls"))
+        copy_secret(
+            join(tls_path, "tlscacerts"), join(opts["core"]["dir_crypto"], "tlscacerts")
+        )
+
+    tls_path = get_tls_path(
+        opts=opts, id_type=id_type, namespace=node_namespace, release=release
+    )
+    tls_to_secrets(namespace=node_namespace, tls_path=tls_path, username=release)
+
+
 def setup_id(opts, msp_name, release, id_type):
     """Setup single ID by registering, enrolling, and saving ID to K8S secrets.
 
@@ -382,9 +463,29 @@ def setup_nodes(opts):
         for peer in get_peers(opts=opts, msp=msp):
             setup_id(opts, msp, peer, "peer")
 
+    tls = is_orderer_tls_true(opts)
     for msp in get_msps(opts=opts):
         for orderer in get_orderers(opts=opts, msp=msp):
             setup_id(opts, msp, orderer, "orderer")
+            if tls:
+                setup_tls(opts, msp, orderer, "orderer")
+    # create necessary secrets in peer nodes
+    if tls:
+        keys_files_path = {}
+        for msp in get_msps(opts=opts):
+            if is_orderer_msp(opts=opts, msp=msp):
+                msp_namespace = get_namespace(opts=opts, msp=msp)
+                keys_files_path[f"{msp_namespace}.pem"] = get_org_tls_ca_cert(
+                    opts=opts, msp_namespace=msp_namespace
+                )
+        for msp in get_msps(opts=opts):
+            secret_name = f"hlf--tls-client-orderer-certs"
+            msp_namespace = get_namespace(opts=opts, msp=msp)
+            secret_from_files(
+                secret=secret_name,
+                namespace=msp_namespace,
+                keys_files_path=keys_files_path,
+            )
 
 
 # ConfigTxGen helpers
@@ -410,11 +511,10 @@ def genesis_block(opts):
             continue
         ord_namespace = get_namespace(opts, msp=msp)
         # Create the genesis block secret
-        secret_from_file(
+        secret_from_files(
             secret=get_secret_genesis(opts=opts),
             namespace=ord_namespace,
-            key=genesis_key,
-            filename=genesis_file,
+            keys_files_path={genesis_key: genesis_file},
         )
         # Return to original directory
     chdir(PWD)
@@ -444,11 +544,10 @@ def channel_tx(opts):
             if msp not in opts["channels"][channel]["msps"]:
                 continue
             peer_namespace = get_namespace(opts, msp=msp)
-            secret_from_file(
+            secret_from_files(
                 secret=opts["channels"][channel]["secret_channel"],
                 namespace=peer_namespace,
-                key=channel_key,
-                filename=channel_file,
+                keys_files_path={channel_key: channel_file},
             )
             # Return to original directory
     chdir(PWD)

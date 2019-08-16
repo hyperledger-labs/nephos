@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from copy import deepcopy
 
 from kubernetes.client.rest import ApiException
 import pytest
@@ -16,6 +17,10 @@ from nephos.fabric.utils import (
     get_kafka_configs,
     get_an_orderer_msp,
     is_orderer_msp,
+    get_org_tls_ca_cert,
+    is_orderer_tls_true,
+    get_tls_path,
+    rename_file,
 )
 
 
@@ -77,27 +82,26 @@ class TestCredentialsSecret:
 
 
 class TestCryptoSecret:
-    @patch("nephos.fabric.utils.secret_from_file")
+    @patch("nephos.fabric.utils.secret_from_files")
     @patch("nephos.fabric.utils.glob")
-    def test_crypto_secret(self, mock_glob, mock_secret_from_file):
+    def test_crypto_secret(self, mock_glob, mock_secret_from_files):
         mock_glob.side_effect = [["./a_path/a_file.txt"]]
         crypto_secret("a-secret", "a-namespace", "./a_dir", "some_file.txt")
         mock_glob.assert_called_once_with("./a_dir/*")
-        mock_secret_from_file.assert_called_once_with(
+        mock_secret_from_files.assert_called_once_with(
             secret="a-secret",
             namespace="a-namespace",
-            key="some_file.txt",
-            filename="./a_path/a_file.txt",
+            keys_files_path={"some_file.txt": "./a_path/a_file.txt"},
         )
 
-    @patch("nephos.fabric.utils.secret_from_file")
+    @patch("nephos.fabric.utils.secret_from_files")
     @patch("nephos.fabric.utils.glob")
-    def test_crypto_secret_fail(self, mock_glob, mock_secret_from_file):
+    def test_crypto_secret_fail(self, mock_glob, mock_secret_from_files):
         mock_glob.side_effect = [[]]
         with pytest.raises(Exception):
             crypto_secret("a-secret", "a-namespace", "./a_dir", "some_file.txt")
         mock_glob.assert_called_once_with("./a_dir/*")
-        mock_secret_from_file.assert_not_called()
+        mock_secret_from_files.assert_not_called()
 
 
 class TestGetPod:
@@ -217,3 +221,103 @@ class TestIsOrdererMSP:
     def test_is_orderer_msp(self):
         assert is_orderer_msp(msp="AlphaMSP", opts=self.OPTS)
         assert not is_orderer_msp(msp="BetaMSP", opts=self.OPTS)
+
+
+class TestGetOrgTLSCACert:
+    OPTS = {
+        "core": {"dir_crypto": "./crypto"},
+        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
+    }
+
+    @patch("nephos.fabric.utils.glob")
+    def test_get_org_tls_cacert(self, mock_glob):
+        mock_glob.side_effect = [["./crypto/tlscacerts/ca.crt"]]
+        get_org_tls_ca_cert(self.OPTS, "ns")
+        mock_glob.assert_called_once_with("./crypto/tlscacerts/*.crt")
+
+    @patch("nephos.fabric.utils.glob")
+    def test_get_org_tls_cacert_with_exception(self, mock_glob):
+        mock_glob.side_effect = [
+            ["./crypto/tlscacerts/ca.crt", "./crypto/tlscacerts/ca-tls.crt"]
+        ]
+        with pytest.raises(ValueError):
+            get_org_tls_ca_cert(self.OPTS, "ns")
+        mock_glob.assert_called_once_with("./crypto/tlscacerts/*.crt")
+
+    @patch("nephos.fabric.utils.glob")
+    def test_get_org_tls_cacert_cryptogen(self, mock_glob):
+        opts = deepcopy(self.OPTS)
+        opts["ordering"]["tls"] = {"enable": "true"}
+        mock_glob.side_effect = [
+            ["./crypto/crypto-config/*Organizations/ns_TLS/tlsca/ca.pem"]
+        ]
+        get_org_tls_ca_cert(opts, "ns")
+        mock_glob.assert_called_once_with(
+            "./crypto/crypto-config/*Organizations/ns*/tlsca/*.pem"
+        )
+
+
+class TestIsOrdererTLSTrue:
+    OPTS = {"ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}}}
+
+    def test_is_orderer_tls_true(self):
+        assert is_orderer_tls_true(opts=self.OPTS)
+
+    def test_is_orderer_tls_true_tls_false(self):
+        opts = deepcopy(self.OPTS)
+        opts["ordering"]["tls"] = {"enable": "false"}
+        assert not is_orderer_tls_true(opts=opts)
+
+    def test_is_orderer_tls_true_tls_false(self):
+        opts = deepcopy(self.OPTS)
+        opts["ordering"] = {}
+        assert not is_orderer_tls_true(opts=opts)
+
+
+class TestGetTLSPath:
+    OPTS = {
+        "core": {"dir_crypto": "./crypto"},
+        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
+    }
+
+    @patch("nephos.fabric.utils.glob")
+    def test_get_tls_path(self, mock_glob):
+        mock_glob.side_effect = [["/crypto/ord0_TLS/tls"]]
+        get_tls_path(self.OPTS, "orderer", "ns", "ord0")
+        mock_glob.assert_called_once_with("./crypto/ord0_TLS/tls")
+
+    @patch("nephos.fabric.utils.glob")
+    def test_get_tls_path_with_exception(self, mock_glob):
+        mock_glob.side_effect = [["/crypto/ord0_TLS/tls", "/crypto/ord1_TLS/tls"]]
+        with pytest.raises(ValueError):
+            get_tls_path(self.OPTS, "orderer", "ns", "ord0")
+        mock_glob.assert_called_once_with("./crypto/ord0_TLS/tls")
+
+    @patch("nephos.fabric.utils.glob")
+    def test_get_tls_path_cryptogen(self, mock_glob):
+        opts = deepcopy(self.OPTS)
+        opts["ordering"]["tls"] = {"enable": "true"}
+        mock_glob.side_effect = [
+            ["./crypto/crypto-config/ordererOrganizations/ns_MSP/orderers/ord0/tls"]
+        ]
+        get_tls_path(opts, "orderer", "ns", "ord0")
+        mock_glob.assert_called_once_with(
+            "./crypto/crypto-config/ordererOrganizations/ns*/orderers/ord0*/tls"
+        )
+
+
+class TestRenameFile:
+    @patch("nephos.fabric.utils.rename")
+    @patch("nephos.fabric.utils.glob")
+    def test_rename_file(self, mock_glob, mock_rename):
+        mock_glob.side_effect = [["directory/abc"]]
+        rename_file("directory", "name")
+        mock_glob.assert_called_once_with("directory/*")
+        mock_rename.assert_called_once_with("directory/abc", "directory/name")
+
+    @patch("nephos.fabric.utils.glob")
+    def test_rename_file_with_exception(self, mock_glob):
+        mock_glob.side_effect = [["directory/abc", "directory/xyz"]]
+        with pytest.raises(ValueError):
+            rename_file("directory", "name")
+        mock_glob.assert_called_once_with("directory/*")

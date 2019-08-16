@@ -246,25 +246,22 @@ def secret_read(name, namespace="default"):
     return secret.data
 
 
-def secret_from_file(secret, namespace, key=None, filename=None):
-    """Convert a file into a K8S Secret.
+def secret_from_files(secret, namespace, keys_files_path):
+    """Convert multiple files into a K8S Secret.
 
     Args:
-        secret (str): Name of Secret where to save the file.
+        secret (str): Name of Secret.
         namespace (str): Name of namespace.
-        key (str): Key to which to assign the file in the K8S t. If not specified, the filename is used.
-        filename (str): If not provided, we ask the user for input.
+        keys_files_path (dict): containing keys as keys to secret and file paths as relevant data
     """
     try:
         secret_read(secret, namespace)
     except ApiException:
-        # Get relevant variables
-        if not filename:
-            secret_data = input_files((key,), clean_key=True)
-        else:
-            with open(filename, "rb") as f:
+        secret_data = {}
+        for key, file_path in keys_files_path.items():
+            with open(file_path, "rb") as f:
                 data = f.read()
-                secret_data = {key: data}
+                secret_data[key] = data
         secret_create(secret_data, secret, namespace)
 
 

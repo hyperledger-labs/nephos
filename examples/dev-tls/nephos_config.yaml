@@ -1,0 +1,64 @@
+core:
+  # Comment out to make it work on your cluster
+  cluster: minikube
+  # ChartMuseum repository or directory holding charts
+  chart_repo: stable
+  # Directory where we hold configtx.yaml
+  dir_config: ./examples/dev-tls/config
+  # Directory where we hold:
+  # 1) cryptographic material
+  # 2) genesis block and
+  # 3) channel transaction
+  # Directory where we hold crypto-material
+  dir_crypto: ./examples/dev-tls/crypto
+  # Directory where the Helm Chart values reside
+  dir_values: ./examples/dev-tls/helm_values
+cas: {}
+ordering:
+  secret_genesis: hlf--genesis
+  tls:
+    enable: true
+msps:
+  AlphaMSP:
+    ca: ca
+    name: AlphaMSP
+    namespace: alpha
+    org_admin: alphaadmin
+    # org_passwd:  # Set implicitly
+    orderers:
+      domain: alpha.svc.cluster.local
+      nodes:
+        ord1: {}
+      secret_genesis: hlf--genesis
+  BetaMSP:
+    ca: ca
+    name: BetaMSP
+    namespace: beta
+    org_admin: betaadmin
+    # org_passwd:  # Set implicitly
+    orderers: {}
+    peers:
+      domain: beta.svc.cluster.local
+      nodes:
+        peer1: {}
+channels:
+  foochannel:
+    msps:
+      - BetaMSP
+    channel_name: foochannel
+    channel_profile: "FooChannel"
+    secret_channel: hlf--foochannel
+# This is only used when we implement a Composer network
+composer:
+  name: hlc
+  secret_bna: hlc--bna
+  secret_connection: hlc--connection
+# You can specify a particular version of a chart for each chart used, or use the latest by default
+versions:
+  postgresql:
+  hlf-ca:
+  kafka:
+  hlf-ord:
+  hlf-couchdb:
+  hlf-peer:
+  hl-composer:

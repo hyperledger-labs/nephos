@@ -16,7 +16,7 @@ from nephos.helpers.k8s import (
     get_app_info,
     secret_create,
     secret_read,
-    secret_from_file,
+    secret_from_files,
 )
 
 # NamedTuples for mocking
@@ -250,36 +250,6 @@ class TestSecretRead:
         mock_pretty_print.assert_called_once_with('{"a_key": "a_value"}')
 
 
-class TestSecretFromFile:
-    @patch("nephos.helpers.k8s.open")
-    @patch("nephos.helpers.k8s.input_files")
-    @patch("nephos.helpers.k8s.secret_create")
-    @patch("nephos.helpers.k8s.secret_read")
-    def test_secret_from_file(
-        self, mock_secret_read, mock_secret_create, mock_input_files, mock_open
-    ):
-        mock_secret_read.side_effect = ApiException()
-        secret_from_file("a_secret", "a-namespace")
-        mock_secret_read.assert_called_once()
-        mock_secret_create.assert_called_once()
-        mock_input_files.assert_called_once()
-        mock_open.assert_not_called()
-
-    @patch("nephos.helpers.k8s.open")
-    @patch("nephos.helpers.k8s.input_files")
-    @patch("nephos.helpers.k8s.secret_create")
-    @patch("nephos.helpers.k8s.secret_read")
-    def test_secret_from_file_define(
-        self, mock_secret_read, mock_secret_create, mock_input_files, mock_open
-    ):
-        mock_secret_read.side_effect = ApiException()
-        secret_from_file("a_secret", "a-namespace", filename="./some_file.txt")
-        mock_secret_read.assert_called_once()
-        mock_secret_create.assert_called_once()
-        mock_input_files.assert_not_called()
-        mock_open.assert_called_once()
-
-
 class TestGetAppInfo:
     @patch("nephos.helpers.k8s.secret_read")
     @patch("nephos.helpers.k8s.ingress_read")
@@ -309,3 +279,15 @@ class TestGetAppInfo:
             )
         mock_ingress_read.assert_called_once_with("an-ingress", namespace="a-namespace")
         mock_secret_read.assert_not_called()
+
+
+class TestSecretFromFiles:
+    @patch("nephos.helpers.k8s.open")
+    @patch("nephos.helpers.k8s.secret_create")
+    @patch("nephos.helpers.k8s.secret_read")
+    def test_secret_from_files(self, mock_secret_read, mock_secret_create, mock_open):
+        mock_secret_read.side_effect = ApiException()
+        secret_from_files("a_secret", "a-namespace", {"a": "path_a"})
+        mock_secret_read.assert_called_once()
+        mock_secret_create.assert_called_once()
+        mock_open.assert_called_once()

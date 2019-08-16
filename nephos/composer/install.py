@@ -18,6 +18,7 @@ from nephos.composer.connection_template import json_ct
 from nephos.fabric.crypto import admin_creds
 from nephos.fabric.utils import get_helm_pod
 from nephos.fabric.settings import get_namespace, get_version
+from nephos.helpers.misc import input_files
 from nephos.helpers.helm import (
     HelmPreserve,
     helm_check,
@@ -30,7 +31,7 @@ from nephos.helpers.k8s import (
     cm_create,
     cm_read,
     ingress_read,
-    secret_from_file,
+    secret_create,
 )
 
 
@@ -101,7 +102,8 @@ def deploy_composer(opts, upgrade=False, verbose=False):
     """
     peer_namespace = get_namespace(opts, opts["peers"]["msp"])
     # Ensure BNA exists
-    secret_from_file(secret=opts["composer"]["secret_bna"], namespace=peer_namespace)
+    secret_data = input_files((None,), clean_key=True)
+    secret_create(secret_data, opts["composer"]["secret_bna"], peer_namespace)
     composer_connection(opts, verbose=verbose)
 
     # Start Composer
