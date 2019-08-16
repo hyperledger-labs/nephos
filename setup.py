@@ -40,7 +40,7 @@ URL = "https://github.com/aidtechnology/nephos"
 EMAIL = "sasha@aid.technology"
 AUTHOR = "Alejandro (Sasha) Vicente Grabovetsky"
 REQUIRES_PYTHON = ">=3.7.0"
-VERSION = "0.4.2"
+VERSION = "0.4.3"
 
 # What packages are required for this module to be executed?
 REQUIRED = ["blessings", "click", "kubernetes", "pygments"]
