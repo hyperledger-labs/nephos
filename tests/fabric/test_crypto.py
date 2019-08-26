@@ -861,7 +861,7 @@ class TestSetupNodes:
         mock_secret_from_files,
     ):
         opts = deepcopy(self.OPTS)
-        opts["ordering"]["tls"] = {"enable": "true", "tls_ca": "ca-tls"}
+        opts["ordering"]["tls"] = {"enable": True, "tls_ca": "ca-tls"}
         mock_get_org_tls_ca_cert.side_effect = ["./alpha_tls"]
         setup_nodes(opts)
         mock_setup_id.assert_has_calls(
@@ -1067,7 +1067,7 @@ class TestTLSToSecrets:
 class TestSetupTLS:
     OPTS = {
         "core": {"dir_crypto": "./crypto"},
-        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
+        "ordering": {"tls": {"enable": True, "tls_ca": "ca-tls"}},
         "cas": {
             "ca-ord": {"namespace": "ca-namespace"},
             "ca-peer": {"namespace": "ca-namespace"},
@@ -1165,7 +1165,7 @@ class TestSetupTLS:
         mock_register_id,
     ):
         opts = deepcopy(self.OPTS)
-        opts["ordering"]["tls"] = {"enable": "true"}
+        opts["ordering"]["tls"] = {"enable": True}
         mock_get_tls_path.side_effect = ["./tls"]
 
         setup_tls(opts, "AlphaMSP", "ord0", "orderer")

@@ -14,7 +14,6 @@
 
 from glob import glob
 from os import path, rename
-
 from kubernetes.client.rest import ApiException
 
 from nephos.helpers.k8s import Executer, secret_create, secret_read, secret_from_files
@@ -164,8 +163,7 @@ def is_orderer_tls_true(opts):
     """
 
     if "tls" in opts["ordering"]:
-        return opts["ordering"]["tls"]["enable"] == "true"
-    return False
+        return opts["ordering"]["tls"]["enable"] == True
 
 
 def rename_file(directory, name):

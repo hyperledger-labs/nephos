@@ -226,7 +226,7 @@ class TestIsOrdererMSP:
 class TestGetOrgTLSCACert:
     OPTS = {
         "core": {"dir_crypto": "./crypto"},
-        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
+        "ordering": {"tls": {"enable": True, "tls_ca": "ca-tls"}},
     }
 
     @patch("nephos.fabric.utils.glob")
@@ -247,7 +247,7 @@ class TestGetOrgTLSCACert:
     @patch("nephos.fabric.utils.glob")
     def test_get_org_tls_cacert_cryptogen(self, mock_glob):
         opts = deepcopy(self.OPTS)
-        opts["ordering"]["tls"] = {"enable": "true"}
+        opts["ordering"]["tls"] = {"enable": True}
         mock_glob.side_effect = [
             ["./crypto/crypto-config/*Organizations/ns_TLS/tlsca/ca.pem"]
         ]
@@ -258,7 +258,7 @@ class TestGetOrgTLSCACert:
 
 
 class TestIsOrdererTLSTrue:
-    OPTS = {"ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}}}
+    OPTS = {"ordering": {"tls": {"enable": True, "tls_ca": "ca-tls"}}}
 
     def test_is_orderer_tls_true(self):
         assert is_orderer_tls_true(opts=self.OPTS)
@@ -277,7 +277,7 @@ class TestIsOrdererTLSTrue:
 class TestGetTLSPath:
     OPTS = {
         "core": {"dir_crypto": "./crypto"},
-        "ordering": {"tls": {"enable": "true", "tls_ca": "ca-tls"}},
+        "ordering": {"tls": {"enable": True, "tls_ca": "ca-tls"}},
     }
 
     @patch("nephos.fabric.utils.glob")
@@ -296,7 +296,7 @@ class TestGetTLSPath:
     @patch("nephos.fabric.utils.glob")
     def test_get_tls_path_cryptogen(self, mock_glob):
         opts = deepcopy(self.OPTS)
-        opts["ordering"]["tls"] = {"enable": "true"}
+        opts["ordering"]["tls"] = {"enable": True}
         mock_glob.side_effect = [
             ["./crypto/crypto-config/ordererOrganizations/ns_MSP/orderers/ord0/tls"]
         ]
