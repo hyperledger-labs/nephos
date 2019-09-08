@@ -53,7 +53,7 @@ requests-toolbelt==0.9.1
 rsa==4.0
 six==1.12.0
 smmap2==2.0.5
-snowballstemmer==1.9.0
+snowballstemmer==1.9.1
 Sphinx==2.2.0
 sphinx-rtd-theme==0.4.3
 sphinxcontrib-websupport==1.1.2
