@@ -60,7 +60,7 @@ sphinxcontrib-websupport==1.1.2
 stevedore==1.31.0
 toml==0.10.0
 tqdm==4.35.0
-twine==1.14.0
+twine==1.15.0
 urllib3==1.25.3
 webencodings==0.5.1
 websocket-client==0.56.0
