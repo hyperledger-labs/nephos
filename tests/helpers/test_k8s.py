@@ -4,8 +4,8 @@ from unittest.mock import call, patch, MagicMock
 from kubernetes.client.rest import ApiException
 import pytest
 
+from nephos.helpers.executer import Executer
 from nephos.helpers.k8s import (
-    Executer,
     context_get,
     ns_create,
     ns_read,

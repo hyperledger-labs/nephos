@@ -16,7 +16,8 @@ from glob import glob
 from os import path, rename
 from kubernetes.client.rest import ApiException
 
-from nephos.helpers.executer import Executer, secret_create, secret_read, secret_from_files
+from nephos.helpers.executer import Executer
+from nephos.helpers.k8s import secret_create, secret_read, secret_from_files
 from nephos.helpers.misc import execute, rand_string
 
 
