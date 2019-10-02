@@ -39,7 +39,7 @@ class TestExecuter:
             == "kubectl exec a-pod -n a-namespace --container a_container -- "
         )
 
-    @patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.executer.execute")
     def test_executer_execute(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer("a_pod", "a-namespace")
@@ -48,7 +48,7 @@ class TestExecuter:
             "kubectl exec a_pod -n a-namespace -- a_command"
         )
 
-    @patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.executer.execute")
     def test_executer_logs(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer("a_pod", "a-namespace")
@@ -57,7 +57,7 @@ class TestExecuter:
             "kubectl logs a_pod -n a-namespace --tail=-1"
         )
 
-    @patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.executer.execute")
     def test_executer_logs_tail(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer("a_pod", "a-namespace", container="a_container")
@@ -66,7 +66,7 @@ class TestExecuter:
             "kubectl logs a_pod -n a-namespace --container a_container --tail=10"
         )
 
-    @patch("nephos.helpers.k8s.execute")
+    @patch("nephos.helpers.executer.execute")
     def test_executer_logs_sincetime(self, mock_execute):
         mock_execute.side_effect = [("result", None)]
         executer = Executer("a_pod", "a-namespace")
