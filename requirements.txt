@@ -11,7 +11,7 @@ bleach==3.1.0
 blessings==1.7
 cachetools==3.1.1
 certifi==2019.9.11
-cffi==1.12.3
+cffi==1.13.0
 chardet==3.0.4
 Click==7.0
 coverage==4.5.4
