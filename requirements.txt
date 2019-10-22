@@ -15,7 +15,7 @@ cffi==1.13.1
 chardet==3.0.4
 Click==7.0
 coverage==4.5.4
-cryptography==2.7
+cryptography==2.8
 docutils==0.15.2
 gitdb2==2.0.6
 GitPython==3.0.4
