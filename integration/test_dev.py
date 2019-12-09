@@ -14,7 +14,7 @@ class TestIntegrationDev:
     CONFIG = os.path.join(CURRENT_PATH, "..", "examples", "dev", "nephos_config.yaml")
     logging.basicConfig(
         level=logging.DEBUG,
-        format='%(asctime)s %(module)-10s %(levelname)-8s %(message)s'
+        format="%(asctime)s %(module)-10s %(levelname)-8s %(message)s",
     )
 
     def test_integration_dev(self):

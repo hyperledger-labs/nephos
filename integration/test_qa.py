@@ -16,7 +16,7 @@ class TestIntegrationQa:
     TLS_PATH = os.path.join(CURRENT_PATH, "..", "examples", "ca-nephos-local")
     logging.basicConfig(
         level=logging.DEBUG,
-        format='%(asctime)s %(module)-10s %(levelname)-8s %(message)s'
+        format="%(asctime)s %(module)-10s %(levelname)-8s %(message)s",
     )
 
     def test_integration_qa(self):

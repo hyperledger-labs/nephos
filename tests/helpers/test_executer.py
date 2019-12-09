@@ -6,6 +6,7 @@ import pytest
 
 from nephos.helpers.executer import Executer
 
+
 class TestExecuter:
     def test_executer_init(self):
         executer = Executer("a-pod", "a-namespace")

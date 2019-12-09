@@ -23,6 +23,7 @@ ConfigMap = namedtuple("ConfigMap", ("data",))
 Secret = namedtuple("Secret", ("data",))
 IngressHost = namedtuple("IngressHost", ("host",))
 
+
 class TestContextGet:
     CONTEXTS = ({"all": "contexts"}, {"active": "context"})
 
