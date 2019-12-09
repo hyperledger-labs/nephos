@@ -15,6 +15,7 @@
 from kubernetes.client.rest import ApiException
 
 from nephos.composer.connection_template import json_ct
+from nephos.composer.helpers import get_peer_msp
 from nephos.fabric.crypto import admin_creds
 from nephos.fabric.utils import get_helm_pod
 from nephos.fabric.settings import get_namespace, get_version
@@ -32,6 +33,7 @@ from nephos.helpers.k8s import (
     cm_read,
     ingress_read,
     secret_create,
+    secret_read,
 )
 
 
@@ -62,9 +64,8 @@ def composer_connection(opts, verbose=False):
         opts (dict): Nephos options dict.
         verbose (bool): Verbosity. False by default.
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
+    peer_msp, peer_namespace = get_peer_msp(opts)
     # TODO: This could be a single function
-    peer_msp = opts["peers"]["msp"]
     peer_ca = opts["msps"][peer_msp]["ca"]
     ca_namespace = opts["cas"][peer_ca]["namespace"]
     ingress_urls = ingress_read(peer_ca + "-hlf-ca", namespace=ca_namespace)
@@ -82,7 +83,7 @@ def composer_connection(opts, verbose=False):
                 "AidTech",
                 None,
                 peer_msp,
-                opts["peers"]["channel_name"],
+                opts["channels"]["composerchannel"]["channel_name"],
             )
         }
         cm_create(cm_data, opts["composer"]["secret_connection"], peer_namespace)
@@ -100,10 +101,13 @@ def deploy_composer(opts, upgrade=False, verbose=False):
         upgrade (bool): Do we upgrade the deployment? False by default.
         verbose (bool): Verbosity. False by default.
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
+    _, peer_namespace = get_peer_msp(opts)
     # Ensure BNA exists
-    secret_data = input_files((None,), clean_key=True)
-    secret_create(secret_data, opts["composer"]["secret_bna"], peer_namespace)
+    try:
+        secret_read(opts["composer"]["secret_bna"], peer_namespace)
+    except:
+        secret_data = input_files((None,), clean_key=True)
+        secret_create(secret_data, opts["composer"]["secret_bna"], peer_namespace)
     composer_connection(opts, verbose=verbose)
 
     # Start Composer
