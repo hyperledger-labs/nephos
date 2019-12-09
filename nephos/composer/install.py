@@ -197,7 +197,6 @@ def setup_admin(opts, verbose=False):
         msp_path="/hl_config/admin",
         user_name="PeerAdmin",
         roles=("PeerAdmin", "ChannelAdmin"),
-        network="hlfv1",
         verbose=verbose,
     )
 
