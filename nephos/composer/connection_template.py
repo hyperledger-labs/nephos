@@ -98,8 +98,8 @@ def json_ct(opts, ca_name, ca_host, organisation, domain, msp_id, channel):
     # Derive variables
     peer_msp, peer_namespace = get_peer_msp(opts)
     ord_msp, ord_namespace = get_ord_msp(opts)
-    peer_names = list(opts["msps"][peer_msp]["peers"].keys())
-    ord_names = list(opts["msps"][ord_msp]["orderers"].keys())
+    peer_names = list(opts["msps"][peer_msp]["peers"]["nodes"].keys())
+    ord_names = list(opts["msps"][ord_msp]["orderers"]["nodes"].keys())
     # TODO: Currently specific to intra-cluster communication (Service)
     peer_hosts = [
         peer + f"-hlf-peer.{peer_namespace}.svc.cluster.local"
