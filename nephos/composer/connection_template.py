@@ -102,10 +102,12 @@ def json_ct(opts, ca_name, ca_host, organisation, domain, msp_id, channel):
     ord_names = list(opts["msps"][ord_msp]["orderers"].keys())
     # TODO: Currently specific to intra-cluster communication (Service)
     peer_hosts = [
-        peer + f"-hlf-peer.{peer_namespace}.svc.cluster.local" for peer in peer_names
+        peer + f"-hlf-peer.{peer_namespace}.svc.cluster.local"
+        for peer in peer_names
     ]
     orderer_hosts = [
-        orderer + f"-hlf-ord.{ord_namespace}.svc.cluster.local" for orderer in ord_names
+        orderer + f"-hlf-ord.{ord_namespace}.svc.cluster.local"
+        for orderer in ord_names
     ]
     # Get peers
     peer_options, peer_connections = define_peers(
@@ -113,7 +115,9 @@ def json_ct(opts, ca_name, ca_host, organisation, domain, msp_id, channel):
     )
     peer_names = [key for key, value in peer_options.items()]
     # Get orderers
-    orderer_connections = define_orderers(ord_names, orderer_hosts, domain)
+    orderer_connections = define_orderers(
+        ord_names, orderer_hosts, domain
+    )
     return json.dumps(
         {
             "name": "hlfv1",

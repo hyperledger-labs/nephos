@@ -156,8 +156,7 @@ def setup_card(opts, msp_path, user_name, roles, network=None, verbose=False):
         roles (Iterable): Roles to assign to identity card.
         verbose (bool): Verbosity. False by default.
     """
-
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
+    _, peer_namespace = get_peer_msp(opts)
     hlc_cli_ex = get_helm_pod(peer_namespace, opts["composer"]["name"], "hl-composer")
 
     # Set up the PeerAdmin card
@@ -209,7 +208,7 @@ def install_network(opts, verbose=False):
         opts (dict): Nephos options dict.
         verbose (bool): Verbosity. False by default.
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
+    peer_msp, peer_namespace = get_peer_msp(opts)
     hlc_cli_ex = get_helm_pod(peer_namespace, opts["composer"]["name"], "hl-composer")
 
     # Install network
@@ -218,7 +217,6 @@ def install_network(opts, verbose=False):
     bna_name, bna_rem = bna.split("_")
     bna_version, _ = bna_rem.split(".bna")
     # TODO: This could be a single function
-    peer_msp = opts["peers"]["msp"]
     bna_admin = opts["msps"][peer_msp]["org_admin"]
     admin_creds(opts, peer_msp)
     bna_pw = opts["msps"][peer_msp]["org_adminpw"]
