@@ -47,7 +47,7 @@ def get_composer_data(opts, verbose=False):
     Returns:
         dict: Data related to the Composer deployment (URI & API key)
     """
-    peer_namespace = get_namespace(opts, opts["peers"]["msp"])
+    _, peer_namespace = get_peer_msp(opts)
     composer_name = opts["composer"]["name"] + "-hl-composer-rest"
     data = get_app_info(
         peer_namespace, composer_name, composer_name, secret_key="COMPOSER_APIKEY"
