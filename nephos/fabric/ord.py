@@ -92,7 +92,7 @@ def setup_ord(opts, upgrade=False):
             extra_vars=extra_vars,
         )
         helm_check(
-            "kafka",
+            {"app.kubernetes.io/name": "kafka", "app.kubernetes.io/component": "kafka-broker"},
             kafka_config["name"],
             ord_namespace,
             pod_num=kafka_config["pod_num"],

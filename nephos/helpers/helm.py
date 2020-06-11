@@ -31,7 +31,11 @@ def helm_check(app, release, namespace, pod_num=None):
         namespace (str): Namespace where Helm deployment is located.
         pod_num (int): Number of pods expected to exist in the release.
     """
-    identifier = f'-l "app={app},release={release}"'
+    if isinstance(app, str):
+        identifier = f'-l "app={app},release={release}"'
+    elif isinstance(app, dict):
+        id_string = ",".join([f"{key}={value}" for key, value in app.items()])
+        identifier = f'-l "{id_string}"'
     pod_check(namespace, identifier, pod_num=pod_num)
 
 
