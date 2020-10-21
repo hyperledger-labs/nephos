@@ -5,6 +5,8 @@
 
 # Nephos
 
+> Looking for new maintainers, as @alexvicegrab is in a transitional period and can no longer contribute to this code base in the near to mid-term.
+
 Library to deploy [Hyperledger Fabric](https://hyperledger-fabric.readthedocs.io) projects to [Kubernetes](https://kubernetes.io/)
 
 Source resides at https://github.com/hyperledger-labs/nephos, originally developed at **[AID:Tech](https://github.com/aidtechnology/nephos)**
